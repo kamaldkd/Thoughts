@@ -19,6 +19,7 @@ const router = express.Router();
 router
   .route("/")
   .post(
+    isLoggedIn,
     upload.array("media", 10),
     (req, res, next) => next(),
     wrapAsync(createThought)

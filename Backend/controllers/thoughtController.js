@@ -1,4 +1,5 @@
 import Thought from "../models/Thought.js";
+import { cloudinary } from "../config/cloudinary.js";
 
 // @desc    Create a thought
 // @route   POST /api/thoughts
@@ -7,20 +8,47 @@ export const createThought = async (req, res) => {
   const { text } = req.body;
   const files = req.files || [];
 
-  console.log("files received:", files);
+  console.log("files received:", files.length);
 
-  const media = files.map((file) => {
-    const isImage = file.mimetype.startsWith("image/");
+  // Upload files to Cloudinary
+  const media = [];
 
-    // Some multer storage engines attach the uploaded file URL under different keys.
-    const url =
-      file.path || file.secure_url || file.url || file.location || file.fileUrl;
+  for (const file of files) {
+    try {
+      const isImage = file.mimetype.startsWith("image/");
 
-    return {
-      type: isImage ? "image" : "video",
-      url,
-    };
-  });
+      // Upload buffer directly to Cloudinary
+      const result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "thoughts",
+            resource_type: "auto",
+            allowed_formats: isImage
+              ? ["jpg", "png", "jpeg"]
+              : ["mp4", "mov", "webm", "mkv"],
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+
+        uploadStream.end(file.buffer);
+      });
+
+      media.push({
+        type: isImage ? "image" : "video",
+        url: result.secure_url,
+      });
+
+      console.log("File uploaded:", file.originalname, "->", result.secure_url);
+    } catch (error) {
+      console.error("Upload error for:", file.originalname, error.message);
+      return res.status(400).json({
+        message: `Failed to upload ${file.originalname}: ${error.message}`,
+      });
+    }
+  }
 
   // Create new thought
   const thought = await Thought.create({

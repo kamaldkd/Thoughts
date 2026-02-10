@@ -13,15 +13,16 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "axios": "^1.13.5",
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.8.0",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "form-data": "^4.0.5",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.5",
-    "multer": "^2.0.2",
-    "cloudinary": "^2.8.0",
-    "multer-storage-cloudinary": "^2.2.1"
+    "multer": "^2.0.2"
   }
 }

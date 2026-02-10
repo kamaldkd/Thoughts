@@ -1,11 +1,9 @@
 import multer from "multer";
-import { storage } from "../config/cloudinary.js";
 import ExpressError from "../utils/ExpressError.js";
 
-// const upload = multer({ dest: "uploads/"
-//  });
+// Use memory storage instead of CloudinaryStorage to avoid timeout issues
 const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 50 * 1024 * 1024, // 50 MB per file
   },
