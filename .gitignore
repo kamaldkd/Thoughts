@@ -1,0 +1,5 @@
+Backend/.env
+Backend/node_modules
+Backend/test.html
+Backend/testServer.js
+Frontend/node_modules
