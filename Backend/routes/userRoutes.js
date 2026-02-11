@@ -3,6 +3,7 @@ import wrapAsync from "../utils/wrapAsync.js";
 import { isLoggedIn } from "../middleware/isLoggedIn.js";
 import User from "../models/User.js";
 import ExpressError from "../utils/ExpressError.js";
+import { getThoughtsByUserId } from "../controllers/thoughtController.js";
 
 const router = express.Router();
 
@@ -21,5 +22,9 @@ router.get(
     });
   })
 );
+
+router
+  .route("/:userId/thoughts")
+  .get(isLoggedIn, wrapAsync(getThoughtsByUserId));
 
 export default router;

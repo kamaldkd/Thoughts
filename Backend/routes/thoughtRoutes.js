@@ -8,6 +8,7 @@ import {
   getThoughtById,
   updateThought,
   deleteThought,
+  getThoughtsOfUser,
 } from "../controllers/thoughtController.js";
 import { isLoggedIn } from "../middleware/isLoggedIn.js";
 import upload from "../middleware/upload.js";
@@ -18,12 +19,12 @@ const router = express.Router();
 
 router
   .route("/")
-  .post(
-    isLoggedIn,
-    upload.array("media", 10),
-    wrapAsync(createThought)
-  )
+  .post(isLoggedIn, upload.array("media", 10), wrapAsync(createThought))
   .get(isLoggedIn, wrapAsync(getThoughts));
+
+router
+  .route("/me")
+  .get(isLoggedIn, wrapAsync(getThoughtsOfUser));
 
 router
   .route("/:id")

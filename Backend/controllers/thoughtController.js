@@ -99,14 +99,29 @@ export const getThoughts = async (req, res) => {
 export const getThoughtById = async (req, res) => {
   const id = req.params.id;
 
-  const thought = await Thought.findById(id).populate("author", "name email");
+  const thought = await Thought.findById(id).populate("author", "name email").sort({ createdAt: -1 });
   if (!thought) {
     return res.status(404).json({ message: "Thought not found" });
   }
   res.json({ thought });
 };
+// @desc    Get thoughts of current user
+// @route   GET /api/thoughts/me
+// @access  Private
+export const getThoughtsOfUser = async (req, res) => {
+  const userId = req.userId;
+
+  const thoughts = await Thought.find({ author: userId }).populate(
+    "author",
+    "name email"
+  ).sort({ createdAt: -1 });
+  if (!thoughts.length) {
+    return res.status(404).json({ message: "No thoughts found for this user" });
+  }
+  res.json({ thoughts });
+};
 // @desc    Get thoughts by user_id
-// @route   GET /api/thoughts/:userId
+// @route   GET /api/users/:userId/thoughts
 // @access  Private
 export const getThoughtsByUserId = async (req, res) => {
   const userId = req.params.userId;
@@ -114,7 +129,7 @@ export const getThoughtsByUserId = async (req, res) => {
   const thoughts = await Thought.find({ author: userId }).populate(
     "author",
     "name email"
-  );
+  ).sort({ createdAt: -1 });
   if (!thoughts.length) {
     return res.status(404).json({ message: "No thoughts found for this user" });
   }
@@ -124,8 +139,42 @@ export const getThoughtsByUserId = async (req, res) => {
 // @desc    Update thought
 // @route   PUT /api/thoughts/:id
 // @access  Private
-export const updateThought = async (req, res) => {};
+export const updateThought = async (req, res) => {
+  const id = req.params.id;
+  const { text } = req.body;
+  const thought = await Thought.findByIdAndUpdate(
+    id,
+    { text },
+    { new: true }
+  ).populate("author", "name email");
+  if (!thought) {
+    return res.status(404).json({ message: "Thought not found" });
+  }
+  res.json({ thought });
+};
 // @desc    Delete thought
 // @route   DELETE /api/thoughts/:id
 // @access  Private
-export const deleteThought = async (req, res) => {};
+export const deleteThought = async (req, res) => {
+  const id = req.params.id;
+  // delete associated media from Cloudinary
+  const thought = await Thought.findById(id);
+  if (!thought) {
+    return res.status(404).json({ message: "Thought not found" });
+  }
+  for (const mediaItem of thought.media) {
+    try {
+      const publicId = mediaItem.url.split("/").slice(-1)[0].split(".")[0]; // extract public_id from URL
+      let resourceType = mediaItem.type === "image" ? "image" : "video";
+      await cloudinary.uploader.destroy(`thoughts/${publicId}`, {
+        resource_type: resourceType,
+      });
+      console.log("Deleted media from Cloudinary:", mediaItem.url);
+    } catch (error) {
+      console.error("Error deleting media from Cloudinary:", mediaItem.url, error.message);
+    } 
+  }
+
+  await Thought.findByIdAndDelete(id);
+  res.json({ message: "Thought deleted successfully" });
+};
