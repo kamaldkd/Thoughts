@@ -1,68 +1,196 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    --background: 40 20% 97%;
+    --foreground: 220 20% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 14%;
+
+    --primary: 168 40% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 15% 93%;
+    --secondary-foreground: 220 20% 14%;
+
+    --muted: 40 10% 92%;
+    --muted-foreground: 220 10% 46%;
+
+    --accent: 168 30% 94%;
+    --accent-foreground: 168 40% 30%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 10% 88%;
+    --input: 40 10% 88%;
+    --ring: 168 40% 40%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 20% 14%;
+    --sidebar-primary: 168 40% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 168 30% 94%;
+    --sidebar-accent-foreground: 168 40% 30%;
+    --sidebar-border: 40 10% 88%;
+    --sidebar-ring: 168 40% 40%;
+
+    --chart-1: 168 40% 40%;
+    --chart-2: 168 30% 55%;
+    --chart-3: 168 20% 70%;
+    --chart-4: 40 15% 80%;
+    --chart-5: 220 10% 46%;
+
+    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+
+    --shadow-soft: 0 2px 20px -4px hsl(220 20% 14% / 0.06);
+    --shadow-card: 0 1px 3px hsl(220 20% 14% / 0.04),
+      0 4px 16px hsl(220 20% 14% / 0.04);
+    --shadow-elevated: 0 8px 30px hsl(220 20% 14% / 0.08);
+    --shadow-glow: 0 0 20px hsl(168 40% 40% / 0.15);
   }
-  a:hover {
-    color: #747bff;
+
+  .dark {
+    --background: 220 18% 10%;
+    --foreground: 40 10% 92%;
+
+    --card: 220 16% 14%;
+    --card-foreground: 40 10% 92%;
+
+    --popover: 220 16% 14%;
+    --popover-foreground: 40 10% 92%;
+
+    --primary: 168 35% 55%;
+    --primary-foreground: 220 18% 10%;
+
+    --secondary: 220 14% 18%;
+    --secondary-foreground: 40 10% 92%;
+
+    --muted: 220 12% 20%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 220 14% 18%;
+    --accent-foreground: 168 35% 55%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 12% 20%;
+    --input: 220 12% 20%;
+    --ring: 168 35% 55%;
+
+    --sidebar-background: 220 18% 8%;
+    --sidebar-foreground: 40 10% 92%;
+    --sidebar-primary: 168 35% 55%;
+    --sidebar-primary-foreground: 220 18% 10%;
+    --sidebar-accent: 220 14% 18%;
+    --sidebar-accent-foreground: 168 35% 55%;
+    --sidebar-border: 220 12% 20%;
+    --sidebar-ring: 168 35% 55%;
+
+    --chart-1: 168 35% 55%;
+    --chart-2: 168 30% 45%;
+    --chart-3: 168 20% 35%;
+    --chart-4: 220 14% 30%;
+    --chart-5: 220 10% 55%;
+
+    --shadow-soft: 0 2px 20px -4px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.2), 0 4px 16px hsl(0 0% 0% / 0.15);
+    --shadow-elevated: 0 8px 30px hsl(0 0% 0% / 0.3);
+    --shadow-glow: 0 0 20px hsl(168 35% 55% / 0.2);
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    box-shadow: var(--shadow-card);
+  }
+
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .animate-in-view {
+    animation: fadeUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted-foreground) / 0.08) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
   }
 }
