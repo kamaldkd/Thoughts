@@ -79,7 +79,7 @@ export const getThoughts = async (req, res) => {
   }
 
   const thoughts = await Thought.find(query)
-    .populate("user", "name email")
+    .populate("author", "name email")
     .sort({ _id: -1 }) // newest first
     .limit(limit);
 
@@ -96,7 +96,31 @@ export const getThoughts = async (req, res) => {
 // @desc    Get Single thought
 // @route   GET /api/thoughts/:id
 // @access  Private
-export const getThoughtById = async (req, res) => {};
+export const getThoughtById = async (req, res) => {
+  const id = req.params.id;
+
+  const thought = await Thought.findById(id).populate("author", "name email");
+  if (!thought) {
+    return res.status(404).json({ message: "Thought not found" });
+  }
+  res.json({ thought });
+};
+// @desc    Get thoughts by user_id
+// @route   GET /api/thoughts/:userId
+// @access  Private
+export const getThoughtsByUserId = async (req, res) => {
+  const userId = req.params.userId;
+
+  const thoughts = await Thought.find({ author: userId }).populate(
+    "author",
+    "name email"
+  );
+  if (!thoughts.length) {
+    return res.status(404).json({ message: "No thoughts found for this user" });
+  }
+  res.json({ thoughts });
+};
+
 // @desc    Update thought
 // @route   PUT /api/thoughts/:id
 // @access  Private

@@ -21,7 +21,6 @@ router
   .post(
     isLoggedIn,
     upload.array("media", 10),
-    (req, res, next) => next(),
     wrapAsync(createThought)
   )
   .get(isLoggedIn, wrapAsync(getThoughts));
