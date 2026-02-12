@@ -77,6 +77,26 @@ export const login = async (req, res) => {
   });
 };
 
+export const oauthCallback = async (req, res) => {
+  // `req.user` is set by passport in the Google strategy
+  const user = req.user;
+  if (!user) {
+    return res.status(400).json({ success: false, message: "OAuth failed" });
+  }
+
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
+
+  // Redirect to frontend with token. Frontend should read token and store it.
+  const redirectBase =
+    process.env.OAUTH_SUCCESS_REDIRECT ||
+    process.env.FRONTEND_URL ||
+    "http://localhost:5173";
+  const redirectUrl = `${redirectBase}?token=${token}`;
+  res.redirect(redirectUrl);
+};
+
 // What will happen on client side :-
 
 // after login or register, cliet received a token.

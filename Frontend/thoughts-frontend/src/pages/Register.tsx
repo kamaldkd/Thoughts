@@ -1,27 +1,27 @@
 import { useState } from "react";
-import api, { setAuthToken } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
+    setIsLoading(true);
     try {
-      const res = await api.post("/auth/register", {
-        username,
-        email,
-        password,
-      });
-      const token = res.data.token;
-      localStorage.setItem("token", token);
-      setAuthToken(token);
+      await register(username, email, password);
       navigate("/feed");
     } catch (err: any) {
-      alert(err?.response?.data?.message || "Registration failed");
+      setError(err?.response?.data?.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -32,17 +32,21 @@ export default function Register() {
         className="max-w-md mx-auto w-full p-6 glass-card"
       >
         <h2 className="text-2xl font-semibold mb-4">Create an account</h2>
+        {error && <div className="text-red-500 mb-4 text-sm">{error}</div>}
         <input
           className="w-full p-3 mb-2 bg-transparent border border-border rounded"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          required
         />
         <input
           className="w-full p-3 mb-2 bg-transparent border border-border rounded"
           placeholder="Email"
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
         <input
           type="password"
@@ -50,10 +54,20 @@ export default function Register() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
-        <button className="w-full px-4 py-2 bg-primary text-primary-foreground rounded">
-          Create account
+        <button
+          disabled={isLoading}
+          className="w-full px-4 py-2 bg-primary text-primary-foreground rounded disabled:opacity-50"
+        >
+          {isLoading ? "Creating account..." : "Create account"}
         </button>
+        <p className="mt-4 text-sm text-center">
+          Already have an account?{" "}
+          <a href="/login" className="text-primary hover:underline">
+            Login here
+          </a>
+        </p>
       </form>
     </div>
   );

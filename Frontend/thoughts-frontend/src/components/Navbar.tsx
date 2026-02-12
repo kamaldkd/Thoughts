@@ -1,35 +1,16 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { Feather } from "lucide-react";
-import { useEffect, useState } from "react";
-import api, { setAuthToken } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Navbar() {
   const location = useLocation();
   const isLanding = location.pathname === "/";
-  const [user, setUser] = useState<any>(null);
+  const { user, logout, isLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        const res = await api.get("/users/me");
-        if (mounted) setUser(res.data.user);
-      } catch (err) {
-        if (mounted) setUser(null);
-      }
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   function handleLogout() {
-    localStorage.removeItem("token");
-    setAuthToken(null);
-    setUser(null);
+    logout();
     navigate("/login");
   }
 
@@ -56,26 +37,30 @@ export function Navbar() {
               Explore
             </Link>
           )}
-          {user ? (
+          {!loading && (
             <>
-              <Link to="/profile" className="inline-flex text-sm">
-                {user.username || user.name}
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="inline-flex text-sm bg-destructive text-destructive-foreground px-2 py-1 rounded"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="inline-flex text-sm">
-                Login
-              </Link>
-              <Link to="/register" className="inline-flex text-sm">
-                Sign up
-              </Link>
+              {isLoggedIn && user ? (
+                <>
+                  <Link to="/profile" className="inline-flex text-sm">
+                    {user.username}
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="inline-flex text-sm bg-destructive text-destructive-foreground px-2 py-1 rounded"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="inline-flex text-sm">
+                    Login
+                  </Link>
+                  <Link to="/register" className="inline-flex text-sm">
+                    Sign up
+                  </Link>
+                </>
+              )}
             </>
           )}
         </div>

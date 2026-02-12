@@ -5,13 +5,18 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import thoughtRoutes from "./routes/thoughtRoutes.js";
 import cors from "cors";
+import passport from "passport";
+import setupPassport from "./config/passport.js";
 
 const app = express();
-
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Passport (OAuth) initialization
+setupPassport(passport);
+app.use(passport.initialize());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

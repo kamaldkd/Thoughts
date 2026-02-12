@@ -1,4 +1,5 @@
 Backend/.env
+Backend/.env.example
 Backend/node_modules
 Backend/test.html
 Backend/testServer.js

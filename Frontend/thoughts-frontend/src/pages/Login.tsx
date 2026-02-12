@@ -1,22 +1,26 @@
 import { useState } from "react";
-import api, { setAuthToken } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
+    setIsLoading(true);
     try {
-      const res = await api.post("/auth/login", { email, password });
-      const token = res.data.token;
-      localStorage.setItem("token", token);
-      setAuthToken(token);
+      await login(email, password);
       navigate("/feed");
     } catch (err: any) {
-      alert(err?.response?.data?.message || "Login failed");
+      setError(err?.response?.data?.message || "Login failed");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -27,11 +31,14 @@ export default function Login() {
         className="max-w-md mx-auto w-full p-6 glass-card"
       >
         <h2 className="text-2xl font-semibold mb-4">Login</h2>
+        {error && <div className="text-red-500 mb-4 text-sm">{error}</div>}
         <input
           className="w-full p-3 mb-2 bg-transparent border border-border rounded"
           placeholder="Email"
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
         <input
           type="password"
@@ -39,10 +46,20 @@ export default function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
-        <button className="w-full px-4 py-2 bg-primary text-primary-foreground rounded">
-          Sign in
+        <button
+          disabled={isLoading}
+          className="w-full px-4 py-2 bg-primary text-primary-foreground rounded disabled:opacity-50"
+        >
+          {isLoading ? "Signing in..." : "Sign in"}
         </button>
+        <p className="mt-4 text-sm text-center">
+          Don't have an account?{" "}
+          <a href="/register" className="text-primary hover:underline">
+            Register here
+          </a>
+        </p>
       </form>
     </div>
   );

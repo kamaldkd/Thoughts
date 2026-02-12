@@ -1,7 +1,12 @@
 import express from "express";
 import wrapAsync from "../utils/wrapAsync.js";
-import { register, login } from "../controllers/authController.js";
+import {
+  register,
+  login,
+  oauthCallback,
+} from "../controllers/authController.js";
 import { validateUser, validateLogin } from "../middleware/validate.js";
+import passport from "passport";
 
 const router = express.Router();
 
@@ -27,5 +32,17 @@ router.post("/logout", (req, res) => {
   //   // redirect to login
   // }
 });
+
+// OAuth: Google
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { session: false }),
+  wrapAsync(oauthCallback)
+);
 
 export default router;
