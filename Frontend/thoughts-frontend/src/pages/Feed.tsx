@@ -1,25 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ThoughtCard } from "@/components/ThoughtCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { CreateThoughtModal } from "@/components/CreateThoughtModal";
 import { PenSquare } from "lucide-react";
-import api from "@/lib/api";
+import api, { deleteThought, getThoughts } from "@/lib/api";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Feed = () => {
+  const { user } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [thoughts, setThoughts] = useState<any[]>([]);
   const [unauth, setUnauth] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
       setLoading(true);
       try {
-        const res = await api.get("/thoughts");
+        const res = await getThoughts();
         if (mounted) {
           setThoughts(res.data.thoughts || []);
+          setNextCursor(res.data.nextCursor || null);
+          setHasMore(!!res.data.hasMore);
           setUnauth(false);
         }
       } catch (err: any) {
@@ -34,6 +42,57 @@ const Feed = () => {
       mounted = false;
     };
   }, []);
+
+  const handleDelete = async (thoughtId: string) => {
+    if (!window.confirm("Are you sure you want to delete this thought?")) {
+      return;
+    }
+
+    try {
+      await deleteThought(thoughtId);
+      setThoughts((prev) => prev.filter((t) => (t._id || t.id) !== thoughtId));
+    } catch (err) {
+      console.error("Failed to delete thought:", err);
+      alert("Failed to delete thought");
+    }
+  };
+
+  const handleLoadMore = async () => {
+    if (!hasMore || !nextCursor) return;
+    setLoadingMore(true);
+    try {
+      const res = await getThoughts({ cursor: nextCursor });
+      const more = res.data.thoughts || [];
+      setThoughts((prev) => [...prev, ...more]);
+      setNextCursor(res.data.nextCursor || null);
+      setHasMore(!!res.data.hasMore);
+    } catch (err) {
+      console.error("Failed to load more:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Infinite scroll: observe sentinel and load more when visible
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node) return;
+    if (!hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        if (e && e.isIntersecting && !loadingMore) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: "200px", threshold: 0.1 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, loadingMore, nextCursor]);
 
   if (loading) return <p className="p-4">Loading feed…</p>;
 
@@ -86,11 +145,25 @@ const Feed = () => {
               avatar={t.author?.avatar || "/src/assets/hero-bg.jpg"}
               time={new Date(t.createdAt).toLocaleString()}
               content={t.text}
-              image={t.media && t.media.length ? t.media[0].url : undefined}
+              mediaUrl={t.media && t.media.length ? t.media[0].url : undefined}
+              mediaType={
+                t.media && t.media.length ? t.media[0].type : undefined
+              }
               likes={t.likes || 0}
               comments={t.comments || 0}
+              authorId={t.author?._id}
+              currentUserId={user?._id}
+              onDelete={handleDelete}
             />
           ))
+        )}
+
+        {/* sentinel for infinite scroll */}
+        <div ref={loadMoreRef} className="h-2" />
+        {loadingMore && (
+          <div className="max-w-xl mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
+            Loading…
+          </div>
         )}
       </div>
 

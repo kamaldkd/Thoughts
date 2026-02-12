@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Image, Film, Feather } from "lucide-react";
 import { postMultipart } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 const MAX_CHARS = 500;
 
@@ -112,8 +113,9 @@ export function CreateThoughtModal({ open, onClose }: Props) {
                 try {
                   const form = new FormData();
                   form.append("text", text);
-                  files.forEach((f) => form.append("media", f));
+                  files.forEach((f) => form.append("file", f));
                   await postMultipart("/thoughts", form);
+                  toast({ title: "Your thought is posted" });
                   setText("");
                   setFiles([]);
                   onClose();

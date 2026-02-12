@@ -79,7 +79,7 @@ export const getThoughts = async (req, res) => {
   }
 
   const thoughts = await Thought.find(query)
-    .populate("author", "name email")
+    .populate("author", "username name email")
     .sort({ _id: -1 }) // newest first
     .limit(limit);
 
@@ -99,7 +99,10 @@ export const getThoughts = async (req, res) => {
 export const getThoughtById = async (req, res) => {
   const id = req.params.id;
 
-  const thought = await Thought.findById(id).populate("author", "name email").sort({ createdAt: -1 });
+  const thought = await Thought.findById(id).populate(
+    "author",
+    "username name email"
+  );
   if (!thought) {
     return res.status(404).json({ message: "Thought not found" });
   }
@@ -111,10 +114,9 @@ export const getThoughtById = async (req, res) => {
 export const getThoughtsOfUser = async (req, res) => {
   const userId = req.userId;
 
-  const thoughts = await Thought.find({ author: userId }).populate(
-    "author",
-    "name email"
-  ).sort({ createdAt: -1 });
+  const thoughts = await Thought.find({ author: userId })
+    .populate("author", "username name email")
+    .sort({ createdAt: -1 });
   if (!thoughts.length) {
     return res.status(404).json({ message: "No thoughts found for this user" });
   }
@@ -126,10 +128,9 @@ export const getThoughtsOfUser = async (req, res) => {
 export const getThoughtsByUserId = async (req, res) => {
   const userId = req.params.userId;
 
-  const thoughts = await Thought.find({ author: userId }).populate(
-    "author",
-    "name email"
-  ).sort({ createdAt: -1 });
+  const thoughts = await Thought.find({ author: userId })
+    .populate("author", "username name email")
+    .sort({ createdAt: -1 });
   if (!thoughts.length) {
     return res.status(404).json({ message: "No thoughts found for this user" });
   }
@@ -146,7 +147,7 @@ export const updateThought = async (req, res) => {
     id,
     { text },
     { new: true }
-  ).populate("author", "name email");
+  ).populate("author", "username name email");
   if (!thought) {
     return res.status(404).json({ message: "Thought not found" });
   }
@@ -154,7 +155,7 @@ export const updateThought = async (req, res) => {
 };
 // @desc    Delete thought
 // @route   DELETE /api/thoughts/:id
-// @access  Private
+// @access  Private (Author only)
 export const deleteThought = async (req, res) => {
   const id = req.params.id;
   // delete associated media from Cloudinary
@@ -171,10 +172,13 @@ export const deleteThought = async (req, res) => {
       });
       console.log("Deleted media from Cloudinary:", mediaItem.url);
     } catch (error) {
-      console.error("Error deleting media from Cloudinary:", mediaItem.url, error.message);
-    } 
+      console.error(
+        "Error deleting media from Cloudinary:",
+        mediaItem.url,
+        error.message
+      );
+    }
   }
-
   await Thought.findByIdAndDelete(id);
   res.json({ message: "Thought deleted successfully" });
 };

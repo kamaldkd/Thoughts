@@ -7,12 +7,14 @@ import {
   getMyThoughts,
   deleteThought as apiDelete,
 } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 const Profile = () => {
   const [view, setView] = useState<"list" | "grid">("list");
   const [thoughts, setThoughts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { id: userId } = useParams();
+  const { user } = useAuth();
 
   useEffect(() => {
     let mounted = true;
@@ -113,9 +115,14 @@ const Profile = () => {
               }
               time={new Date(t.createdAt).toLocaleString()}
               content={t.text}
-              image={t.media && t.media.length ? t.media[0].url : undefined}
+              mediaUrl={t.media && t.media.length ? t.media[0].url : undefined}
+              mediaType={
+                t.media && t.media.length ? t.media[0].type : undefined
+              }
               likes={t.likes || 0}
               comments={t.comments || 0}
+              authorId={t.author?._id}
+              currentUserId={user?._id}
               onDelete={async (id) => {
                 if (!confirm("Delete this thought?")) return;
                 try {
@@ -130,14 +137,16 @@ const Profile = () => {
         ) : (
           <div className="grid grid-cols-3 gap-0.5 mt-2">
             {thoughts
-              .filter((t) => t.image)
+              .filter(
+                (t) => t.media && t.media.length && t.media[0].type === "image"
+              )
               .map((t) => (
                 <div
-                  key={t.id}
+                  key={t.id || t._id}
                   className="aspect-square overflow-hidden bg-muted"
                 >
                   <img
-                    src={t.image}
+                    src={t.media[0].url}
                     alt=""
                     className="w-full h-full object-cover hover:opacity-80 transition-opacity cursor-pointer"
                   />
