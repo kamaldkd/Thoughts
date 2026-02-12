@@ -6,6 +6,8 @@ import ExpressError from "../utils/ExpressError.js";
 // reading content is at last
 
 export const register = async (req, res) => {
+  console.log("Registering user with data:", req.body); 
+
   const { username, email, password } = req.body;
 
   // check if user already exists
