@@ -10,7 +10,10 @@ import setupPassport from "./config/passport.js";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:8080", "http://192.168.56.1:8080", "https://thoughts-social.vercel.app"],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
