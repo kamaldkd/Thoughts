@@ -7,8 +7,15 @@ import api, { deleteThought, getThoughts } from "@/lib/api";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import defaultAvatar from "../assets/hero-bg.jpg";
+import { useLocation } from "react-router-dom";
+
+type FeedLocationState = {
+  openCreate?: boolean;
+};
 
 const Feed = () => {
+  const location = useLocation();
+  const state = location.state as FeedLocationState | null;
   const { user } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -30,6 +37,10 @@ const Feed = () => {
           setNextCursor(res.data.nextCursor || null);
           setHasMore(!!res.data.hasMore);
           setUnauth(false);
+        }
+        if(location.state?.openCreate) {
+          setCreateOpen(true);
+          window.history.replaceState({}, ""); // clear state so it doesn't reopen modal on back/forward navigation
         }
       } catch (err: any) {
         if (err?.response?.status === 401) setUnauth(true);
