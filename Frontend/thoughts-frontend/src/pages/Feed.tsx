@@ -6,6 +6,7 @@ import { PenSquare } from "lucide-react";
 import api, { deleteThought, getThoughts } from "@/lib/api";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import defaultAvatar from "../assets/hero-bg.jpg";
 
 const Feed = () => {
   const { user } = useAuth();
@@ -142,7 +143,7 @@ const Feed = () => {
               key={t._id || t.id}
               id={t._id || t.id}
               username={t.author?.username || t.author?.name || "User"}
-              avatar={t.author?.avatar || "/src/assets/hero-bg.jpg"}
+              avatar={t.author?.avatar || defaultAvatar}
               time={new Date(t.createdAt).toLocaleString()}
               content={t.text}
               mediaUrl={t.media && t.media.length ? t.media[0].url : undefined}
