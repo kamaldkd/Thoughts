@@ -40,9 +40,17 @@ export function Navbar() {
           {!loading && (
             <>
               {isLoggedIn && user ? (
-                <Link to="/profile" className="inline-flex text-sm font-medium text-foreground hover:text-primary transition-colors">
-                  {user.username}
-                </Link>
+                <>
+                  <Link to="/profile" className="inline-flex text-sm">
+                    {user.username}
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="inline-flex text-sm bg-destructive text-destructive-foreground px-2 py-1 rounded"
+                  >
+                    Logout
+                  </button>
+                </>
               ) : (
                 <>
                   <Link to="/login" className="inline-flex text-sm">

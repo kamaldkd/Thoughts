@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ThoughtCard } from "@/components/ThoughtCard";
-import { Grid3X3, List, Settings, LogOut } from "lucide-react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { Grid3X3, List, Settings } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
 import {
   getUserThoughts,
   getMyThoughts,
@@ -9,26 +9,13 @@ import {
   getUserProfile,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const Profile = () => {
   const [view, setView] = useState<"list" | "grid">("list");
   const [thoughts, setThoughts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { id: userId } = useParams();
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
+  const { user } = useAuth();
 
   useEffect(() => {
     let mounted = true;
@@ -86,23 +73,9 @@ const Profile = () => {
             <Link to="/edit-profile" className="h-9 px-6 rounded-full border border-border bg-card text-sm font-medium transition-colors hover:bg-secondary inline-flex items-center">
               Edit Profile
             </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="h-9 w-9 rounded-full border border-border bg-card flex items-center justify-center transition-colors hover:bg-secondary">
-                  <Settings className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem asChild>
-                  <Link to="/edit-profile" className="cursor-pointer">Edit Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <button className="h-9 w-9 rounded-full border border-border bg-card flex items-center justify-center transition-colors hover:bg-secondary">
+              <Settings className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
