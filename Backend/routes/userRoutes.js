@@ -8,10 +8,10 @@ import { getThoughtsByUserId } from "../controllers/thoughtController.js";
 const router = express.Router();
 
 router.get(
-  "/me",
+  "/:id",
   isLoggedIn,
   wrapAsync(async (req, res) => {
-    const user = await User.findById(req.userId).select("-password");
+    const user = await User.findById(req.params.id).select("-password");
     if (!user) {
       throw new ExpressError(404, "User not found");
     }

@@ -11,6 +11,9 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ThoughtDetail from "./pages/ThoughtDetail";
+import Explore from "./pages/Explore";
+import EditProfile from "./pages/EditProfile";
 
 const queryClient = new QueryClient();
 
@@ -51,7 +54,23 @@ function AppRoutes() {
           path="/explore"
           element={
             <ProtectedRoute>
-              <Feed />
+              <Explore />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/thought/:id"
+          element={
+            <ProtectedRoute>
+              <ThoughtDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-profile"
+          element={
+            <ProtectedRoute>
+              <EditProfile />
             </ProtectedRoute>
           }
         />
