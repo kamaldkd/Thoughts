@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { ThoughtCard } from "@/components/ThoughtCard";
 import { Grid3X3, List, Settings } from "lucide-react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   getUserThoughts,
   getMyThoughts,
   deleteThought as apiDelete,
-  getUserProfile,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -48,7 +47,7 @@ const Profile = () => {
             alt="Profile"
             className="h-20 w-20 rounded-full object-cover mx-auto mb-4 border-2 border-border"
           />
-          <h1 className="text-xl font-semibold">{user?.username || "User"}</h1>
+          <h1 className="text-xl font-semibold">alex_design</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
             Designer & thinker. Exploring the intersection of simplicity and
             beauty.
@@ -70,9 +69,9 @@ const Profile = () => {
 
           {/* Actions */}
           <div className="flex justify-center gap-3 mt-5">
-            <Link to="/edit-profile" className="h-9 px-6 rounded-full border border-border bg-card text-sm font-medium transition-colors hover:bg-secondary inline-flex items-center">
+            <button className="h-9 px-6 rounded-full border border-border bg-card text-sm font-medium transition-colors hover:bg-secondary">
               Edit Profile
-            </Link>
+            </button>
             <button className="h-9 w-9 rounded-full border border-border bg-card flex items-center justify-center transition-colors hover:bg-secondary">
               <Settings className="h-4 w-4" />
             </button>

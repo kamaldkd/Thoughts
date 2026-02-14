@@ -43,7 +43,3 @@ export function getUserThoughts(userId: string) {
 export function getMyThoughts() {
   return api.get("/thoughts/me");
 }
-
-export function getUserProfile(userId: string) {
-  return api.get(`/users/${userId}`);
-}

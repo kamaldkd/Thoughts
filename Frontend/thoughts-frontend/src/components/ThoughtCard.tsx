@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   Heart,
   MessageCircle,
@@ -244,14 +243,14 @@ export function ThoughtCard({
               )}
             </button>
 
-            <Link to={`/thought/${id}`} className="flex items-center gap-1.5 group">
+            <button className="flex items-center gap-1.5 group">
               <MessageCircle className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
               {comments > 0 && (
                 <span className="text-xs text-muted-foreground">
                   {comments}
                 </span>
               )}
-            </Link>
+            </button>
 
             <button className="group">
               <Repeat2 className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
