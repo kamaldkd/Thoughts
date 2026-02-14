@@ -159,7 +159,7 @@ export function ThoughtCard({
             </div>
           </div>
 
-          <p className="mt-1 text-[15px] leading-relaxed">{content}</p>
+          <Link to={`/thought/${id}`} className="mt-1 text-[15px] leading-relaxed">{content}</Link>
 
           {mediaUrl && mediaType === "image" && (
             <div className="mt-3 rounded-xl overflow-hidden border border-border/40">
