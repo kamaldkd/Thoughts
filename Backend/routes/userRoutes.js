@@ -11,6 +11,10 @@ router.get(
   "/me",
   isLoggedIn,
   wrapAsync(async (req, res) => {
+     // 🔴 GUARD: never assume req.userId exists
+    if (!req.userId) {
+      throw new ExpressError(401, "Unauthorized");
+    }
     const user = await User.findById(req.userId).select("-password");
     if (!user) {
       throw new ExpressError(404, "User not found");
