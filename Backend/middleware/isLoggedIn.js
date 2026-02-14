@@ -16,8 +16,6 @@ export const isLoggedIn = (req, res, next) => {
     // verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    console.log("JWT decoded payload:", decoded);
-
     // save user id for next middlewares/ controllers
     req.userId = decoded.userId;
 

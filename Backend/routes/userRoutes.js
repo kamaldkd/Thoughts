@@ -27,6 +27,21 @@ router.get(
   })
 );
 
+router.get(
+  "/:id",
+  isLoggedIn,
+  wrapAsync(async (req, res) => {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      throw new ExpressError(404, "User not found");
+    }
+    res.json({
+      success: true,
+      user,
+    });
+  })
+);
+
 router
   .route("/:userId/thoughts")
   .get(isLoggedIn, wrapAsync(getThoughtsByUserId));
