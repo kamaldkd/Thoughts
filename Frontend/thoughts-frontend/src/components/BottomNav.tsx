@@ -52,13 +52,12 @@ export function BottomNav() {
             />
           );
         })}
-        <div className="min-h-screen pt-14 pb-20 md:pb-8">
+      </div>
           <CreateThoughtModal
             open={createOpen}
             onClose={() => setCreateOpen(false)}
           />
-        </div>
-      </div>
     </nav>
+
   );
 }
