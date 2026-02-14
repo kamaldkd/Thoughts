@@ -131,7 +131,7 @@ const Feed = () => {
   return (
     <div className="min-h-screen pt-14 pb-20 md:pb-8">
       <div className="max-w-xl mx-auto px-4">
-        {/* Header (visible on all sizes) */}
+        {/* Header (visible on all sizes)
         <div className="flex items-center justify-between py-6">
           <h1 className="text-2xl font-serif font-semibold">Your Feed</h1>
           <button
@@ -141,7 +141,7 @@ const Feed = () => {
             <PenSquare className="h-4 w-4" />
             New Thought
           </button>
-        </div>
+        </div> */}
 
         {/* Feed */}
         {thoughts.length === 0 ? (
@@ -182,7 +182,7 @@ const Feed = () => {
       {/* Mobile FAB */}
       <button
         onClick={() => setCreateOpen(true)}
-        className="fixed bottom-20 right-4 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+        className="fixed bottom-20 right-4 h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
         style={{ boxShadow: "var(--shadow-elevated)" }}
       >
         <PenSquare className="h-5 w-5" />

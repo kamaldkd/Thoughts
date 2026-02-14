@@ -39,11 +39,7 @@ export function Navbar() {
           )}
           {!loading && (
             <>
-              {isLoggedIn && user ? (
-                <Link to="/profile" className="inline-flex text-sm font-medium text-foreground hover:text-primary transition-colors">
-                  {user.username}
-                </Link>
-              ) : (
+              {!isLoggedIn && !user && (
                 <>
                   <Link to="/login" className="inline-flex text-sm">
                     Login

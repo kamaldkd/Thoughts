@@ -84,15 +84,22 @@ export function CreateThoughtModal({ open, onClose }: Props) {
               <Image className="h-5 w-5 text-muted-foreground" />
               <input
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*"
                 multiple
                 className="hidden"
                 onChange={(e) => setFiles(Array.from(e.target.files || []))}
               />
             </label>
-            <button className="p-2 rounded-full hover:bg-secondary transition-colors">
+            <label className="p-2 rounded-full hover:bg-secondary transition-colors cursor-pointer">
               <Film className="h-5 w-5 text-muted-foreground" />
-            </button>
+              <input
+                type="file"
+                accept="video/*"
+                multiple
+                className="hidden"
+                onChange={(e) => setFiles(Array.from(e.target.files || []))}
+              />
+            </label>
           </div>
           <div className="flex items-center gap-3">
             <span
