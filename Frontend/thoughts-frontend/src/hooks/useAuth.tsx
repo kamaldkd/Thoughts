@@ -30,17 +30,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth from localStorage on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      setToken(storedToken);
-      setAuthToken(storedToken);
-      // Optionally fetch user details
-      fetchUserDetails(storedToken);
-    }
-    setLoading(false);
-  }, []);
+  const storedToken = localStorage.getItem("token");
 
-  async function fetchUserDetails(authToken: string) {
+  if (!storedToken) {
+    setLoading(false);
+    return;
+  }
+
+  setToken(storedToken);
+  setAuthToken(storedToken);
+
+  fetchUserDetails()
+    .finally(() => {
+      setLoading(false); // ✅ ONLY after fetch completes
+    });
+}, []);
+
+  async function fetchUserDetails(authToken?: string) {
     try {
       const res = await api.get("/users/me");
       setUser(res.data.user);
@@ -49,6 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("token");
       setToken(null);
       setAuthToken(null);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -86,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
-        isLoggedIn: !!token,
+        isLoggedIn: !!token && !!user,
       }}
     >
       {children}
