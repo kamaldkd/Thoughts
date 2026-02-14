@@ -11,6 +11,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import { openAsBlob } from "fs";
 
 interface ThoughtProps {
   id: number;
@@ -159,7 +160,7 @@ export function ThoughtCard({
             </div>
           </div>
 
-          <Link to={`/thought/${id}`} className="mt-1 text-[15px] leading-relaxed">{content}</Link>
+          <Link to={`/thought/${id}`} className="mt-1 text-[15px] leading-relaxed">{content.length > 50 ? content.substring(0, 50) + "...see more" : content}</Link>
 
           {mediaUrl && mediaType === "image" && (
             <div className="mt-3 rounded-xl overflow-hidden border border-border/40">
