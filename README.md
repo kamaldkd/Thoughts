@@ -1,4 +1,4 @@
-# 🧠 Thoughts — A Social Media App for Sharing Ideas
+# 🧠 Thoughts — Share What’s On Your Mind
 
 **Thoughts** is a modern full-stack social media application where users can share their thoughts, interact with posts, and connect with others in a clean and minimal interface.  
 The project focuses on real-world features like authentication, CRUD operations, media handling, and responsive UI.
