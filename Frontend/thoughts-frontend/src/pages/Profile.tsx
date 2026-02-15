@@ -149,7 +149,7 @@ const Profile = () => {
                 t.author?.avatar ||
                 "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=face"
               }
-              time={new Date(t.createdAt).toLocaleString()}
+              time={t.createdAt}
               content={t.text}
               mediaUrl={t.media && t.media.length ? t.media[0].url : undefined}
               mediaType={
