@@ -14,7 +14,10 @@ interface Props {
 export function CreateThoughtModal({ open, onClose }: Props) {
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);  
   const navigate = useNavigate();
+
+
 
   if (!open) return null;
 
@@ -41,11 +44,31 @@ export function CreateThoughtModal({ open, onClose }: Props) {
           </button>
           <span className="text-sm font-semibold">New Thought</span>
           <button
-            disabled={text.length === 0 || overLimit}
-            className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 transition-all duration-200 hover:opacity-90"
-          >
-            Post
-          </button>
+              disabled={text.length === 0 || overLimit}
+              onClick={async (e) => {
+                e.preventDefault();
+                try {
+                  setLoading(true);
+                  const form = new FormData();
+                  form.append("text", text);
+                  files.forEach((f) => form.append("file", f));
+                  await postMultipart("/thoughts", form);
+                  setLoading(false);
+                  toast({ title: "Your thought is posted" });
+                  setText("");
+                  setFiles([]);
+                  onClose();
+                  // redirect to feed so user sees new post
+                  navigate("/feed");
+                } catch (err: any) {
+                  alert(err?.response?.data?.message || "Failed to post");
+                }
+              }}
+              className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 transition-all duration-200 hover:opacity-90"
+            >
+              {loading && <span className="animate-spin">⏳</span>}
+              {loading ? "Posting..." : "Post"}
+            </button>
         </div>
 
         {/* Body */}
@@ -156,10 +179,12 @@ export function CreateThoughtModal({ open, onClose }: Props) {
               onClick={async (e) => {
                 e.preventDefault();
                 try {
+                  setLoading(true);
                   const form = new FormData();
                   form.append("text", text);
                   files.forEach((f) => form.append("file", f));
                   await postMultipart("/thoughts", form);
+                  setLoading(false);
                   toast({ title: "Your thought is posted" });
                   setText("");
                   setFiles([]);
@@ -172,7 +197,8 @@ export function CreateThoughtModal({ open, onClose }: Props) {
               }}
               className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 transition-all duration-200 hover:opacity-90"
             >
-              Post
+              {loading && <span className="animate-spin [animation-duration:2s]">⏳</span>}
+              {loading ? "Posting..." : "Post"}
             </button>
           </div>
         </div>

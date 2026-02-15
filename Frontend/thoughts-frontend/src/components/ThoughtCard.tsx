@@ -12,6 +12,9 @@ import {
   VolumeX,
 } from "lucide-react";
 import { openAsBlob } from "fs";
+import { formatRelativeTime } from "@/utils/formatRelativeTime";
+import { useMinuteTick } from "@/hooks/useMinuteTick";
+import { useFadeOnChange } from "@/hooks/useFadeOnChange";
 
 interface ThoughtProps {
   id: number;
@@ -47,6 +50,11 @@ export function ThoughtCard({
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
+
+  useMinuteTick(); // forces re-render every minute to update relative time display
+
+  const timeText = formatRelativeTime(time);
+  const { displayValue, fade } = useFadeOnChange(timeText);
 
   const handleLike = () => {
     setLiked((l) => !l);
@@ -140,7 +148,14 @@ export function ThoughtCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">{username}</span>
-              <span className="text-xs text-muted-foreground">{time}</span>
+              <span
+                className={`text-[11px] text-gray-400 transition-opacity duration-150 ${
+                  fade ? "opacity-0" : "opacity-100"
+                }`}
+                title={new Date(time).toLocaleString()}
+              >
+                • {displayValue}
+              </span>{" "}
             </div>
             <div className="flex items-center gap-2">
               {onDelete &&
@@ -160,7 +175,14 @@ export function ThoughtCard({
             </div>
           </div>
 
-          <Link to={`/thought/${id}`} className="mt-1 text-[15px] leading-relaxed">{content.length > 50 ? content.substring(0, 50) + "...see more" : content}</Link>
+          <Link
+            to={`/thought/${id}`}
+            className="mt-1 text-[15px] leading-relaxed"
+          >
+            {content.length > 50
+              ? content.substring(0, 50) + "...see more"
+              : content}
+          </Link>
 
           {mediaUrl && mediaType === "image" && (
             <div className="mt-3 rounded-xl overflow-hidden border border-border/40">
@@ -245,7 +267,10 @@ export function ThoughtCard({
               )}
             </button>
 
-            <Link to={`/thought/${id}`} className="flex items-center gap-1.5 group">
+            <Link
+              to={`/thought/${id}`}
+              className="flex items-center gap-1.5 group"
+            >
               <MessageCircle className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
               {comments > 0 && (
                 <span className="text-xs text-muted-foreground">

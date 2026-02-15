@@ -194,3 +194,12 @@
     animation: shimmer 1.5s ease-in-out infinite;
   }
 }
+
+@keyframes loader {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+.animate-loader {
+  animation: loader 1.2s infinite linear;
+}

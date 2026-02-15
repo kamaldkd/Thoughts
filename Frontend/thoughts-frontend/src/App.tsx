@@ -14,6 +14,8 @@ import Register from "./pages/Register";
 import ThoughtDetail from "./pages/ThoughtDetail";
 import Explore from "./pages/Explore";
 import EditProfile from "./pages/EditProfile";
+import { useEffect, useState } from "react";
+import AppLoader from "@/components/AppLoader";
 
 const queryClient = new QueryClient();
 
@@ -96,18 +98,32 @@ function AppRoutes() {
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [appReady, setAppReady] = useState(false);
+
+  useEffect(() => {
+    // things that decide "app is ready"
+    Promise.all([
+      // example: auth check, token restore
+      new Promise((res) => setTimeout(res, 500)),
+    ]).then(() => setAppReady(true));
+  }, []);
+
+  if (!appReady) return <AppLoader />;
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

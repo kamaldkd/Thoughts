@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import defaultAvatar from "../assets/hero-bg.jpg";
 import { useLocation } from "react-router-dom";
+import ThoughtSkeleton from "@/components/ThoughtSkeleton";
 
 type FeedLocationState = {
   openCreate?: boolean;
@@ -38,7 +39,7 @@ const Feed = () => {
           setHasMore(!!res.data.hasMore);
           setUnauth(false);
         }
-        if(location.state?.openCreate) {
+        if (location.state?.openCreate) {
           setCreateOpen(true);
           window.history.replaceState({}, ""); // clear state so it doesn't reopen modal on back/forward navigation
         }
@@ -106,6 +107,19 @@ const Feed = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, loadingMore, nextCursor]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-14 pb-20 md:pb-14 md:pt-14">
+        <div className="max-w-xl mx-auto px-4">
+          {[...Array(5)].map((_, i) => (
+            <ThoughtSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Initial loading state
   if (loading) return <p className="p-4">Loading feed…</p>;
 
   if (unauth)
@@ -129,7 +143,9 @@ const Feed = () => {
     );
 
   return (
-    <div className="min-h-screen pt-14 pb-20 md:pb-8">
+    // adding some extra bottom padding to ensure last thought isn't hidden behind mobile FAB
+    // adding loading skeletons to give better feedback while loading thoughts or fetching more or while server is slow
+    <div className="min-h-screen pt-14 pb-20 md:pb-14 md:pt-14">
       <div className="max-w-xl mx-auto px-4">
         {/* Header (visible on all sizes)
         <div className="flex items-center justify-between py-6">
@@ -173,8 +189,12 @@ const Feed = () => {
         {/* sentinel for infinite scroll */}
         <div ref={loadMoreRef} className="h-2" />
         {loadingMore && (
-          <div className="max-w-xl mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
-            Loading…
+          <div className="min-h-screen pt-14 pb-20 md:pb-14 md:pt-14">
+            <div className="max-w-xl mx-auto px-4">
+              {[...Array(3)].map((_, i) => (
+                <ThoughtSkeleton key={i} />
+              ))}
+            </div>
           </div>
         )}
       </div>
