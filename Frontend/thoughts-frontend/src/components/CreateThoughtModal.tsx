@@ -67,11 +67,45 @@ export function CreateThoughtModal({ open, onClose }: Props) {
         {files.length > 0 && (
           <div className="p-4 grid grid-cols-3 gap-2">
             {files.map((f, i) => (
+              // adding cross to remove file from preview and files state
               <div
                 key={i}
-                className="rounded overflow-hidden bg-muted p-2 text-xs text-muted-foreground"
+                className="relative rounded-xl overflow-hidden border border-border/40"
               >
-                {f.name}
+                <button
+                  onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                  className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+                {f.type.startsWith("image/") ? (
+                  <img
+                    src={URL.createObjectURL(f)}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  // for video, show a thumbnail with play button overlay and adding cross to remove file from preview and files state
+                  <div className="w-full h-full bg-muted flex items-center justify-center relative">
+                    <button
+                      onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/80 z-10"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    <video
+                      src={URL.createObjectURL(f)}
+                      muted={true}
+                      autoPlay
+                      loop
+                      playsInline
+                      preload="metadata"
+                      onContextMenu={(e) => e.preventDefault()}
+                      disablePictureInPicture
+                      controlsList="nodownload noremoteplayback"
+                      className="w-full object-cover max-h-80 bg-black"
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -87,7 +121,9 @@ export function CreateThoughtModal({ open, onClose }: Props) {
                 accept="image/*"
                 multiple
                 className="hidden"
-                onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                onChange={(e) =>
+                  setFiles([...files, ...Array.from(e.target.files || [])])
+                }
               />
             </label>
             <label className="p-2 rounded-full hover:bg-secondary transition-colors cursor-pointer">
@@ -97,7 +133,9 @@ export function CreateThoughtModal({ open, onClose }: Props) {
                 accept="video/*"
                 multiple
                 className="hidden"
-                onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                onChange={(e) =>
+                  setFiles([...files, ...Array.from(e.target.files || [])])
+                }
               />
             </label>
           </div>
