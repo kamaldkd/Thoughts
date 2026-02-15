@@ -69,7 +69,7 @@ thoughts/
 └── README.md
 
 
-🧩 What I Learned from This Project
+**🧩 What I Learned from This Project**
 
 Building a full authentication flow using JWT
 
@@ -83,7 +83,7 @@ Debugging real production issues (CORS, env vars, refresh 404s)
 
 Writing cleaner, scalable code
 
-🔮 Future Improvements
+**🔮 Future Improvements**
 
 💬 Comments on thoughts
 
@@ -93,11 +93,9 @@ Writing cleaner, scalable code
 
 🎥 Instagram-style media slider for posts
 
-🌙 Dark mode
-
 🔍 Search & hashtags
 
-👨‍💻 Author
+**👨‍💻 Author**
 
 Kamal Dhakad
 Aspiring Software Engineer | Full-Stack Developer
