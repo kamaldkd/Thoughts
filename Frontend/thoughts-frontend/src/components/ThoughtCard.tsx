@@ -15,6 +15,7 @@ import { openAsBlob } from "fs";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useMinuteTick } from "@/hooks/useMinuteTick";
 import { useFadeOnChange } from "@/hooks/useFadeOnChange";
+import { format, parseISO, isValid } from "date-fns";
 
 interface ThoughtProps {
   id: number;
@@ -136,7 +137,6 @@ export function ThoughtCard({
     } catch (e) {}
   };
 
-  console.log("ThoughtCard rendered with time:", time);
   return (
     <article className="py-4 border-b border-border/60 animate-fade-in">
       <div className="flex gap-3">
@@ -153,13 +153,9 @@ export function ThoughtCard({
                 className={`text-[11px] text-gray-400 transition-opacity duration-150 ${
                   fade ? "opacity-0" : "opacity-100"
                 }`}
-                title={
-                  time
-                    ? new Date(time).toLocaleString()
-                    : ""
-                }
+                title={format(parseISO(time), "dd MMM yyyy, hh:mm a")}
               >
-                • {displayValue}
+                • {timeText}
               </span>{" "}
             </div>
             <div className="flex items-center gap-2">

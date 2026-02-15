@@ -3,24 +3,40 @@ import {
   differenceInDays,
   format,
   isValid,
+  parseISO,
 } from "date-fns";
 
-export function formatRelativeTime(dateString?: string | null) {
-  if (!dateString) {
-    return "just now";
+function normalizeDate(input: any): Date | null {
+  if (!input) return null;
+
+  // If already a Date
+  if (input instanceof Date) return input;
+
+  // If Mongo-style { $date: "..." }
+  if (typeof input === "object" && input.$date) {
+    const d = new Date(input.$date);
+    return isValid(d) ? d : null;
   }
 
-  const date = new Date(dateString);
-
-  // 🔐 Guard against invalid dates
-  if (!isValid(date)) {
-    return "just now";
+  // If ISO string
+  if (typeof input === "string") {
+    const d = parseISO(input);
+    return isValid(d) ? d : null;
   }
 
-  const daysDiff = differenceInDays(new Date(), date);
+  return null;
+}
+
+export function formatRelativeTime(createdAt: any) {
+  const date = normalizeDate(createdAt);
+
+  if (!date) return "just now";
+
+  const now = new Date();
+  const daysDiff = differenceInDays(now, date);
 
   if (daysDiff >= 7) {
-    return format(date, "dd MMM yyyy"); // 15 Feb 2026
+    return format(date, "dd MMM yyyy");
   }
 
   return formatDistanceToNow(date, {
