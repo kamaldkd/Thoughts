@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import api from "@/lib/api";
 import {
   Heart,
   MessageCircle,
@@ -7,62 +8,96 @@ import {
   Send,
   ArrowLeft,
   MoreHorizontal,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
-const mockComments = [
-  {
-    id: 1,
-    username: "sarah_j",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
-    text: "This is so beautifully written. Really resonates with me.",
-    time: "1h",
-    likes: 5,
-  },
-  {
-    id: 2,
-    username: "mike_codes",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
-    text: "Couldn't agree more. We need more spaces like this.",
-    time: "45m",
-    likes: 3,
-  },
-  {
-    id: 3,
-    username: "emma_reads",
-    avatar:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face",
-    text: "The kind of thought that makes you stop and think. Love it.",
-    time: "30m",
-    likes: 8,
-  },
-];
-
-const mockThought = {
-  id: "1",
-  username: "alex_design",
-  avatar:
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=face",
-  time: "2h",
-  content:
-    "Just started working on a new minimal design system. The focus is purely on typography and whitespace. Less is definitely more. ✨\n\nThere's something deeply satisfying about stripping away the unnecessary and finding what truly matters in a design. Every pixel should earn its place.",
-  image:
-    "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=400&fit=crop",
-  likes: 42,
-  comments: 8,
-};
+import { formatRelativeTime } from "@/utils/formatRelativeTime";
+import ThoughtSkeleton from "@/components/ThoughtSkeleton";
 
 export default function ThoughtDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(mockThought.likes);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState(mockComments);
 
+  const [thought, setThought] = useState<any>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [commentText, setCommentText] = useState("");
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+
+  // ✅ FETCH THOUGHT
+  useEffect(() => {
+    const fetchThought = async () => {
+      try {
+        const res = await api.get(`/thoughts/${id}`);
+        setThought(res.data.thought);
+        setComments(res.data.comments || []);
+        setLikeCount(res.data.thought.likesCount || 0);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchThought();
+  }, [id]);
+
+  const mediaUrl =
+    thought?.media?.length ? thought.media[0].url : undefined;
+  const mediaType =
+    thought?.media?.length ? thought.media[0].type : undefined;
+
+  // ✅ VIDEO EFFECT (ALWAYS CALLED)
+  useEffect(() => {
+    if (!mediaUrl || mediaType !== "video") return;
+
+    const vid = videoRef.current;
+    if (!vid) return;
+
+    vid.muted = true;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          vid.play().catch(() => {});
+          setIsPlaying(true);
+        } else {
+          vid.pause();
+          setIsPlaying(false);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(vid);
+    return () => observer.disconnect();
+  }, [mediaUrl, mediaType]);
+
+  // ⬇️ NOW SAFE TO RETURN CONDITIONALLY ⬇️
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-14">
+        <ThoughtSkeleton />
+      </div>
+    );
+  }
+
+  if (!thought) {
+    return <div className="pt-20 text-center">Thought not found</div>;
+  }
+
+  const timeText = formatRelativeTime(thought.createdAt);
+  
   const handleLike = () => {
     setLiked((l) => !l);
     setLikeCount((c) => (liked ? c - 1 : c + 1));
@@ -85,6 +120,36 @@ export default function ThoughtDetail() {
     setCommentText("");
   };
 
+  
+
+  const handleVideoClick = () => {
+    // toggle mute/unmute on click
+    const vid = videoRef.current;
+    if (!vid) return;
+    const newMuted = !isMuted;
+    vid.muted = newMuted;
+    setIsMuted(newMuted);
+    // if user unmutes, ensure playback
+    if (!newMuted) {
+      vid.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  const togglePlay = async () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    try {
+      if (vid.paused) {
+        await vid.play();
+        setIsPlaying(true);
+      } else {
+        vid.pause();
+        setIsPlaying(false);
+      }
+    } catch (e) {}
+  };
+
   return (
     <div className="min-h-screen pt-14 pb-20 md:pb-8">
       <div className="max-w-xl mx-auto px-4">
@@ -103,8 +168,11 @@ export default function ThoughtDetail() {
         <article className="pb-4 border-b border-border/60 animate-fade-in">
           <div className="flex gap-3">
             <img
-              src={mockThought.avatar}
-              alt={mockThought.username}
+              src={
+                thought.author.avatar ||
+                "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=80&h=80&fit=crop&crop=face"
+              }
+              alt={thought.author.username}
               className="h-12 w-12 rounded-full object-cover flex-shrink-0 bg-muted"
             />
             <div className="flex-1 min-w-0">
@@ -114,10 +182,10 @@ export default function ThoughtDetail() {
                     to={`/profile`}
                     className="text-sm font-semibold hover:underline"
                   >
-                    {mockThought.username}
+                    {thought.author.username}
                   </Link>
                   <span className="text-xs text-muted-foreground">
-                    {mockThought.time}
+                    {timeText}
                   </span>
                 </div>
                 <button className="p-1 rounded-full hover:bg-secondary transition-colors">
@@ -128,23 +196,74 @@ export default function ThoughtDetail() {
           </div>
 
           <p className="mt-4 text-[16px] leading-relaxed whitespace-pre-line">
-            {mockThought.content}
+            {thought.text}
           </p>
 
-          {mockThought.image && (
-            <div className="mt-4 rounded-xl overflow-hidden border border-border/40">
+          {mediaUrl && mediaType === "image" && (
+            <div className="mt-3 rounded-xl overflow-hidden border border-border/40">
               <img
-                src={mockThought.image}
+                src={mediaUrl}
                 alt="Post"
-                className="w-full object-cover"
+                className="w-full object-cover max-h-80"
               />
+            </div>
+          )}
+
+          {mediaUrl && mediaType === "video" && (
+            <div
+              className="mt-3 rounded-xl overflow-hidden border border-border/40 relative"
+              onMouseEnter={() => setShowControls(true)}
+              onMouseLeave={() => setShowControls(false)}
+            >
+              <video
+                ref={videoRef}
+                src={mediaUrl}
+                muted={isMuted}
+                loop
+                playsInline
+                preload="metadata"
+                onContextMenu={(e) => e.preventDefault()}
+                disablePictureInPicture
+                controlsList="nodownload noremoteplayback"
+                className="w-full object-cover max-h-80 bg-black"
+              />
+
+              {/* Center play/pause overlay */}
+              {showControls && (
+                <button
+                  onClick={togglePlay}
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 flex items-center justify-center text-white z-10"
+                  aria-label={isPlaying ? "Pause video" : "Play video"}
+                >
+                  {isPlaying ? (
+                    <Pause className="w-6 h-6" />
+                  ) : (
+                    <Play className="w-6 h-6" />
+                  )}
+                </button>
+              )}
+
+              {/* Top-right mute toggle */}
+              {showControls && (
+                <button
+                  onClick={handleVideoClick}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white"
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-4 h-4" />
+                  ) : (
+                    <Volume2 className="w-4 h-4" />
+                  )}
+                </button>
+              )}
             </div>
           )}
 
           {/* Stats bar */}
           <div className="flex items-center gap-6 mt-4 py-3 border-t border-border/40 text-sm text-muted-foreground">
             <span>
-              <strong className="text-foreground">{likeCount}</strong> likes
+              <strong className="text-foreground">{thought.likesCount}</strong>{" "}
+              likes
             </span>
             <span>
               <strong className="text-foreground">{comments.length}</strong>{" "}

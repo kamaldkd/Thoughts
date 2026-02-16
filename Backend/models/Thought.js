@@ -45,6 +45,11 @@ const thoughtSchema = mongoose.Schema(
       },
     },
 
+    thoughtsCount: {
+      type: Number,
+      default: 0,
+    },
+    
     // basic engagement fields (for future use)
     likesCount: {
       type: Number,

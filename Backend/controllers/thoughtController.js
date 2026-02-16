@@ -131,10 +131,12 @@ export const getThoughtsByUserId = async (req, res) => {
   const thoughts = await Thought.find({ author: userId })
     .populate("author", "username name email")
     .sort({ createdAt: -1 });
+
+  const thoughtsCount = await Thought.countDocuments({ author: userId });
   if (!thoughts.length) {
     return res.status(404).json({ message: "No thoughts found for this user" });
   }
-  res.json({ thoughts });
+  res.json({ thoughts, thoughtsCount });
 };
 
 // @desc    Update thought

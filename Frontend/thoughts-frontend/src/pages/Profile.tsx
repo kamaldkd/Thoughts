@@ -30,6 +30,8 @@ const Profile = () => {
     navigate("/login");
   }
 
+  let res: any = {};
+
   useEffect(() => {
     let mounted = true;
     async function load() {
@@ -70,7 +72,7 @@ const Profile = () => {
           {/* Stats */}
           <div className="flex justify-center gap-8 mt-5">
             {[
-              { label: "Thoughts", value: "47" },
+              { label: "Thoughts", value: thoughts.length },
               { label: "Followers", value: "1.2k" },
               { label: "Following", value: "318" },
             ].map((s) => (

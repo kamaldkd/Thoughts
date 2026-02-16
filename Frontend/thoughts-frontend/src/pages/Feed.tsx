@@ -170,14 +170,14 @@ const Feed = () => {
               key={t._id || t.id}
               id={t._id || t.id}
               username={t.author?.username || t.author?.name || "User"}
-              avatar={t.author?.avatar || defaultAvatar}
+              avatar={t.author?.avatar || "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=80&h=80&fit=crop&crop=face"}
               time={t.createdAt}
               content={t.text}
               mediaUrl={t.media && t.media.length ? t.media[0].url : undefined}
               mediaType={
                 t.media && t.media.length ? t.media[0].type : undefined
               }
-              likes={t.likes || 0}
+              likes={t.likesCount || 0}
               comments={t.comments || 0}
               authorId={t.author?._id}
               currentUserId={user?._id}

@@ -73,7 +73,7 @@ export function ThoughtCard({
       vid.muted = true;
     } catch (e) {}
 
-    const playIfVisible = async () => {
+     const playIfVisible = async () => {
       try {
         await vid.play();
         if (!cancelled) setIsPlaying(true);
@@ -180,8 +180,8 @@ export function ThoughtCard({
             to={`/thought/${id}`}
             className="mt-1 text-[15px] leading-relaxed"
           >
-            {content.length > 50
-              ? content.substring(0, 50) + "...see more"
+            {content.length > 100
+              ? content.substring(0, 100) + "...see more"
               : content}
           </Link>
 
