@@ -40,8 +40,6 @@ export const createThought = async (req, res) => {
         type: isImage ? "image" : "video",
         url: result.secure_url,
       });
-
-      console.log("File uploaded:", file.originalname, "->", result.secure_url);
     } catch (error) {
       console.error("Upload error for:", file.originalname, error.message);
       return res.status(400).json({
