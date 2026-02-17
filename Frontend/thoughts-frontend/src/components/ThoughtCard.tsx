@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Heart,
@@ -10,14 +10,13 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  ChevronRight,
   ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { openAsBlob } from "fs";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useMinuteTick } from "@/hooks/useMinuteTick";
 import { useFadeOnChange } from "@/hooks/useFadeOnChange";
-import { format, parseISO, isValid } from "date-fns";
+import { format, parseISO } from "date-fns";
 import api from "@/lib/api";
 import { VideoPlayer } from "@/components/VideoPlayer";
 
@@ -77,12 +76,10 @@ export function ThoughtCard({
       const res = await api.get(`/likes/status/${id}`);
       setLiked(res.data.liked);
     };
-
     fetchLikeStatus();
   }, [id, currentUserId]);
 
-  useMinuteTick(); // forces re-render every minute to update relative time display
-
+  useMinuteTick();
   const timeText = formatRelativeTime(time);
   const { displayValue, fade } = useFadeOnChange(timeText);
 
@@ -120,39 +117,31 @@ export function ThoughtCard({
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">{username}</span>
               <span
-                className={`text-[11px] text-gray-400 transition-opacity duration-150 ${
+                className={`text-[11px] text-muted-foreground transition-opacity duration-150 ${
                   fade ? "opacity-0" : "opacity-100"
                 }`}
                 title={format(parseISO(time), "dd MMM yyyy, hh:mm a")}
               >
                 • {timeText}
-              </span>{" "}
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              {onDelete &&
-                currentUserId &&
-                authorId &&
-                currentUserId === authorId && (
-                  <button
-                    onClick={() => onDelete(id)}
-                    className="text-xs text-destructive hover:underline mr-2"
-                  >
-                    Delete
-                  </button>
-                )}
+              {onDelete && currentUserId && authorId && currentUserId === authorId && (
+                <button
+                  onClick={() => onDelete(id)}
+                  className="text-xs text-destructive hover:underline mr-2"
+                >
+                  Delete
+                </button>
+              )}
               <button className="p-1 rounded-full hover:bg-secondary transition-colors">
                 <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
               </button>
             </div>
           </div>
 
-          <Link
-            to={`/thought/${id}`}
-            className="mt-1 text-[15px] leading-relaxed"
-          >
-            {content.length > 100
-              ? content.substring(0, 100) + "...see more"
-              : content}
+          <Link to={`/thought/${id}`} className="mt-1 text-[15px] leading-relaxed">
+            {content.length > 100 ? content.substring(0, 100) + "...see more" : content}
           </Link>
 
           {/* Media gallery */}
@@ -208,10 +197,7 @@ export function ThoughtCard({
           )}
 
           <div className="flex items-center gap-5 mt-3">
-            <button
-              onClick={handleLike}
-              className="flex items-center gap-1.5 group"
-            >
+            <button onClick={handleLike} className="flex items-center gap-1.5 group">
               <Heart
                 className={`h-[18px] w-[18px] transition-all duration-200 ${
                   liked
@@ -220,26 +206,15 @@ export function ThoughtCard({
                 }`}
               />
               {likeCount > 0 && (
-                <span
-                  className={`text-xs ${
-                    liked ? "text-destructive" : "text-muted-foreground"
-                  }`}
-                >
+                <span className={`text-xs ${liked ? "text-destructive" : "text-muted-foreground"}`}>
                   {likeCount}
                 </span>
               )}
             </button>
 
-            <Link
-              to={`/thought/${id}`}
-              className="flex items-center gap-1.5 group"
-            >
+            <Link to={`/thought/${id}`} className="flex items-center gap-1.5 group">
               <MessageCircle className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
-              {comments > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {comments}
-                </span>
-              )}
+              {comments > 0 && <span className="text-xs text-muted-foreground">{comments}</span>}
             </Link>
 
             <button className="group">
