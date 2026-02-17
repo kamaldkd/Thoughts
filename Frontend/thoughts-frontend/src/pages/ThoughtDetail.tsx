@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import ThoughtSkeleton from "@/components/ThoughtSkeleton";
-
+import defaultAvatar from "../assets/hero-bg.jpg";
 export default function ThoughtDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -184,8 +184,7 @@ export default function ThoughtDetail() {
           <div className="flex gap-3">
             <img
               src={
-                thought.author.avatar ||
-                "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=80&h=80&fit=crop&crop=face"
+                thought.author.avatar ||defaultAvatar 
               }
               alt={thought.author.username}
               className="h-12 w-12 rounded-full object-cover flex-shrink-0 bg-muted"
