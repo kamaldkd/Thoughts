@@ -52,10 +52,20 @@ export default function ThoughtDetail() {
     fetchThought();
   }, [id]);
 
-  const mediaUrl =
-    thought?.media?.length ? thought.media[0].url : undefined;
-  const mediaType =
-    thought?.media?.length ? thought.media[0].type : undefined;
+  useEffect(() => {
+    if (!thought?._id) return;
+
+    const fetchLikeStatus = async () => {
+      const res = await api.get(`/likes/status/${thought._id}`);
+      setLiked(res.data.liked);
+      setLikeCount(thought.likesCount || 0);
+    };
+
+    fetchLikeStatus();
+  }, [thought?._id]);
+
+  const mediaUrl = thought?.media?.length ? thought.media[0].url : undefined;
+  const mediaType = thought?.media?.length ? thought.media[0].type : undefined;
 
   // ✅ VIDEO EFFECT (ALWAYS CALLED)
   useEffect(() => {
@@ -83,6 +93,18 @@ export default function ThoughtDetail() {
     return () => observer.disconnect();
   }, [mediaUrl, mediaType]);
 
+  const handleLike = async () => {
+    setLiked((prev) => !prev);
+    setLikeCount((c) => (liked ? c - 1 : c + 1));
+
+    try {
+      await api.post(`/likes/toggle/${thought._id}`);
+    } catch {
+      setLiked((prev) => !prev);
+      setLikeCount((c) => (liked ? c + 1 : c - 1));
+    }
+  };
+
   // ⬇️ NOW SAFE TO RETURN CONDITIONALLY ⬇️
   if (loading) {
     return (
@@ -97,11 +119,6 @@ export default function ThoughtDetail() {
   }
 
   const timeText = formatRelativeTime(thought.createdAt);
-  
-  const handleLike = () => {
-    setLiked((l) => !l);
-    setLikeCount((c) => (liked ? c - 1 : c + 1));
-  };
 
   const handleComment = () => {
     if (!commentText.trim()) return;
@@ -119,8 +136,6 @@ export default function ThoughtDetail() {
     ]);
     setCommentText("");
   };
-
-  
 
   const handleVideoClick = () => {
     // toggle mute/unmute on click
@@ -262,7 +277,7 @@ export default function ThoughtDetail() {
           {/* Stats bar */}
           <div className="flex items-center gap-6 mt-4 py-3 border-t border-border/40 text-sm text-muted-foreground">
             <span>
-              <strong className="text-foreground">{thought.likesCount}</strong>{" "}
+              <strong className="text-foreground">{likeCount}</strong>{" "}
               likes
             </span>
             <span>

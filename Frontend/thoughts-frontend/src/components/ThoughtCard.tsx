@@ -16,6 +16,7 @@ import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useMinuteTick } from "@/hooks/useMinuteTick";
 import { useFadeOnChange } from "@/hooks/useFadeOnChange";
 import { format, parseISO, isValid } from "date-fns";
+import api from "@/lib/api";
 
 interface ThoughtProps {
   id: number;
@@ -52,15 +53,33 @@ export function ThoughtCard({
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
 
+  useEffect(() => {
+    const fetchStatus = async () => {
+      if (!currentUserId) return;
+      const res = await api.get(`/likes/status/${id}`);
+      setLiked(res.data.liked);
+    };
+
+    fetchStatus();
+  }, [id, currentUserId]);
+
   useMinuteTick(); // forces re-render every minute to update relative time display
 
   const timeText = formatRelativeTime(time);
   const { displayValue, fade } = useFadeOnChange(timeText);
 
-  const handleLike = () => {
-    setLiked((l) => !l);
-    setLikeCount((c) => (liked ? c - 1 : c + 1));
-  };
+  const handleLike = async () => {
+  setLiked((prev) => !prev);
+  setLikeCount((c) => (liked ? c - 1 : c + 1));
+
+  try {
+    await api.post(`/likes/toggle/${id}`);
+  } catch {
+    // rollback
+    setLiked((prev) => !prev);
+    setLikeCount((c) => (liked ? c + 1 : c - 1));
+  }
+};
 
   useEffect(() => {
     const vid = videoRef.current;
@@ -73,7 +92,7 @@ export function ThoughtCard({
       vid.muted = true;
     } catch (e) {}
 
-     const playIfVisible = async () => {
+    const playIfVisible = async () => {
       try {
         await vid.play();
         if (!cancelled) setIsPlaying(true);
