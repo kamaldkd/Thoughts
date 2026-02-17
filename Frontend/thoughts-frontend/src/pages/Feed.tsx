@@ -139,6 +139,8 @@ const Feed = () => {
       </div>
     );
 
+    console.log("Rendering feed with thoughts:", thoughts[0], thoughts[0].author);
+
   return (
     // adding some extra bottom padding to ensure last thought isn't hidden behind mobile FAB
     // adding loading skeletons to give better feedback while loading thoughts or fetching more or while server is slow

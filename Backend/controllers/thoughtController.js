@@ -115,8 +115,19 @@ export const getThoughtsOfUser = async (req, res) => {
   const userId = req.userId;
 
   const thoughts = await Thought.find({ author: userId })
-    .populate("author", "username name email avatar")
+    .populate({
+      path: "author",
+      model: "User",
+      select: {
+        username: 1,
+        name: 1,
+        email: 1,
+        avatar: 1,
+      },
+    })
     .sort({ createdAt: -1 });
+
+    console.log(`Fetched ${thoughts.length} thoughts for user ${userId}`);
   if (!thoughts.length) {
     return res.status(404).json({ message: "No thoughts found for this user" });
   }
