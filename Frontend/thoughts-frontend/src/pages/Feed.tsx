@@ -119,9 +119,6 @@ const Feed = () => {
     );
   }
 
-  // Initial loading state
-  if (loading) return <p className="p-4">Loading feed…</p>;
-
   if (unauth)
     return (
       <div className="text-center py-12">
@@ -160,7 +157,7 @@ const Feed = () => {
         </div> */}
 
         {/* Feed */}
-        {thoughts.length === 0 ? (
+        {!loading && thoughts.length === 0 ? (
           <p className="text-muted-foreground">
             No thoughts yet — be the first to post!
           </p>

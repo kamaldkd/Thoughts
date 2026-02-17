@@ -54,13 +54,13 @@ export function ThoughtCard({
   const [showControls, setShowControls] = useState(false);
 
   useEffect(() => {
-    const fetchStatus = async () => {
+    const fetchLikeStatus = async () => {
       if (!currentUserId) return;
       const res = await api.get(`/likes/status/${id}`);
       setLiked(res.data.liked);
     };
 
-    fetchStatus();
+    fetchLikeStatus();
   }, [id, currentUserId]);
 
   useMinuteTick(); // forces re-render every minute to update relative time display
