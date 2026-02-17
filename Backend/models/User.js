@@ -36,16 +36,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-
-    likesCount: {
-      type: Number,
-      default: 0,
-    },
-
-    commentsCount: {
-      type: Number,
-      default: 0,
-    },
   },
   {
     timestamps: true,
