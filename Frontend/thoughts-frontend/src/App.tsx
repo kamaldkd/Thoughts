@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { ActivityBadgeProvider } from "@/hooks/useActivityBadge";
 import { Layout } from "./components/Layout";
 import Index from "./pages/Index";
 import Feed from "./pages/Feed";
@@ -14,6 +15,7 @@ import Register from "./pages/Register";
 import ThoughtDetail from "./pages/ThoughtDetail";
 import Explore from "./pages/Explore";
 import EditProfile from "./pages/EditProfile";
+import Activity from "./pages/Activity";
 import { useEffect, useState } from "react";
 import AppLoader from "@/components/AppLoader";
 
@@ -88,7 +90,7 @@ function AppRoutes() {
           path="/activity"
           element={
             <ProtectedRoute>
-              <Feed />
+              <Activity />
             </ProtectedRoute>
           }
         />
@@ -115,11 +117,13 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
+          <ActivityBadgeProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </ActivityBadgeProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
