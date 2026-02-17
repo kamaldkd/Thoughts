@@ -69,6 +69,25 @@ export function ThoughtCard({
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
+
+  const handleDragStart = (clientX: number) => {
+    setDragStartX(clientX);
+  };
+
+  const handleDragEnd = (clientX: number) => {
+    if (dragStartX === null) return;
+
+    const diff = dragStartX - clientX;
+
+    if (diff > 50 && currentSlide < mediaItems.length - 1) {
+      setCurrentSlide((s) => s + 1);
+    } else if (diff < -50 && currentSlide > 0) {
+      setCurrentSlide((s) => s - 1);
+    }
+
+    setDragStartX(null);
+  };
 
   useEffect(() => {
     const fetchLikeStatus = async () => {
@@ -126,54 +145,97 @@ export function ThoughtCard({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {onDelete && currentUserId && authorId && currentUserId === authorId && (
-                <button
-                  onClick={() => onDelete(id)}
-                  className="text-xs text-destructive hover:underline mr-2"
-                >
-                  Delete
-                </button>
-              )}
+              {onDelete &&
+                currentUserId &&
+                authorId &&
+                currentUserId === authorId && (
+                  <button
+                    onClick={() => onDelete(id)}
+                    className="text-xs text-destructive hover:underline mr-2"
+                  >
+                    Delete
+                  </button>
+                )}
               <button className="p-1 rounded-full hover:bg-secondary transition-colors">
                 <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
               </button>
             </div>
           </div>
 
-          <Link to={`/thought/${id}`} className="mt-1 text-[15px] leading-relaxed">
-            {content.length > 100 ? content.substring(0, 100) + "...see more" : content}
+          <Link
+            to={`/thought/${id}`}
+            className="mt-1 text-[15px] leading-relaxed"
+          >
+            {content.length > 100
+              ? content.substring(0, 100) + "...see more"
+              : content}
           </Link>
 
           {/* Media gallery */}
           {mediaItems.length > 0 && (
-            <div className="mt-3 rounded-xl overflow-hidden border border-border/40 relative">
-              {/* Current slide */}
-              {mediaItems[currentSlide].type === "image" ? (
-                <img
-                  src={mediaItems[currentSlide].url}
-                  alt={`Post media ${currentSlide + 1}`}
-                  className="w-full object-cover max-h-80"
-                />
-              ) : (
-                <VideoPlayer src={mediaItems[currentSlide].url} />
+            <div
+              className="mt-3 rounded-xl overflow-hidden border border-border/40 relative select-none cursor-grab active:cursor-grabbing"
+              onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+              onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].clientX)}
+              onMouseDown={(e) => handleDragStart(e.clientX)}
+              onMouseUp={(e) => handleDragEnd(e.clientX)}
+            >
+              {mediaItems.length > 1 && (
+                <div className="absolute top-2 left-2 right-2 z-20 flex gap-1">
+                  {mediaItems.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                        i === currentSlide
+                          ? "bg-foreground"
+                          : "bg-foreground/30"
+                      }`}
+                    />
+                  ))}
+                </div>
               )}
+              {/* Current slide */}
+              <div className="relative w-full overflow-hidden">
+                <div
+                  className="flex transition-transform duration-300 ease-out"
+                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                >
+                  {mediaItems.map((item, index) => (
+                    <div
+                      key={index}
+                      className="w-full flex-shrink-0 aspect-[4/5] bg-black flex items-center justify-center"
+                    >
+                      {item.type === "image" ? (
+                        <img
+                          src={item.url}
+                          alt={`Post media ${index + 1}`}
+                          className="w-full h-full object-contain"
+                          draggable={false}
+                        />
+                      ) : (
+                          <VideoPlayer src={item.url} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {/* Navigation arrows for multiple items */}
               {mediaItems.length > 1 && (
                 <>
                   <button
                     onClick={() => goToSlide("prev")}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
+                    className="absolute hidden md:flex left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
                     aria-label="Previous media"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-4 h-4 hidden md:flex" />
                   </button>
                   <button
                     onClick={() => goToSlide("next")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
+                    className="absolute hidden md:flex right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
                     aria-label="Next media"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4 hidden md:flex" />
                   </button>
 
                   {/* Dot indicators */}
@@ -197,7 +259,10 @@ export function ThoughtCard({
           )}
 
           <div className="flex items-center gap-5 mt-3">
-            <button onClick={handleLike} className="flex items-center gap-1.5 group">
+            <button
+              onClick={handleLike}
+              className="flex items-center gap-1.5 group"
+            >
               <Heart
                 className={`h-[18px] w-[18px] transition-all duration-200 ${
                   liked
@@ -206,15 +271,26 @@ export function ThoughtCard({
                 }`}
               />
               {likeCount > 0 && (
-                <span className={`text-xs ${liked ? "text-destructive" : "text-muted-foreground"}`}>
+                <span
+                  className={`text-xs ${
+                    liked ? "text-destructive" : "text-muted-foreground"
+                  }`}
+                >
                   {likeCount}
                 </span>
               )}
             </button>
 
-            <Link to={`/thought/${id}`} className="flex items-center gap-1.5 group">
+            <Link
+              to={`/thought/${id}`}
+              className="flex items-center gap-1.5 group"
+            >
               <MessageCircle className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
-              {comments > 0 && <span className="text-xs text-muted-foreground">{comments}</span>}
+              {comments > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {comments}
+                </span>
+              )}
             </Link>
 
             <button className="group">
