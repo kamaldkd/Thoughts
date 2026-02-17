@@ -223,7 +223,7 @@ export function ThoughtCard({
               {/* Navigation arrows for multiple items */}
               {mediaItems.length > 1 && (
                 <>
-                  <button
+                  {/* <button
                     onClick={() => goToSlide("prev")}
                     className="absolute md:flex left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
                     aria-label="Previous media"
@@ -232,11 +232,11 @@ export function ThoughtCard({
                   </button>
                   <button
                     onClick={() => goToSlide("next")}
-                    className="absolute md:flex right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
+                    className="absolute md:flex  right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
                     aria-label="Next media"
                   >
                     <ChevronRight className="w-4 h-4 hidden md:flex" />
-                  </button>
+                  </button> */}
 
                   {/* Dot indicators */}
                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
