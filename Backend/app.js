@@ -3,6 +3,7 @@ import User from "./models/User.js";
 import { errorHandler } from "./middleware/errorMiddleware.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import likeRoutes from "./routes/likeRoutes.js";
 import thoughtRoutes from "./routes/thoughtRoutes.js";
 import cors from "cors";
 import passport from "passport";
@@ -24,6 +25,7 @@ app.use(passport.initialize());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/thoughts", thoughtRoutes);
+app.use("/api/likes", likeRoutes);
 
 app.get("/", (req, res) => {
   res.send("Thoughts API is running");
