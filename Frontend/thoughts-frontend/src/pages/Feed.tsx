@@ -170,6 +170,7 @@ const Feed = () => {
               avatar={t.author?.avatar || defaultAvatar}
               time={t.createdAt}
               content={t.text}
+              media={t.media}
               mediaUrl={t.media && t.media.length ? t.media[0].url : undefined}
               mediaType={
                 t.media && t.media.length ? t.media[0].type : undefined
