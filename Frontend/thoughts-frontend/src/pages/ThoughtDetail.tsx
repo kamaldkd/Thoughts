@@ -184,7 +184,7 @@ export default function ThoughtDetail() {
           <div className="flex gap-3">
             <img
               src={
-                thought.author.avatar ||defaultAvatar 
+                thought.author.avatar || defaultAvatar 
               }
               alt={thought.author.username}
               className="h-12 w-12 rounded-full object-cover flex-shrink-0 bg-muted"
