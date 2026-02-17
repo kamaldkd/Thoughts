@@ -225,14 +225,14 @@ export function ThoughtCard({
                 <>
                   <button
                     onClick={() => goToSlide("prev")}
-                    className="absolute hidden md:flex left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
+                    className="absolute md:flex left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
                     aria-label="Previous media"
                   >
                     <ChevronLeft className="w-4 h-4 hidden md:flex" />
                   </button>
                   <button
                     onClick={() => goToSlide("next")}
-                    className="absolute hidden md:flex right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
+                    className="absolute md:flex right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
                     aria-label="Next media"
                   >
                     <ChevronRight className="w-4 h-4 hidden md:flex" />
