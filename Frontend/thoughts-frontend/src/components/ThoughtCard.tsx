@@ -10,6 +10,8 @@ import {
   Pause,
   Volume2,
   VolumeX,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { openAsBlob } from "fs";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
@@ -17,6 +19,12 @@ import { useMinuteTick } from "@/hooks/useMinuteTick";
 import { useFadeOnChange } from "@/hooks/useFadeOnChange";
 import { format, parseISO, isValid } from "date-fns";
 import api from "@/lib/api";
+import { VideoPlayer } from "@/components/VideoPlayer";
+
+interface MediaItem {
+  url: string;
+  type: "image" | "video";
+}
 
 interface ThoughtProps {
   id: number;
@@ -24,6 +32,7 @@ interface ThoughtProps {
   avatar: string;
   time: string;
   content: string;
+  media?: MediaItem[];
   mediaUrl?: string;
   mediaType?: string;
   likes: number;
@@ -37,6 +46,7 @@ export function ThoughtCard({
   avatar,
   time,
   content,
+  media,
   mediaUrl,
   mediaType,
   likes,
@@ -46,12 +56,20 @@ export function ThoughtCard({
   currentUserId,
   onDelete,
 }: ThoughtProps & { onDelete?: (id: any) => void }) {
+  // Normalize media: support both new `media[]` and legacy single `mediaUrl`
+  const mediaItems: MediaItem[] =
+    media && media.length > 0
+      ? media
+      : mediaUrl
+      ? [{ url: mediaUrl, type: (mediaType as "image" | "video") || "image" }]
+      : [];
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     const fetchLikeStatus = async () => {
@@ -69,91 +87,24 @@ export function ThoughtCard({
   const { displayValue, fade } = useFadeOnChange(timeText);
 
   const handleLike = async () => {
-  setLiked((prev) => !prev);
-  setLikeCount((c) => (liked ? c - 1 : c + 1));
-
-  try {
-    await api.post(`/likes/toggle/${id}`);
-  } catch {
-    // rollback
     setLiked((prev) => !prev);
-    setLikeCount((c) => (liked ? c + 1 : c - 1));
-  }
-};
+    setLikeCount((c) => (liked ? c - 1 : c + 1));
 
-  useEffect(() => {
-    const vid = videoRef.current;
-    if (!vid) return;
-
-    let cancelled = false;
-
-    // ensure video is muted by default so autoplay is allowed
     try {
-      vid.muted = true;
-    } catch (e) {}
-
-    const playIfVisible = async () => {
-      try {
-        await vid.play();
-        if (!cancelled) setIsPlaying(true);
-      } catch (e) {
-        // autoplay might be blocked if not muted; keep muted by default
-      }
-    };
-
-    const pauseIfHidden = () => {
-      try {
-        vid.pause();
-      } catch (e) {}
-      setIsPlaying(false);
-    };
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry && entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-          playIfVisible();
-        } else {
-          pauseIfHidden();
-        }
-      },
-      { threshold: [0.5] }
-    );
-
-    observer.observe(vid);
-
-    return () => {
-      cancelled = true;
-      observer.disconnect();
-    };
-  }, [mediaUrl]);
-
-  const handleVideoClick = () => {
-    // toggle mute/unmute on click
-    const vid = videoRef.current;
-    if (!vid) return;
-    const newMuted = !isMuted;
-    vid.muted = newMuted;
-    setIsMuted(newMuted);
-    // if user unmutes, ensure playback
-    if (!newMuted) {
-      vid.play().catch(() => {});
-      setIsPlaying(true);
+      await api.post(`/likes/toggle/${id}`);
+    } catch {
+      // rollback
+      setLiked((prev) => !prev);
+      setLikeCount((c) => (liked ? c + 1 : c - 1));
     }
   };
 
-  const togglePlay = async () => {
-    const vid = videoRef.current;
-    if (!vid) return;
-    try {
-      if (vid.paused) {
-        await vid.play();
-        setIsPlaying(true);
-      } else {
-        vid.pause();
-        setIsPlaying(false);
-      }
-    } catch (e) {}
+  const goToSlide = (dir: "prev" | "next") => {
+    setCurrentSlide((prev) =>
+      dir === "prev"
+        ? (prev - 1 + mediaItems.length) % mediaItems.length
+        : (prev + 1) % mediaItems.length
+    );
   };
 
   return (
@@ -204,62 +155,54 @@ export function ThoughtCard({
               : content}
           </Link>
 
-          {mediaUrl && mediaType === "image" && (
-            <div className="mt-3 rounded-xl overflow-hidden border border-border/40">
-              <img
-                src={mediaUrl}
-                alt="Post"
-                className="w-full object-cover max-h-80"
-              />
-            </div>
-          )}
-
-          {mediaUrl && mediaType === "video" && (
-            <div
-              className="mt-3 rounded-xl overflow-hidden border border-border/40 relative"
-              onMouseEnter={() => setShowControls(true)}
-              onMouseLeave={() => setShowControls(false)}
-            >
-              <video
-                ref={videoRef}
-                src={mediaUrl}
-                muted={isMuted}
-                loop
-                playsInline
-                preload="metadata"
-                onContextMenu={(e) => e.preventDefault()}
-                disablePictureInPicture
-                controlsList="nodownload noremoteplayback"
-                className="w-full object-cover max-h-80 bg-black"
-              />
-
-              {/* Center play/pause overlay */}
-              {showControls && (
-                <button
-                  onClick={togglePlay}
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 flex items-center justify-center text-white z-10"
-                  aria-label={isPlaying ? "Pause video" : "Play video"}
-                >
-                  {isPlaying ? (
-                    <Pause className="w-6 h-6" />
-                  ) : (
-                    <Play className="w-6 h-6" />
-                  )}
-                </button>
+          {/* Media gallery */}
+          {mediaItems.length > 0 && (
+            <div className="mt-3 rounded-xl overflow-hidden border border-border/40 relative">
+              {/* Current slide */}
+              {mediaItems[currentSlide].type === "image" ? (
+                <img
+                  src={mediaItems[currentSlide].url}
+                  alt={`Post media ${currentSlide + 1}`}
+                  className="w-full object-cover max-h-80"
+                />
+              ) : (
+                <VideoPlayer src={mediaItems[currentSlide].url} />
               )}
 
-              {/* Top-right mute toggle */}
-              {showControls && (
-                <button
-                  onClick={handleVideoClick}
-                  className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white"
-                >
-                  {isMuted ? (
-                    <VolumeX className="w-4 h-4" />
-                  ) : (
-                    <Volume2 className="w-4 h-4" />
-                  )}
-                </button>
+              {/* Navigation arrows for multiple items */}
+              {mediaItems.length > 1 && (
+                <>
+                  <button
+                    onClick={() => goToSlide("prev")}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
+                    aria-label="Previous media"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => goToSlide("next")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border border-border flex items-center justify-center text-foreground hover:bg-background transition-colors z-10"
+                    aria-label="Next media"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+
+                  {/* Dot indicators */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                    {mediaItems.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentSlide(i)}
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${
+                          i === currentSlide
+                            ? "bg-primary w-3"
+                            : "bg-muted-foreground/50"
+                        }`}
+                        aria-label={`Go to media ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           )}
