@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
-import { Feather } from "lucide-react";
+import { Feather, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export function Navbar() {
@@ -39,7 +39,7 @@ export function Navbar() {
           )}
           {!loading && (
             <>
-              {!isLoggedIn && !user && (
+              {!isLoggedIn && !user ? (
                 <>
                   <Link to="/login" className="inline-flex text-sm">
                     Login
@@ -48,6 +48,28 @@ export function Navbar() {
                     Sign up
                   </Link>
                 </>
+              ) : (
+                isLoggedIn && user && !isLanding && (
+                  <Link
+                    to={`/profile/${user.username}`}
+                    aria-label="Profile"
+                    className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 active:scale-95 hover:opacity-80"
+                    style={{
+                      background: "hsl(var(--primary) / 0.12)",
+                      border: "1.5px solid hsl(var(--primary) / 0.3)",
+                    }}
+                  >
+                    <User
+                      style={{
+                        width: 16,
+                        height: 16,
+                        stroke: "hsl(var(--primary))",
+                        strokeWidth: 2,
+                        fill: "transparent",
+                      }}
+                    />
+                  </Link>
+                )
               )}
             </>
           )}

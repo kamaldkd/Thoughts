@@ -198,13 +198,13 @@ const Feed = () => {
       </div>
 
       {/* Mobile FAB */}
-      <button
+      {/* <button
         onClick={() => setCreateOpen(true)}
         className="fixed bottom-20 right-4 h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
         style={{ boxShadow: "var(--shadow-elevated)" }}
       >
         <PenSquare className="h-5 w-5" />
-      </button>
+      </button> */}
 
       <CreateThoughtModal
         open={createOpen}
