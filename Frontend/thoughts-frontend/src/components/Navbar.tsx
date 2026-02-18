@@ -51,7 +51,7 @@ export function Navbar() {
               ) : (
                 isLoggedIn && user && !isLanding && (
                   <Link
-                    to={`/profile/${user.username}`}
+                    to={`/profile`}
                     aria-label="Profile"
                     className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 active:scale-95 hover:opacity-80"
                     style={{
