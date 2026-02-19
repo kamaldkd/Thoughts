@@ -19,13 +19,16 @@ export const updateProfile = async (req, res) => {
     }
   }
 
+  const currUser = await User.findById(userId); // ensure user exists, otherwise findByIdAndUpdate would return null
+
   // username uniqueness check
   if (updates.username) {
-    const exists = await User.exists({
-      username: updates.username,
-      _id: { $ne: userId },
-    });
-
+    if (currUser.username !== updates.username) {
+      const exists = await User.exists({
+        username: updates.username,
+        _id: { $ne: userId },
+      });
+    }
     if (exists) {
       return res.status(400).json({ message: "Username already taken" });
     }
@@ -59,17 +62,16 @@ export const getMe = async (req, res) => {
 export const getUserByUsername = async (req, res) => {
   const { username } = req.params;
 
-   // 🔴 GUARD: never assume req.userId exists
+  // 🔴 GUARD: never assume req.userId exists
   if (!req.userId) {
     throw new ExpressError(401, "Unauthorized");
   }
-  
+
   const currentUserId = req.userId; // optional (public profile)
 
-  const user = await User.findOne({ username })
-    .select(
-      "username name bio avatar website socialLinks followersCount followingCount thoughtsCount createdAt"
-    );
+  const user = await User.findOne({ username }).select(
+    "username name bio avatar website socialLinks followersCount followingCount thoughtsCount createdAt"
+  );
 
   if (!user) {
     return res.status(404).json({ message: "User not found" });

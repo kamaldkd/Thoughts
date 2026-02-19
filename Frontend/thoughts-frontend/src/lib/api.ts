@@ -47,3 +47,7 @@ export function getMyThoughts() {
 export function getUserProfile(userId: string) {
   return api.get(`/users/${userId}`);
 }
+
+export function updateProfile(data: any) {
+  return api.patch("/users/me", data);
+}

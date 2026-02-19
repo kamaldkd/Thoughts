@@ -66,8 +66,7 @@ const Profile = () => {
           />
           <h1 className="text-xl font-semibold">{user?.username || "User"}</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
-            Designer & thinker. Exploring the intersection of simplicity and
-            beauty.
+            Just a person sharing their thoughts with the world.
           </p>
 
           {/* Stats */}

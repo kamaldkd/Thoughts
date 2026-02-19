@@ -6,6 +6,15 @@ const userSchema = Joi.object({
   username: Joi.string().min(3).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
+  bio: Joi.string().max(160).allow(""),
+  avatar: Joi.string().allow(""),
+  website: Joi.string().uri().allow(""),
+  socialLinks: Joi.object({
+    github: Joi.string().uri().allow(""),
+    linkedin: Joi.string().uri().allow(""),
+    twitter: Joi.string().uri().allow(""),
+    instagram: Joi.string().uri().allow(""),
+  }).allow(null),
 });
 
 export const validateUser = (req, res, next) => {

@@ -125,7 +125,6 @@ export const getThoughtsOfUser = async (req, res) => {
     })
     .sort({ createdAt: -1 });
 
-  console.log(`Fetched ${thoughts.length} thoughts for user ${userId}`);
   if (!thoughts.length) {
     return res.status(404).json({ message: "No thoughts found for this user" });
   }
@@ -181,7 +180,6 @@ export const deleteThought = async (req, res) => {
       await cloudinary.uploader.destroy(`thoughts/${publicId}`, {
         resource_type: resourceType,
       });
-      console.log("Deleted media from Cloudinary:", mediaItem.url);
     } catch (error) {
       console.error(
         "Error deleting media from Cloudinary:",
