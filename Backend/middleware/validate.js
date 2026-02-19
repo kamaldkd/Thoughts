@@ -2,6 +2,7 @@ import Joi from "joi";
 import ExpressError from "../utils/ExpressError.js";
 
 const userSchema = Joi.object({
+  name: Joi.string().min(3).required(),
   username: Joi.string().min(3).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),

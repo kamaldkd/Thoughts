@@ -35,9 +35,9 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Index />} />
-        <Route path="/register" element={<Register />} />
         <Route
           path="/feed"
           element={

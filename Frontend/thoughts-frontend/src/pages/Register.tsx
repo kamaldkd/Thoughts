@@ -6,6 +6,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function Register() {
     setError("");
     setIsLoading(true);
     try {
-      await register(username, email, password);
+      await register(name, username, email, password);
       navigate("/feed");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Registration failed");
@@ -33,6 +34,13 @@ export default function Register() {
       >
         <h2 className="text-2xl font-semibold mb-4">Create an account</h2>
         {error && <div className="text-red-500 mb-4 text-sm">{error}</div>}
+        <input
+          className="w-full p-3 mb-2 bg-transparent border border-border rounded"
+          placeholder="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
         <input
           className="w-full p-3 mb-2 bg-transparent border border-border rounded"
           placeholder="Username"
