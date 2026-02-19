@@ -125,7 +125,7 @@ export const getThoughtsOfUser = async (req, res) => {
     })
     .sort({ createdAt: -1 });
 
-    console.log(`Fetched ${thoughts.length} thoughts for user ${userId}`);
+  console.log(`Fetched ${thoughts.length} thoughts for user ${userId}`);
   if (!thoughts.length) {
     return res.status(404).json({ message: "No thoughts found for this user" });
   }
@@ -192,4 +192,44 @@ export const deleteThought = async (req, res) => {
   }
   await Thought.findByIdAndDelete(id);
   res.json({ message: "Thought deleted successfully" });
+};
+
+export const getUserThoughts = async (req, res) => {
+  const { username } = req.params;
+  const limit = Math.min(Number(req.query.limit) || 10, 30);
+  const cursor = req.query.cursor;
+
+  // 1️⃣ find user
+  const user = await User.findOne({ username }).select("_id");
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // 2️⃣ build query
+  const query = {
+    author: user._id,
+  };
+
+  if (cursor) {
+    query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+  }
+
+  // 3️⃣ fetch thoughts
+  const thoughts = await Thought.find(query)
+    .sort({ _id: -1 })
+    .limit(limit + 1)
+    .select("text media likesCount commentsCount createdAt");
+
+  // 4️⃣ pagination logic
+  const hasNextPage = thoughts.length > limit;
+  if (hasNextPage) thoughts.pop();
+
+  const nextCursor =
+    thoughts.length > 0 ? thoughts[thoughts.length - 1]._id : null;
+
+  res.status(200).json({
+    thoughts,
+    nextCursor,
+    hasNextPage,
+  });
 };
