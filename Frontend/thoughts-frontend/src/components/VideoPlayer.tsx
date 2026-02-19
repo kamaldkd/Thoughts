@@ -16,7 +16,9 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     if (!vid) return;
 
     let cancelled = false;
-    try { vid.muted = true; } catch {}
+    try {
+      vid.muted = true;
+    } catch {}
 
     const playIfVisible = async () => {
       try {
@@ -26,7 +28,9 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     };
 
     const pauseIfHidden = () => {
-      try { vid.pause(); } catch {}
+      try {
+        vid.pause();
+      } catch {}
       setIsPlaying(false);
     };
 
@@ -43,7 +47,10 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     );
 
     observer.observe(vid);
-    return () => { cancelled = true; observer.disconnect(); };
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
   }, [src]);
 
   const toggleMute = () => {
@@ -62,8 +69,13 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     const vid = videoRef.current;
     if (!vid) return;
     try {
-      if (vid.paused) { await vid.play(); setIsPlaying(true); }
-      else { vid.pause(); setIsPlaying(false); }
+      if (vid.paused) {
+        await vid.play();
+        setIsPlaying(true);
+      } else {
+        vid.pause();
+        setIsPlaying(false);
+      }
     } catch {}
   };
 
@@ -83,7 +95,8 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
         onContextMenu={(e) => e.preventDefault()}
         disablePictureInPicture
         controlsList="nodownload noremoteplayback"
-        className="w-full object-cover max-h-80 bg-black"
+        className="w-full block bg-black"
+        style={{ display: "block", maxHeight: 520, objectFit: "contain" }}
       />
 
       {showControls && (
@@ -92,7 +105,11 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 flex items-center justify-center text-white z-10"
           aria-label={isPlaying ? "Pause video" : "Play video"}
         >
-          {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+          {isPlaying ? (
+            <Pause className="w-6 h-6" />
+          ) : (
+            <Play className="w-6 h-6" />
+          )}
         </button>
       )}
 
@@ -101,7 +118,11 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
           onClick={toggleMute}
           className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white"
         >
-          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          {isMuted ? (
+            <VolumeX className="w-4 h-4" />
+          ) : (
+            <Volume2 className="w-4 h-4" />
+          )}
         </button>
       )}
     </div>
