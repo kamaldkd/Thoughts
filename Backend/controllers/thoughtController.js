@@ -77,7 +77,7 @@ export const getThoughts = async (req, res) => {
   }
 
   const thoughts = await Thought.find(query)
-    .populate("author", "username name email")
+    .populate("author", "username name email avatar")
     .sort({ _id: -1 }) // newest first
     .limit(limit);
 

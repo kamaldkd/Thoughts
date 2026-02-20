@@ -16,6 +16,7 @@ import ThoughtDetail from "./pages/ThoughtDetail";
 import Explore from "./pages/Explore";
 import EditProfile from "./pages/EditProfile";
 import Activity from "./pages/Activity";
+import UserProfile from "./pages/UserProfile";
 import { useEffect, useState } from "react";
 import AppLoader from "@/components/AppLoader";
 
@@ -25,7 +26,12 @@ const queryClient = new QueryClient();
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, loading } = useAuth();
 
-  if (loading) return <div><AppLoader /></div>;
+  if (loading)
+    return (
+      <div>
+        <AppLoader />
+      </div>
+    );
   if (!isLoggedIn) return <Navigate to="/login" />;
 
   return children;
@@ -36,6 +42,14 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route
+        path="/profile/:username"
+        element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        }
+      />
       <Route element={<Layout />}>
         <Route path="/" element={<Index />} />
         <Route
