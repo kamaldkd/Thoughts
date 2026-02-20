@@ -51,7 +51,7 @@ export const login = async (req, res) => {
   }
 
   // 1. check if user exists
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select("+password");;
   if (!user) {
     throw new ExpressError(400, "Invalid email or password");
   }

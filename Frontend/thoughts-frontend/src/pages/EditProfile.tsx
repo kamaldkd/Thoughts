@@ -6,29 +6,61 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import { updateProfile } from "@/lib/api";
 
 export default function EditProfile() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth(); // make sure setUser exists in your auth context
 
-  const [username, setUsername] = useState(user?.username || "alex_design");
-  const [bio, setBio] = useState(
-    "Designer & thinker. Exploring the intersection of simplicity and beauty."
-  );
-  const [email, setEmail] = useState(user?.email || "alex@example.com");
-  const [website, setWebsite] = useState("");
-  const [location, setLocation] = useState("");
+  const [name, setName] = useState(user?.name || "");
+  const [username, setUsername] = useState(user?.username || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [bio, setBio] = useState(user?.bio || "");
+  const [website, setWebsite] = useState(user?.website || "");
+  const [location, setLocation] = useState(user?.location || "");
+  const [isPrivate, setIsPrivate] = useState(user?.isPrivate || false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
 
+  // 🔥 Handle avatar change
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAvatarFile(e.target.files[0]);
+    }
+  };
+
+  // 🔥 Handle Save
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    // Simulate save
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+
+    try {
+      const formData = new FormData();
+
+      formData.append("name", name);
+      formData.append("username", username);
+      formData.append("email", email);
+      formData.append("bio", bio);
+      formData.append("website", website);
+      formData.append("location", location);
+      formData.append("isPrivate", String(isPrivate));
+
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+
+      const res = await updateProfile(formData);
+      console.log("UPDATE RESPONSE:", res.data);
+      const updatedUser = res.data;
+      setUser(updatedUser); // 🔥 update global context
+
+      navigate(`/profile`);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -45,110 +77,107 @@ export default function EditProfile() {
           <h1 className="text-lg font-semibold">Edit Profile</h1>
         </div>
 
-        {/* Avatar */}
+        {/* Avatar Section */}
         <div className="flex justify-center py-8">
-          <div className="relative group cursor-pointer">
+          <label className="relative group cursor-pointer">
             <img
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=face"
+              src={
+                avatarFile
+                  ? URL.createObjectURL(avatarFile)
+                  : user?.avatar || "/default-avatar.png"
+              }
               alt="Profile"
               className="h-24 w-24 rounded-full object-cover border-2 border-border"
             />
-            <div className="absolute inset-0 rounded-full bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Camera className="h-6 w-6 text-background" />
+            <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Camera className="h-6 w-6 text-white" />
             </div>
-          </div>
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleAvatarChange}
+            />
+          </label>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSave} className="space-y-5 animate-fade-in">
+        <form onSubmit={handleSave} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label>Name</Label>
             <Input
-              id="username"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={30}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Username</Label>
+            <Input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="your_username"
               maxLength={30}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label>Email</Label>
             <Input
-              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
+            <Label>Bio</Label>
             <Textarea
-              id="bio"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell the world about yourself…"
               maxLength={160}
               rows={3}
-              className="resize-none"
             />
-            <p className="text-xs text-muted-foreground text-right">
+            <p className="text-xs text-right text-muted-foreground">
               {bio.length}/160
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="website">Website</Label>
+            <Label>Website</Label>
             <Input
-              id="website"
+              type="url"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
-              placeholder="https://yoursite.com"
-              type="url"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
+            <Label>Location</Label>
             <Input
-              id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="City, Country"
               maxLength={50}
             />
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-border/60 pt-5">
-            <h3 className="text-sm font-semibold mb-3">Privacy</h3>
-            <label className="flex items-center justify-between py-2 cursor-pointer">
-              <span className="text-sm">Private account</span>
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-              />
-            </label>
-            <p className="text-xs text-muted-foreground">
-              When enabled, only approved followers can see your thoughts.
-            </p>
+          {/* Privacy */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Private Account</span>
+            <input
+              type="checkbox"
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.target.checked)}
+            />
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="submit"
-              disabled={saving}
-              className="flex-1 rounded-full"
-            >
-              {saving ? "Saving…" : saved ? "Saved ✓" : "Save Changes"}
+          <div className="flex gap-3 pt-4">
+            <Button type="submit" disabled={saving} className="flex-1">
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate(-1)}
-              className="rounded-full"
             >
               Cancel
             </Button>

@@ -12,6 +12,7 @@ import {
 import { updateProfile, getMe, getUserByUsername} from "../controllers/userController.js";
 import { getFollowers, getFollowing } from "../controllers/followListController.js";
 import { authOptional } from "../middleware/authOptional.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.post("/:id/follow", isLoggedIn, wrapAsync(followUser));
 router.post("/:id/unfollow", isLoggedIn, wrapAsync(unfollowUser));
 router.get("/:id/is-following", isLoggedIn, wrapAsync(isFollowing));
 router.get("/me", isLoggedIn, wrapAsync(getMe));
-router.patch("/me", isLoggedIn, wrapAsync(updateProfile));
+router.patch("/me", isLoggedIn, upload.single("avatar"), wrapAsync(updateProfile));
 router.get("/:username", authOptional, wrapAsync(getUserByUsername));
 router.get("/:username/followers", authOptional, wrapAsync(getFollowers));
 router.get("/:username/following", authOptional, wrapAsync(getFollowing));

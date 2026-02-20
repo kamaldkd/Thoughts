@@ -3,8 +3,14 @@ import api, { setAuthToken } from "@/lib/api";
 
 interface User {
   _id: string;
+  name: string;
   username: string;
   email: string;
+  bio?: string;
+  website?: string;
+  location?: string;
+  avatar?: string;
+  isPrivate?: boolean;
 }
 
 interface AuthContextType {
@@ -20,6 +26,7 @@ interface AuthContextType {
   ) => Promise<void>;
   logout: () => void;
   isLoggedIn: boolean;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -96,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         isLoggedIn: !!token && !!user,
+        setUser,
       }}
     >
       {children}

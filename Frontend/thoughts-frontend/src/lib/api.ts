@@ -49,5 +49,9 @@ export function getUserProfile(userId: string) {
 }
 
 export function updateProfile(data: any) {
-  return api.patch("/users/me", data);
+  return api.patch("/users/me", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 }

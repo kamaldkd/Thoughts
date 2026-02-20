@@ -60,13 +60,13 @@ const Profile = () => {
         {/* Profile header */}
         <div className="py-8 text-center">
           <img
-            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=face"
+            src={user?.avatar || "@/assets/hero-bg.jpg"}  
             alt="Profile"
             className="h-20 w-20 rounded-full object-cover mx-auto mb-4 border-2 border-border"
           />
           <h1 className="text-xl font-semibold">{user?.username || "User"}</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
-            Just a person sharing their thoughts with the world.
+            {user?.bio || "Just a person sharing their thoughts with the world."}
           </p>
 
           {/* Stats */}
