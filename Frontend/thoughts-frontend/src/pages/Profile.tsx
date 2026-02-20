@@ -7,6 +7,7 @@ import {
   getMyThoughts,
   deleteThought as apiDelete,
   getUserProfile,
+  getFollowers,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -18,9 +19,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+
 const Profile = () => {
   const [view, setView] = useState<"list" | "grid">("list");
   const [thoughts, setThoughts] = useState<any[]>([]);
+  const [followers, setFollowers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { id: userId } = useParams();
   const { user, logout } = useAuth();
@@ -32,6 +35,24 @@ const Profile = () => {
   }
 
   let res: any = {};
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadProfile() {
+      try {
+        res = await getFollowers(user.username);
+        if (mounted) {
+          setFollowers(res.data.followers.length || []);
+        }
+      } catch (err) {
+        console.error("Failed to load profile:", err);
+      }
+    }
+    loadProfile();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.username]);
 
   useEffect(() => {
     let mounted = true;

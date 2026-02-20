@@ -49,6 +49,6 @@ router.patch("/me", isLoggedIn, upload.single("avatar"), wrapAsync(updateProfile
 router.get("/:username", authOptional, wrapAsync(getUserByUsername));
 router.get("/:username/followers", authOptional, wrapAsync(getFollowers));
 router.get("/:username/following", authOptional, wrapAsync(getFollowing));
-router.get("/users/:username/thoughts", getUserThoughts);
+router.get("/:username/thoughts", getUserThoughts);
 
 export default router;

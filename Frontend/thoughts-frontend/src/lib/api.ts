@@ -55,3 +55,7 @@ export function updateProfile(data: any) {
     },
   });
 }
+
+export function getFollowers(username: string) {
+  return api.get(`/users/${username}/followers`);
+}
