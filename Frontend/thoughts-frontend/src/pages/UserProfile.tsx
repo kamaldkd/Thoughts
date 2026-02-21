@@ -28,6 +28,8 @@ import { StatModal } from "@/components/profile/StatModal";
 import { ThoughtCard } from "@/components/ThoughtCard";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { getUserProfileByUsername, getThoughtsByUsername } from "@/lib/api";
+import { followUser, unfollowUser, checkIsFollowing } from "@/lib/api";
 
 /* ── Mock data helpers (replace with real API later) ─────────────────────── */
 const MOCK_MUTUAL_AVATARS = [
@@ -208,6 +210,9 @@ export default function UserProfile() {
   const [postModal, setPostModal] = useState<any>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
+  const [followState, setFollowState] = useState<
+    "not_following" | "following" | "requested"
+  >("not_following");
 
   // Sticky header detection
   useEffect(() => {
@@ -219,67 +224,81 @@ export default function UserProfile() {
   // Load profile
   useEffect(() => {
     if (!username) return;
+
     let mounted = true;
     setLoading(true);
 
     const loadData = async () => {
       try {
-        // Try to find user by username; fallback: search thoughts for matching author
-        const [thoughtsRes] = await Promise.allSettled([
-          api.get("/thoughts", { params: { username } }),
+        const [profileRes, thoughtsRes] = await Promise.all([
+          getUserProfileByUsername(username),
+          getThoughtsByUsername(username),
         ]);
 
         if (!mounted) return;
 
-        if (thoughtsRes.status === "fulfilled") {
-          const data = thoughtsRes.value.data;
-          const list: any[] = data.thoughts || data || [];
-          setThoughts(list);
-
-          // Derive profile from first thought's author if no profile endpoint
-          if (list.length > 0 && list[0].author) {
-            const author = list[0].author;
-            setProfile({
-              _id: author._id,
-              username: author.username || username,
-              fullName: author.fullName || author.name || "",
-              avatar: author.avatar || null,
-              bio: author.bio || "",
-              website: author.website || "",
-              createdAt: author.createdAt || "",
-              isVerified: author.isVerified || false,
-              isPrivate: author.isPrivate || false,
-              followersCount: author.followersCount ?? 0,
-              followingCount: author.followingCount ?? 0,
-              postsCount: list.length,
-            });
-          } else {
-            setProfile({
-              username,
-              postsCount: 0,
-              followersCount: 0,
-              followingCount: 0,
-            });
-          }
-        }
-      } catch (err) {
-        console.error(err);
-        setProfile({
-          username,
-          postsCount: 0,
-          followersCount: 0,
-          followingCount: 0,
-        });
+        setProfile(profileRes.data);
+        setThoughts(thoughtsRes.data.thoughts || []);
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        setProfile(null);
+        setThoughts([]);
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
     loadData();
+
     return () => {
       mounted = false;
     };
   }, [username]);
+
+  useEffect(() => {
+    if (!profile?._id || isOwnProfile) return;
+
+    const checkFollowStatus = async () => {
+      try {
+        const res = await checkIsFollowing(profile._id);
+        if (res.data.isFollowing) {
+          setFollowState("following");
+        } else {
+          setFollowState("not_following");
+        }
+      } catch (err) {
+        console.error("Error checking follow status:", err);
+      }
+    };
+
+    checkFollowStatus();
+  }, [profile?._id]);
+
+  const handleFollow = async () => {
+    if (!profile?._id) return;
+
+    await followUser(profile._id);
+
+    setFollowState(profile.isPrivate ? "requested" : "following");
+
+    setProfile((prev: any) => ({
+      ...prev,
+      followersCount: (prev.followersCount || 0) + 1,
+    }));
+  };
+
+  const handleUnfollow = async () => {
+    if (!profile?._id) return;
+
+    await unfollowUser(profile._id);
+
+    setFollowState("not_following");
+
+    setProfile((prev: any) => ({
+      ...prev,
+      followersCount: Math.max((prev.followersCount || 1) - 1, 0),
+    }));
+  };
 
   const isOwnProfile = me?.username === username;
 
@@ -395,7 +414,7 @@ export default function UserProfile() {
                   {[
                     {
                       label: "Posts",
-                      value: profile?.postsCount ?? thoughts.length,
+                      value: thoughts.length,
                     },
                     {
                       label: "Followers",
@@ -503,8 +522,10 @@ export default function UserProfile() {
               {!isOwnProfile && (
                 <div className="flex gap-2.5 mt-4">
                   <FollowButton
-                    initialState="not_following"
+                    initialState={followState}
                     isPrivate={profile?.isPrivate}
+                    onFollow={handleFollow}
+                    onUnfollow={handleUnfollow}
                     className="flex-1"
                   />
                   <button className="flex-1 h-9 rounded-full border border-border bg-transparent text-sm font-semibold hover:bg-muted transition-colors active:scale-95">

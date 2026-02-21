@@ -1,15 +1,26 @@
 import axios from "axios";
 
-const BASE = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
-  baseURL: BASE,
+  baseURL: BASE_URL,
 });
 
+/* ─────────────────────────────────────────────
+   AUTH
+───────────────────────────────────────────── */
+
 export function setAuthToken(token?: string | null) {
-  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  else delete api.defaults.headers.common["Authorization"];
+  if (token) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common["Authorization"];
+  }
 }
+
+/* ─────────────────────────────────────────────
+   GENERIC HELPERS
+───────────────────────────────────────────── */
 
 export function postMultipart(path: string, formData: FormData) {
   return api.post(path, formData, {
@@ -17,9 +28,10 @@ export function postMultipart(path: string, formData: FormData) {
   });
 }
 
-export default api;
+/* ─────────────────────────────────────────────
+   THOUGHTS
+───────────────────────────────────────────── */
 
-// Convenience wrappers
 export function getThoughts(params?: any) {
   return api.get("/thoughts", { params });
 }
@@ -28,27 +40,72 @@ export function getThought(id: string) {
   return api.get(`/thoughts/${id}`);
 }
 
-export function deleteThought(id: string) {
-  return api.delete(`/thoughts/${id}`);
-}
-
 export function updateThought(id: string, data: any) {
   return api.put(`/thoughts/${id}`, data);
 }
 
-export function getUserThoughts(userId: string) {
-  return api.get(`/users/${userId}/thoughts`);
+export function deleteThought(id: string) {
+  return api.delete(`/thoughts/${id}`);
 }
 
 export function getMyThoughts() {
   return api.get("/thoughts/me");
 }
 
-export function getUserProfile(userId: string) {
-  return api.get(`/users/${userId}`);
+/* ─────────────────────────────────────────────
+   USER (BY USERNAME — preferred)
+───────────────────────────────────────────── */
+
+export function getUserProfile(username: string) {
+  return api.get(`/users/username/${username}`);
 }
 
-export function updateProfile(data: any) {
+export const getUserProfileByUsername = getUserProfile;
+
+export function getUserThoughts(username: string, params?: any) {
+  return api.get(`/users/username/${username}/thoughts`, { params });
+}
+
+export const getThoughtsByUsername = getUserThoughts;
+
+export function getFollowers(username: string) {
+  return api.get(`/users/username/${username}/followers`);
+}
+
+export function getFollowing(username: string) {
+  return api.get(`/users/username/${username}/following`);
+}
+
+/* ─────────────────────────────────────────────
+   USER (BY ID — internal use only)
+───────────────────────────────────────────── */
+
+export function getUserById(id: string) {
+  return api.get(`/users/${id}`);
+}
+
+export function followUser(id: string) {
+  return api.post(`/users/${id}/follow`);
+}
+
+export function unfollowUser(id: string) {
+  return api.post(`/users/${id}/unfollow`);
+}
+
+export function isFollowing(id: string) {
+  return api.get(`/users/${id}/is-following`);
+}
+
+export function checkIsFollowing(id: string) {
+  return api.get(`/users/${id}/is-following`);
+}
+
+
+/* ─────────────────────────────────────────────
+   PROFILE UPDATE
+───────────────────────────────────────────── */
+
+export function updateProfile(data: FormData) {
   return api.patch("/users/me", data, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -56,6 +113,4 @@ export function updateProfile(data: any) {
   });
 }
 
-export function getFollowers(username: string) {
-  return api.get(`/users/${username}/followers`);
-}
+export default api;

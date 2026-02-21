@@ -103,13 +103,15 @@ export const getUserByUsername = async (req, res) => {
   const { username } = req.params;
 
   // 🔴 GUARD: never assume req.userId exists
-  if (!req.userId) {
-    throw new ExpressError(401, "Unauthorized");
-  }
+  // if (!req.userId) {
+  //   throw new ExpressError(401, "Unauthorized");
+  // }
 
   const currentUserId = req.userId; // optional (public profile)
 
-  const user = await User.findOne({ username }).select(
+  const user = await User.findOne({
+  username: new RegExp(`^${req.params.username}$`, "i"),
+}).select(
     "username name bio avatar website socialLinks followersCount followingCount thoughtsCount createdAt"
   );
 
