@@ -8,6 +8,7 @@ import {
   deleteThought as apiDelete,
   getUserProfile,
   getFollowers,
+  getFollowing,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -24,6 +25,7 @@ const Profile = () => {
   const [view, setView] = useState<"list" | "grid">("list");
   const [thoughts, setThoughts] = useState<any[]>([]);
   const [followers, setFollowers] = useState<any[]>([]);
+  const [following, setFollowing] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { id: userId } = useParams();
   const { user, logout } = useAuth();
@@ -34,15 +36,18 @@ const Profile = () => {
     navigate("/login");
   }
 
-  let res: any = {};
+  let res1: any = {};
+  let res2: any = {};
 
   useEffect(() => {
     let mounted = true;
     async function loadProfile() {
       try {
-        res = await getFollowers(user.username);
+        res1 = await getFollowers(user.username);
+        res2 = await getFollowing(user.username);
         if (mounted) {
-          setFollowers(res.data.followers.length || []);
+          setFollowers(res1.data.followers.length || []);
+          setFollowing(res2.data.following.length || []);
         }
       } catch (err) {
         console.error("Failed to load profile:", err);
@@ -94,8 +99,8 @@ const Profile = () => {
           <div className="flex justify-center gap-8 mt-5">
             {[
               { label: "Thoughts", value: thoughts.length },
-              { label: "Followers", value: "1.2k" },
-              { label: "Following", value: "318" },
+              { label: "Followers", value: user?._id ? followers.length : 0 },
+              { label: "Following", value: user?._id ? following.length : 0 },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <div className="text-lg font-semibold">{s.value}</div>

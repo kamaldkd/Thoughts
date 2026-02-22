@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 type FollowState = "not_following" | "following" | "requested";
 
@@ -69,6 +70,10 @@ export function FollowButton({
     if (state === "requested") return isHovering ? "Cancel" : "Requested";
     return "Follow";
   };
+
+  useEffect(() => {
+    setState(initialState);
+  }, [initialState]);
 
   return (
     <>

@@ -100,37 +100,52 @@ export const getMe = async (req, res) => {
 };
 
 export const getUserByUsername = async (req, res) => {
-  const { username } = req.params;
+  try {
+    const { username } = req.params;
+    const currentUserId = req.userId; // optional
 
-  // 🔴 GUARD: never assume req.userId exists
-  // if (!req.userId) {
-  //   throw new ExpressError(401, "Unauthorized");
-  // }
+    const user = await User.findOne({
+      username: new RegExp(`^${username}$`, "i"),
+    }).select(
+      "username name bio avatar website socialLinks followers following thoughtsCount createdAt isPrivate"
+    );
 
-  const currentUserId = req.userId; // optional (public profile)
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-  const user = await User.findOne({
-  username: new RegExp(`^${req.params.username}$`, "i"),
-}).select(
-    "username name bio avatar website socialLinks followersCount followingCount thoughtsCount createdAt"
-  );
+    let isFollowing = false;
+    let isOwnProfile = false;
 
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
+    if (currentUserId) {
+      isOwnProfile = user._id.toString() === currentUserId;
 
-  let isFollowing = false;
+      const me = await User.exists({
+        _id: currentUserId,
+        following: user._id,
+      });
 
-  if (currentUserId) {
-    const me = await User.exists({
-      _id: currentUserId,
-      following: user._id,
+      isFollowing = Boolean(me);
+    }
+
+    res.status(200).json({
+      _id: user._id,
+      username: user.username,
+      name: user.name,
+      bio: user.bio,
+      avatar: user.avatar,
+      website: user.website,
+      socialLinks: user.socialLinks,
+      createdAt: user.createdAt,
+      thoughtsCount: user.thoughtsCount || 0,
+      followersCount: user.followers?.length || 0,
+      followingCount: user.following?.length || 0,
+      isPrivate: user.isPrivate || false,
+      isOwnProfile,
+      isFollowing,
     });
-    isFollowing = Boolean(me);
+  } catch (error) {
+    console.error("Get user error:", error);
+    res.status(500).json({ message: "Server error" });
   }
-
-  res.status(200).json({
-    ...user.toObject(),
-    isFollowing,
-  });
 };

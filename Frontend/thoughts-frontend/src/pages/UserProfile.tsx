@@ -256,23 +256,20 @@ export default function UserProfile() {
   }, [username]);
 
   useEffect(() => {
-    if (!profile?._id || isOwnProfile) return;
+    if (!profile?._id || !me?._id || isOwnProfile) return;
 
     const checkFollowStatus = async () => {
       try {
         const res = await checkIsFollowing(profile._id);
-        if (res.data.isFollowing) {
-          setFollowState("following");
-        } else {
-          setFollowState("not_following");
-        }
+
+        setFollowState(res.data.isFollowing ? "following" : "not_following");
       } catch (err) {
         console.error("Error checking follow status:", err);
       }
     };
 
     checkFollowStatus();
-  }, [profile?._id]);
+  }, [profile?._id, me?._id]);
 
   const handleFollow = async () => {
     if (!profile?._id) return;
