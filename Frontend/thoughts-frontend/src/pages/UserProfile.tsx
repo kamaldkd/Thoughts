@@ -77,28 +77,44 @@ function ProfileAvatar({
 
 /* ── Post Grid Item ───────────────────────────────────────────────────────── */
 function GridItem({ thought, onClick }: { thought: any; onClick: () => void }) {
-  const thumb =
-    thought.media && thought.media.length ? thought.media[0].url : null;
+  const mediaItem =
+    thought.media && thought.media.length ? thought.media[0] : null;
+
+  const isVideo = mediaItem?.type === "video";
 
   return (
     <button
       onClick={onClick}
-      className="relative aspect-square overflow-hidden bg-muted group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="relative aspect-square overflow-hidden bg-muted group"
     >
-      {thumb ? (
-        <img
-          src={thumb}
-          alt=""
-          loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+      {mediaItem ? (
+        isVideo ? (
+          <video
+            src={mediaItem.url}
+            poster={mediaItem.thumbnail}
+            muted
+            preload="metadata"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src={mediaItem.url}
+            alt=""
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        )
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-muted">
-          <p className="text-[10px] text-muted-foreground text-center px-2 leading-tight line-clamp-4">
+          <p className="text-[10px] text-muted-foreground text-center px-2 line-clamp-4">
             {thought.text}
           </p>
         </div>
       )}
+
+      {/* Video Icon Overlay */}
+      {isVideo && <div className="absolute top-2 right-2 text-white">🎥</div>}
+
       {/* Hover overlay */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-all duration-200 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
         <span className="flex items-center gap-1 text-white text-xs font-semibold">
