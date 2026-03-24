@@ -37,6 +37,7 @@
     "rate-limit-redis": "^4.3.1",
     "redis": "^5.11.0",
     "sanitize-html": "^2.17.2",
+    "socket.io": "^4.8.3",
     "winston": "^3.19.0",
     "zod": "^4.3.6"
   }

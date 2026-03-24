@@ -17,6 +17,7 @@ import Explore from "./pages/Explore";
 import EditProfile from "./pages/EditProfile";
 import Activity from "./pages/Activity";
 import UserProfile from "./pages/UserProfile";
+import ChatPage from "./pages/ChatPage";
 import { useEffect, useState } from "react";
 import AppLoader from "@/components/AppLoader";
 import { fetchCsrfToken } from "@/lib/api";
@@ -106,6 +107,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Activity />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
             </ProtectedRoute>
           }
         />

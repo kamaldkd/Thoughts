@@ -97,3 +97,25 @@ export const ipUnfollowLimiter = createLimiter({
 ───────────────────────────────────────────── */
 export const followRateLimiters = [burstFollowLimiter, userFollowLimiter, ipFollowLimiter];
 export const unfollowRateLimiters = [burstUnfollowLimiter, userUnfollowLimiter, ipUnfollowLimiter];
+
+/* ─────────────────────────────────────────────
+   MESSAGE ENDPOINT LIMITERS
+   Applied to REST message routes.
+   Socket events have their own in-handler guard.
+───────────────────────────────────────────── */
+
+export const messageBurstLimiter = createLimiter({
+  windowMs: 10 * 1000, // 10 seconds
+  max: 10, // Max 10 messages per 10-second burst
+  keyGenerator: (req) => req.userId ? `msg_burst:${req.userId}` : `ip_msg_burst:${req.ip}`,
+  message: { message: "You are sending messages too quickly. Please slow down." },
+});
+
+export const messageUserLimiter = createLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // Max 60 messages per minute per user
+  keyGenerator: (req) => req.userId ? `msg_user:${req.userId}` : `ip_msg_user:${req.ip}`,
+  message: { message: "Message rate limit reached. Please wait before sending more messages." },
+});
+
+export const messageLimiters = [messageBurstLimiter, messageUserLimiter];
