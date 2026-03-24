@@ -3,6 +3,8 @@ import { X, Image, Film, Feather } from "lucide-react";
 import { postMultipart } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { compressImage } from "@/utils/compressImage";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MAX_CHARS = 500;
 
@@ -16,8 +18,7 @@ export function CreateThoughtModal({ open, onClose }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);  
   const navigate = useNavigate();
-
-
+  const queryClient = useQueryClient();
 
   if (!open) return null;
 
@@ -51,17 +52,25 @@ export function CreateThoughtModal({ open, onClose }: Props) {
                   setLoading(true);
                   const form = new FormData();
                   form.append("text", text);
-                  files.forEach((f) => form.append("file", f));
+                  // Compress all images before uploading
+                  const processedFiles = await Promise.all(
+                    files.map((f) => compressImage(f))
+                  );
+                  processedFiles.forEach((f) => form.append("file", f));
+                  
                   await postMultipart("/thoughts", form);
                   setLoading(false);
                   toast({ title: "Your thought is posted" });
                   setText("");
                   setFiles([]);
                   onClose();
-                  // redirect to feed so user sees new post
+                  
+                  // invalidate the feed cache so the new post appears immediately
+                  queryClient.invalidateQueries({ queryKey: ["thoughts", "feed"] });
                   navigate("/feed");
                 } catch (err: any) {
                   alert(err?.response?.data?.message || "Failed to post");
+                  setLoading(false);
                 }
               }}
               className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 transition-all duration-200 hover:opacity-90"
@@ -182,17 +191,25 @@ export function CreateThoughtModal({ open, onClose }: Props) {
                   setLoading(true);
                   const form = new FormData();
                   form.append("text", text);
-                  files.forEach((f) => form.append("file", f));
+                  // Compress all images before uploading
+                  const processedFiles = await Promise.all(
+                    files.map((f) => compressImage(f))
+                  );
+                  processedFiles.forEach((f) => form.append("file", f));
+                  
                   await postMultipart("/thoughts", form);
                   setLoading(false);
                   toast({ title: "Your thought is posted" });
                   setText("");
                   setFiles([]);
                   onClose();
-                  // redirect to feed so user sees new post
+                  
+                  // invalidate the feed cache so the new post appears immediately
+                  queryClient.invalidateQueries({ queryKey: ["thoughts", "feed"] });
                   navigate("/feed");
                 } catch (err: any) {
                   alert(err?.response?.data?.message || "Failed to post");
+                  setLoading(false);
                 }
               }}
               className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 transition-all duration-200 hover:opacity-90"

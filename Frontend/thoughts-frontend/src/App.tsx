@@ -19,6 +19,7 @@ import Activity from "./pages/Activity";
 import UserProfile from "./pages/UserProfile";
 import { useEffect, useState } from "react";
 import AppLoader from "@/components/AppLoader";
+import { fetchCsrfToken } from "@/lib/api";
 
 const queryClient = new QueryClient();
 
@@ -120,8 +121,9 @@ const App = () => {
   useEffect(() => {
     // things that decide "app is ready"
     Promise.all([
-      // example: auth check, token restore
-      new Promise((res) => setTimeout(res, 500)),
+      // Fetch initial CSRF token transparently into memory
+      fetchCsrfToken(),
+      new Promise((res) => setTimeout(res, 300)),
     ]).then(() => setAppReady(true));
   }, []);
 

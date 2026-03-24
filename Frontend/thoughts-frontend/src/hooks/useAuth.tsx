@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import api, { setAuthToken } from "@/lib/api";
+import api, { fetchCsrfToken } from "@/lib/api";
 
 interface User {
   _id: string;
@@ -15,7 +15,6 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (
@@ -33,76 +32,59 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize auth from localStorage on mount
+  // Initialize auth on mount
   useEffect(() => {
-  const storedToken = localStorage.getItem("token");
-
-  if (!storedToken) {
-    setLoading(false);
-    return;
-  }
-
-  setToken(storedToken);
-  setAuthToken(storedToken);
-
-  fetchUserDetails()
-    .finally(() => {
-      setLoading(false); // ✅ ONLY after fetch completes
+    fetchUserDetails().finally(() => {
+      setLoading(false);
     });
-}, []);
+  }, []);
 
-  async function fetchUserDetails(authToken?: string) {
+  async function fetchUserDetails() {
     try {
       const res = await api.get("/users/me");
       setUser(res.data.user);
     } catch (err) {
       console.error("Failed to fetch user details:", err);
-      localStorage.removeItem("token");
-      setToken(null);
-      setAuthToken(null);
-    } finally {
-      setLoading(false);
+      setUser(null);
     }
   }
 
   async function login(email: string, password: string) {
-    const res = await api.post("/auth/login", { email, password });
-    const newToken = res.data.token;
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-    setAuthToken(newToken);
-    await fetchUserDetails(newToken);
+    await api.post("/auth/login", { email, password });
+    // Backend wiped the old CSRF secret, explicitly fast-fetch the rotated one.
+    await fetchCsrfToken();
+    await fetchUserDetails();
   }
 
   async function register(name: string, username: string, email: string, password: string) {
-    const res = await api.post("/auth/register", { name, username, email, password });
-    const newToken = res.data.token;
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-    setAuthToken(newToken);
-    await fetchUserDetails(newToken);
+    await api.post("/auth/register", { name, username, email, password });
+    // Backend wiped the old CSRF secret, explicitly fast-fetch the rotated one.
+    await fetchCsrfToken();
+    await fetchUserDetails();
   }
 
-  function logout() {
-    localStorage.removeItem("token");
-    setToken(null);
+  async function logout() {
+    try {
+      await api.post("/auth/logout");
+      // Destroy the unauthenticated old token and fetch the public zero-state token
+      await fetchCsrfToken();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
     setUser(null);
-    setAuthToken(null);
   }
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        token,
         loading,
         login,
         register,
         logout,
-        isLoggedIn: !!token && !!user,
+        isLoggedIn: !!user,
         setUser,
       }}
     >

@@ -4,6 +4,7 @@ import { SkeletonCard } from "@/components/SkeletonCard";
 import { CreateThoughtModal } from "@/components/CreateThoughtModal";
 import { PenSquare } from "lucide-react";
 import api, { deleteThought, getThoughts } from "@/lib/api";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import defaultAvatar from "../assets/hero-bg.jpg";
@@ -19,84 +20,74 @@ const Feed = () => {
   const state = location.state as FeedLocationState | null;
   const { user } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [thoughts, setThoughts] = useState<any[]>([]);
-  const [unauth, setUnauth] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    let mounted = true;
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await getThoughts();
-        if (mounted) {
-          setThoughts(res.data.thoughts || []);
-          setNextCursor(res.data.nextCursor || null);
-          setHasMore(!!res.data.hasMore);
-          setUnauth(false);
-        }
-        if (location.state?.openCreate) {
-          setCreateOpen(true);
-          window.history.replaceState({}, ""); // clear state so it doesn't reopen modal on back/forward navigation
-        }
-      } catch (err: any) {
-        if (err?.response?.status === 401) setUnauth(true);
-        else console.error(err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
+    if (location.state?.openCreate) {
+      setCreateOpen(true);
+      window.history.replaceState({}, "");
     }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  }, [location.state?.openCreate]);
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+    error,
+  } = useInfiniteQuery({
+    queryKey: ['thoughts', 'feed'],
+    queryFn: async ({ pageParam = null as string | null }) => {
+      const res = await getThoughts(pageParam ? { cursor: pageParam } : {});
+      return res.data;
+    },
+    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.nextCursor : undefined,
+    initialPageParam: null,
+    retry: false, // Don't retry on 401
+  });
+
+  const thoughts = data?.pages.flatMap((page) => page.thoughts) || [];
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteThought,
+    onSuccess: (_, deletedId) => {
+      queryClient.setQueryData(['thoughts', 'feed'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            thoughts: page.thoughts.filter((t: any) => (t._id || t.id) !== deletedId)
+          }))
+        };
+      });
+    },
+    onError: (err) => {
+      console.error("Failed to delete thought:", err);
+      alert("Failed to delete thought");
+    }
+  });
 
   const handleDelete = async (thoughtId: string) => {
     if (!window.confirm("Are you sure you want to delete this thought?")) {
       return;
     }
-
-    try {
-      await deleteThought(thoughtId);
-      setThoughts((prev) => prev.filter((t) => (t._id || t.id) !== thoughtId));
-    } catch (err) {
-      console.error("Failed to delete thought:", err);
-      alert("Failed to delete thought");
-    }
-  };
-
-  const handleLoadMore = async () => {
-    if (!hasMore || !nextCursor) return;
-    setLoadingMore(true);
-    try {
-      const res = await getThoughts({ cursor: nextCursor });
-      const more = res.data.thoughts || [];
-      setThoughts((prev) => [...prev, ...more]);
-      setNextCursor(res.data.nextCursor || null);
-      setHasMore(!!res.data.hasMore);
-    } catch (err) {
-      console.error("Failed to load more:", err);
-    } finally {
-      setLoadingMore(false);
-    }
+    deleteMutation.mutate(thoughtId);
   };
 
   // Infinite scroll: observe sentinel and load more when visible
   useEffect(() => {
     const node = loadMoreRef.current;
     if (!node) return;
-    if (!hasMore) return;
+    if (!hasNextPage) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         const e = entries[0];
-        if (e && e.isIntersecting && !loadingMore) {
-          handleLoadMore();
+        if (e && e.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage();
         }
       },
       { rootMargin: "200px", threshold: 0.1 }
@@ -104,10 +95,9 @@ const Feed = () => {
 
     observer.observe(node);
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, loadingMore, nextCursor]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (loading) {
+  if (status === 'pending' || (status === 'loading' as any)) {
     return (
       <div className="min-h-screen pt-14 pb-20 md:pb-14 md:pt-14">
         <div className="max-w-xl mx-auto px-4">
@@ -119,7 +109,7 @@ const Feed = () => {
     );
   }
 
-  if (unauth)
+  if (status === 'error' && (error as any)?.response?.status === 401) {
     return (
       <div className="text-center py-12">
         <h3 className="text-lg font-medium">
@@ -138,6 +128,7 @@ const Feed = () => {
         </p>
       </div>
     );
+  }
 
   return (
     // adding some extra bottom padding to ensure last thought isn't hidden behind mobile FAB
@@ -157,7 +148,7 @@ const Feed = () => {
         </div> */}
 
         {/* Feed */}
-        {!loading && thoughts.length === 0 ? (
+        {thoughts.length === 0 ? (
           <p className="text-muted-foreground">
             No thoughts yet — be the first to post!
           </p>
@@ -186,7 +177,7 @@ const Feed = () => {
 
         {/* sentinel for infinite scroll */}
         <div ref={loadMoreRef} className="h-2" />
-        {loadingMore && (
+        {isFetchingNextPage && (
           <div className="min-h-screen pt-14 pb-20 md:pb-14 md:pt-14">
             <div className="max-w-xl mx-auto px-4">
               {[...Array(3)].map((_, i) => (

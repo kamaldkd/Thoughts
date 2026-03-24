@@ -290,27 +290,53 @@ export default function UserProfile() {
   const handleFollow = async () => {
     if (!profile?._id) return;
 
-    await followUser(profile._id);
-
+    // Optimistically update
+    const prevFollowState = followState;
+    const prevFollowersCount = profile.followersCount || 0;
+    
     setFollowState(profile.isPrivate ? "requested" : "following");
-
     setProfile((prev: any) => ({
       ...prev,
-      followersCount: (prev.followersCount || 0) + 1,
+      followersCount: prevFollowersCount + 1,
     }));
+
+    try {
+      await followUser(profile._id);
+    } catch (err) {
+      // Revert on error
+      console.error("Follow failed, reverting:", err);
+      setFollowState(prevFollowState);
+      setProfile((prev: any) => ({
+        ...prev,
+        followersCount: prevFollowersCount,
+      }));
+    }
   };
 
   const handleUnfollow = async () => {
     if (!profile?._id) return;
 
-    await unfollowUser(profile._id);
+    // Optimistically update
+    const prevFollowState = followState;
+    const prevFollowersCount = profile.followersCount || 0;
 
     setFollowState("not_following");
-
     setProfile((prev: any) => ({
       ...prev,
-      followersCount: Math.max((prev.followersCount || 1) - 1, 0),
+      followersCount: Math.max(prevFollowersCount - 1, 0),
     }));
+
+    try {
+      await unfollowUser(profile._id);
+    } catch (err) {
+      // Revert on error
+      console.error("Unfollow failed, reverting:", err);
+      setFollowState(prevFollowState);
+      setProfile((prev: any) => ({
+        ...prev,
+        followersCount: prevFollowersCount,
+      }));
+    }
   };
 
   const isOwnProfile = me?.username === username;
