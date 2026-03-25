@@ -9,7 +9,7 @@ import {
   unfollowUser,
   isFollowing,
 } from "../controllers/followController.js";
-import { updateProfile, getMe, getUserByUsername} from "../controllers/userController.js";
+import { updateProfile, getMe, getUserByUsername, searchUsers } from "../controllers/userController.js";
 import { getFollowers, getFollowing } from "../controllers/followListController.js";
 import { authOptional } from "../middleware/authOptional.js";
 import { followRateLimiters, unfollowRateLimiters } from "../middleware/rateLimiter.js";
@@ -19,6 +19,7 @@ const router = express.Router();
 // 1️⃣ Static routes first
 router.get("/me", isLoggedIn, wrapAsync(getMe));
 router.patch("/me", isLoggedIn, upload.single("avatar"), wrapAsync(updateProfile));
+router.get("/search", authOptional, wrapAsync(searchUsers));
 
 // 2️⃣ Specific username routes
 router.get("/username/:username", authOptional, wrapAsync(getUserByUsername));

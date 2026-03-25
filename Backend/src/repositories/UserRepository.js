@@ -34,3 +34,14 @@ export const updateUser = async (userId, updates) => {
     { new: true, runValidators: true }
   ).select("-password");
 };
+
+export const searchUsersQuery = async (query, limit = 10) => {
+  if (!query) return [];
+  const regex = new RegExp(query, "i");
+  return await User.find({
+    $or: [{ username: regex }, { name: regex }]
+  })
+    .select("username name avatar _id")
+    .limit(limit)
+    .lean();
+};

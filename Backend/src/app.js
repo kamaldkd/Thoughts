@@ -49,7 +49,7 @@ app.get("/api/csrf-token", (req, res) => {
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  keyGenerator: (req) => req.ip || 'unknown',
+  validate: { xForwardedForHeader: false, default: false },
   message: { success: false, message: "Too many authentication attempts, please try again later" }
 });
 

@@ -37,9 +37,11 @@ const createLimiter = (options) => rateLimit({
   handler: customHandler,
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers native to modern UX
   legacyHeaders: false, 
+  validate: { xForwardedForHeader: false, default: false },
   keyGenerator: options.keyGenerator || ((req) => {
     // Provide a default custom key generator to bypass ERR_ERL_KEY_GEN_IPV6 console errors
-    return req.userId ? `user:${req.userId}` : `ip:${req.ip || 'unknown'}`;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    return req.userId ? `user:${req.userId}` : `ip:${ip}`;
   }),
 });
 
@@ -56,14 +58,20 @@ export const burstFollowLimiter = createLimiter({
 export const userFollowLimiter = createLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 30, // Max 30 follows per hour-quarter
-  keyGenerator: (req) => req.userId ? `user_follow:${req.userId}` : `ip_follow:${req.ip}`,
+  keyGenerator: (req) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    return req.userId ? `user_follow:${req.userId}` : `ip_follow:${ip}`;
+  },
   message: { message: "You have reached your Follow limit. Please wait 15 minutes to prevent spam." },
 });
 
 export const ipFollowLimiter = createLimiter({
   windowMs: 15 * 60 * 1000, 
   max: 50, // IP limit is slightly higher to account for NATs/Cafes, but entirely blocks Botnets
-  keyGenerator: (req) => `ip_follow_block:${req.ip}`,
+  keyGenerator: (req) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    return `ip_follow_block:${ip}`;
+  },
   message: { message: "Too many follow requests from this IP Network. Please wait 15 minutes." },
 });
 
@@ -80,14 +88,20 @@ export const burstUnfollowLimiter = createLimiter({
 export const userUnfollowLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 50, // Higher limit for explicitly cleaning social feeds
-  keyGenerator: (req) => req.userId ? `user_unfollow:${req.userId}` : `ip_unfollow:${req.ip}`,
+  keyGenerator: (req) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    return req.userId ? `user_unfollow:${req.userId}` : `ip_unfollow:${ip}`;
+  },
   message: { message: "You have reached your Unfollow limit. Please wait 15 minutes." },
 });
 
 export const ipUnfollowLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 100, 
-  keyGenerator: (req) => `ip_unfollow_block:${req.ip}`,
+  keyGenerator: (req) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    return `ip_unfollow_block:${ip}`;
+  },
   message: { message: "Network unfollow quota exceeded. Please wait 15 minutes." },
 });
 
@@ -107,14 +121,20 @@ export const unfollowRateLimiters = [burstUnfollowLimiter, userUnfollowLimiter, 
 export const messageBurstLimiter = createLimiter({
   windowMs: 10 * 1000, // 10 seconds
   max: 10, // Max 10 messages per 10-second burst
-  keyGenerator: (req) => req.userId ? `msg_burst:${req.userId}` : `ip_msg_burst:${req.ip}`,
+  keyGenerator: (req) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    return req.userId ? `msg_burst:${req.userId}` : `ip_msg_burst:${ip}`;
+  },
   message: { message: "You are sending messages too quickly. Please slow down." },
 });
 
 export const messageUserLimiter = createLimiter({
   windowMs: 60 * 1000, // 1 minute
   max: 60, // Max 60 messages per minute per user
-  keyGenerator: (req) => req.userId ? `msg_user:${req.userId}` : `ip_msg_user:${req.ip}`,
+  keyGenerator: (req) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    return req.userId ? `msg_user:${req.userId}` : `ip_msg_user:${ip}`;
+  },
   message: { message: "Message rate limit reached. Please wait before sending more messages." },
 });
 

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useChatStore } from "@/store/useChatStore";
 import { ConversationItem } from "./ConversationItem";
-import { getConversations } from "@/services/chatApi";
+import { getConversations, createOrGetConversation } from "@/services/chatApi";
 import { Search, MessageSquarePlus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
+import { toast } from "sonner";
 
 interface SidebarProps {
   onSelectConversation: (id: string) => void;
@@ -27,6 +29,9 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
   const setConversations = useChatStore((s) => s.setConversations);
   const setConversationsLoading = useChatStore((s) => s.setConversationsLoading);
   const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [startingChat, setStartingChat] = useState<string | null>(null);
 
   useEffect(() => {
     setConversationsLoading(true);
@@ -36,6 +41,27 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
       .finally(() => setConversationsLoading(false));
   }, [setConversations, setConversationsLoading]);
 
+  useEffect(() => {
+    if (!search.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await api.get(`/users/search?q=${encodeURIComponent(search)}`);
+        setSearchResults(res.data.data || []);
+      } catch (err) {
+        console.error("Failed to search users", err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const existingParticipantIds = new Set(conversations.map((c) => c.participant?._id));
+  
   const filtered = conversations.filter((c) => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -44,6 +70,35 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
       c.participant?.username?.toLowerCase().includes(q)
     );
   });
+
+  const uniqueUsers = searchResults.filter((u) => !existingParticipantIds.has(u._id));
+  const suggestedConvs = uniqueUsers.map((u) => ({
+    _id: `new_${u._id}`,
+    participant: u,
+    isNew: true,
+  }));
+
+  const allDisplayItems = [...filtered, ...suggestedConvs];
+
+  const handleSelect = async (id: string, isNew?: boolean) => {
+    if (isNew) {
+      const realId = id.replace("new_", "");
+      setStartingChat(realId);
+      try {
+        const conv = await createOrGetConversation(realId);
+        // Clear search upon starting chat cleanly
+        setSearch("");
+        onSelectConversation(conv._id);
+      } catch (err) {
+        console.error("Start chat error", err);
+        toast.error("Failed to start conversation");
+      } finally {
+        setStartingChat(null);
+      }
+    } else {
+      onSelectConversation(id);
+    }
+  };
 
   return (
     <aside
@@ -82,20 +137,37 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
       <div className="flex-1 overflow-y-auto px-2 space-y-0.5 scrollbar-thin scrollbar-thumb-slate-700">
         {conversationsLoading ? (
           Array.from({ length: 5 }).map((_, i) => <SkeletonItem key={i} />)
-        ) : filtered.length === 0 ? (
+        ) : allDisplayItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-slate-500 text-sm gap-2">
-            <MessageSquarePlus className="w-10 h-10 opacity-30" />
-            <p>{search ? "No results found" : "No conversations yet"}</p>
+            {isSearching ? (
+              <Loader2 className="w-8 h-8 opacity-50 animate-spin" />
+            ) : (
+              <MessageSquarePlus className="w-10 h-10 opacity-30" />
+            )}
+            <p className="mt-2 text-center">
+              {isSearching ? "Searching..." : search ? "No users found" : "No conversations yet"}
+            </p>
           </div>
         ) : (
-          filtered.map((conv) => (
-            <ConversationItem
-              key={conv._id}
-              conversation={conv}
-              isSelected={selectedId === conv._id}
-              onClick={() => onSelectConversation(conv._id)}
-            />
-          ))
+          <>
+            {allDisplayItems.map((item) => {
+              const loading = startingChat === item.participant._id;
+              return (
+                <div key={item._id} className="relative">
+                   <ConversationItem
+                    conversation={item as any}
+                    isSelected={selectedId === item._id}
+                    onClick={() => handleSelect(item._id, (item as any).isNew)}
+                  />
+                  {loading && (
+                    <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px] rounded-xl flex items-center justify-center z-10 transition-all">
+                      <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
         )}
       </div>
     </aside>

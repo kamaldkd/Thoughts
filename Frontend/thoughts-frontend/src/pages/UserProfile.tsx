@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import api, { getUserThoughts, getUserProfile } from "@/lib/api";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton";
@@ -30,6 +31,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getUserProfileByUsername, getThoughtsByUsername } from "@/lib/api";
 import { followUser, unfollowUser, checkIsFollowing } from "@/lib/api";
+import { createOrGetConversation } from "@/services/chatApi";
+import { Loader2 } from "lucide-react";
 
 /* ── Mock data helpers (replace with real API later) ─────────────────────── */
 const MOCK_MUTUAL_AVATARS = [
@@ -229,6 +232,7 @@ export default function UserProfile() {
   const [followState, setFollowState] = useState<
     "not_following" | "following" | "requested"
   >("not_following");
+  const [isMessaging, setIsMessaging] = useState(false);
 
   // Sticky header detection
   useEffect(() => {
@@ -336,6 +340,20 @@ export default function UserProfile() {
         ...prev,
         followersCount: prevFollowersCount,
       }));
+    }
+  };
+
+  const handleMessageClick = async () => {
+    if (!profile?._id) return;
+    setIsMessaging(true);
+    try {
+      const conv = await createOrGetConversation(profile._id);
+      navigate(`/messages/${conv._id}`);
+    } catch (err) {
+      console.error("Failed to start conversation:", err);
+      toast.error("Failed to start conversation");
+    } finally {
+      setIsMessaging(false);
     }
   };
 
@@ -567,8 +585,12 @@ export default function UserProfile() {
                     onUnfollow={handleUnfollow}
                     className="flex-1"
                   />
-                  <button className="flex-1 h-9 rounded-full border border-border bg-transparent text-sm font-semibold hover:bg-muted transition-colors active:scale-95">
-                    Message
+                  <button 
+                    onClick={handleMessageClick}
+                    disabled={isMessaging}
+                    className="flex-1 flex justify-center items-center h-9 rounded-full border border-border bg-transparent text-sm font-semibold hover:bg-muted transition-colors active:scale-95 disabled:opacity-50"
+                  >
+                    {isMessaging ? <Loader2 className="w-4 h-4 animate-spin" /> : "Message"}
                   </button>
                 </div>
               )}

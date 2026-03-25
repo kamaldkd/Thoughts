@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from "react";
-import { Send } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emitTyping } from "@/services/socket";
 
@@ -102,7 +102,11 @@ export const MessageInput = ({ conversationId, onSend, disabled }: MessageInputP
           (!value.trim() || disabled) && "opacity-40 cursor-not-allowed hover:scale-100"
         )}
       >
-        <Send className="w-4 h-4" />
+        {disabled && value.trim() ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Send className="w-4 h-4 ml-0.5" />
+        )}
       </button>
     </div>
   );

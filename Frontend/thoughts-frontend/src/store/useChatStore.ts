@@ -18,7 +18,6 @@ interface ChatState {
   /* ── Conversations ── */
   conversations: Conversation[];
   conversationsLoading: boolean;
-  selectedConversationId: string | null;
 
   /* ── Messages ── */
   messageStore: MessageStore;
@@ -32,7 +31,6 @@ interface ChatState {
   /* ── Actions ── */
   setConversations: (convs: Conversation[]) => void;
   setConversationsLoading: (v: boolean) => void;
-  selectConversation: (id: string | null) => void;
 
   upsertConversation: (conv: Conversation) => void;
   updateLastMessage: (conversationId: string, msg: Message) => void;
@@ -55,7 +53,6 @@ export const useChatStore = create<ChatState>()(
   immer((set) => ({
     conversations: [],
     conversationsLoading: false,
-    selectedConversationId: null,
     messageStore: {},
     typing: {},
     unreadCounts: {},
@@ -68,13 +65,6 @@ export const useChatStore = create<ChatState>()(
     setConversationsLoading: (v) =>
       set((s) => {
         s.conversationsLoading = v;
-      }),
-
-    selectConversation: (id) =>
-      set((s) => {
-        s.selectedConversationId = id;
-        // Clear unread when opening conversation
-        if (id) s.unreadCounts[id] = 0;
       }),
 
     upsertConversation: (conv) =>

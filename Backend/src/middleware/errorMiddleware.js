@@ -31,6 +31,17 @@ export const errorHandler = (err, req, res, next) => {
     statusCode = 400;
   }
 
+  // Mongoose database connectivity or timeout error
+  if (err.message && err.message.includes("buffering timed out")) {
+    message = "Service is temporarily unavailable (Database Timeout). Please try again later.";
+    statusCode = 503;
+  } else if (!err.statusCode && err.name !== "ValidationError" && err.name !== "CastError" && err.code !== 11000) {
+    // If it's a completely unhandled crash, sanitize the output for the UI
+    // while keeping the stack trace in the console (done above via logger).
+    message = "An unexpected server error occurred. Please try again later.";
+    statusCode = 500;
+  }
+
   res.status(statusCode).json({
     success: false,
     message,

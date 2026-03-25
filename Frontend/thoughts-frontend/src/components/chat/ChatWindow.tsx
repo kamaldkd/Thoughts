@@ -7,10 +7,11 @@ import { joinConversation, leaveConversation, emitSendMessage, emitMarkAsSeen } 
 import { getMessages } from "@/services/chatApi";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Loader2, Circle } from "lucide-react";
+import { ArrowLeft, Loader2, Circle, AlertTriangle } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import type { Message } from "@/services/chatApi";
 import { v4 as uuidv4 } from 'uuid';
+import { toast } from "sonner";
 
 interface ChatWindowProps {
   conversationId: string;
@@ -65,6 +66,7 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   const loadingMore = useChatStore((s) => s.messageStore[conversationId]?.loadingMore) || false;
 
   const [initialLoading, setInitialLoading] = useState(false);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevScrollHeight = useRef(0);
   const markedSeen = useRef(false);
@@ -85,8 +87,13 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
       .then(({ messages, pagination }) => {
         setMessages(conversationId, messages, pagination);
         clearUnread(conversationId);
+        setErrorStatus(null);
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error("Chat load error:", err);
+        setErrorStatus(err?.response?.status || 500);
+        toast.error("Failed to load conversation");
+      })
       .finally(() => setInitialLoading(false));
 
     return () => {
@@ -199,6 +206,35 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   /* ─────────────────────────────────────────────
      RENDER
   ───────────────────────────────────────────── */
+  if (errorStatus) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-slate-900/40 gap-4">
+        <AlertTriangle className="w-12 h-12 text-red-500/80" />
+        <h3 className="text-xl font-semibold text-slate-200">
+          {errorStatus === 403 || errorStatus === 401 ? "Access Denied" : "Conversation Not Found"}
+        </h3>
+        <p className="text-slate-400 text-sm max-w-sm text-center">
+          You don't have permission to view this conversation or it doesn't exist.
+        </p>
+        <button
+          onClick={onBack}
+          className="mt-2 px-6 py-2 rounded-full bg-slate-800 text-slate-200 hover:bg-slate-700 transition"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
+  // Show a loading frame if local conversation hasn't hydrated yet but we are loading
+  if (!conversation && !errorStatus) {
+    return (
+      <div className="flex flex-col h-full bg-slate-900/40 items-center justify-center">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
+
   if (!conversation) return null;
 
   const grouped = groupByDate(messages);

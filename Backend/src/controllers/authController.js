@@ -56,7 +56,7 @@ export const oauthCallback = async (req, res) => {
   setAuthCookies(res, accessToken, refreshToken);
 
   const redirectUrl = process.env.OAUTH_SUCCESS_REDIRECT || process.env.FRONTEND_URL || "http://localhost:5173";
-  res.redirect(redirectUrl);
+  res.redirect(`${redirectUrl}/feed`);
 };
 
 export const logout = async (req, res) => {

@@ -89,3 +89,8 @@ export const updateProfileData = async (userId, body, file) => {
   const updatedUser = await updateUser(userId, updates);
   return updatedUser;
 };
+
+export const searchUsersService = async (query, limit = 10) => {
+  const { searchUsersQuery } = await import("../repositories/UserRepository.js");
+  return await searchUsersQuery(query, limit);
+};
