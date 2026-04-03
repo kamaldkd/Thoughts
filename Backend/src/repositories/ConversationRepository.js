@@ -7,7 +7,7 @@ import Conversation from "../models/Conversation.js";
  */
 export const findConversationByParticipants = async (userA, userB) => {
   const sorted = [userA, userB].map(String).sort();
-  return Conversation.findOne({ participants: { $all: sorted, $size: 2 } }).lean();
+  return Conversation.findOne({ participants: sorted }).lean();
 };
 
 /**
@@ -16,7 +16,8 @@ export const findConversationByParticipants = async (userA, userB) => {
  */
 export const createConversation = async (userA, userB) => {
   const sorted = [userA, userB].map(String).sort();
-  const conversation = await Conversation.create({ participants: sorted });
+  const participantKey = sorted.join("_");
+  const conversation = await Conversation.create({ participants: sorted, participantKey });
   return conversation.toObject();
 };
 

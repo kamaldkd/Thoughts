@@ -109,6 +109,14 @@
     --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.2), 0 4px 16px hsl(0 0% 0% / 0.15);
     --shadow-elevated: 0 8px 30px hsl(0 0% 0% / 0.3);
     --shadow-glow: 0 0 20px hsl(168 35% 55% / 0.2);
+
+    /* ── Chat UI tokens ── */
+    --chat-own-from: 225 70% 55%;
+    --chat-own-to: 245 58% 52%;
+    --chat-other: 220 16% 18%;
+    --chat-failed: 0 72% 55%;
+    --chat-surface: 220 18% 12%;
+    --chat-input-bg: 220 14% 16%;
   }
 }
 
@@ -136,6 +144,27 @@
   .animate-typing-1 { animation: typingDots 1.4s infinite ease-in-out both; }
   .animate-typing-2 { animation: typingDots 1.4s infinite ease-in-out 0.2s both; }
   .animate-typing-3 { animation: typingDots 1.4s infinite ease-in-out 0.4s both; }
+
+  .animate-fade-msg {
+    animation: fadeInMessage 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .animate-bounce-in {
+    animation: bounceIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  /* Chat scrollbar */
+  .chat-scrollbar::-webkit-scrollbar { width: 5px; }
+  .chat-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .chat-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(220 14% 25%);
+    border-radius: 9999px;
+  }
+  .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(220 14% 35%);
+  }
 }
 
 @keyframes slideUp {
@@ -144,8 +173,23 @@
 }
 
 @keyframes typingDots {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
-  40% { transform: scale(1); opacity: 1; background-color: currentColor; }
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1.1); opacity: 1; }
+}
+
+@keyframes fadeInMessage {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes bounceIn {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(0 72% 55% / 0); }
+  50% { box-shadow: 0 0 12px 2px hsl(0 72% 55% / 0.3); }
 }
 
 @layer components {

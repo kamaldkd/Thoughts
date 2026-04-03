@@ -28,6 +28,12 @@ interface ChatState {
   /* ── Unread counts ── */
   unreadCounts: Record<string, number>;
 
+  /* ── Failed messages ── */
+  failedMessageIds: Record<string, Set<string>>; // conversationId → Set<tempId>
+
+  /* ── Currently selected ── */
+  selectedConversationId: string | null;
+
   /* ── Actions ── */
   setConversations: (convs: Conversation[]) => void;
   setConversationsLoading: (v: boolean) => void;
@@ -47,6 +53,12 @@ interface ChatState {
 
   incrementUnread: (conversationId: string) => void;
   clearUnread: (conversationId: string) => void;
+
+  markMessageFailed: (conversationId: string, tempId: string) => void;
+  clearFailedMessage: (conversationId: string, tempId: string) => void;
+  removeFailedMessage: (conversationId: string, tempId: string) => void;
+
+  setSelectedConversationId: (id: string | null) => void;
 }
 
 export const useChatStore = create<ChatState>()(
@@ -56,6 +68,8 @@ export const useChatStore = create<ChatState>()(
     messageStore: {},
     typing: {},
     unreadCounts: {},
+    failedMessageIds: {},
+    selectedConversationId: null,
 
     setConversations: (convs) =>
       set((s) => {
@@ -157,6 +171,10 @@ export const useChatStore = create<ChatState>()(
           const dup = store.messages.find((m) => m._id === realMsg._id);
           if (!dup) store.messages.unshift(realMsg);
         }
+        // Clear from failed if it was there
+        if (s.failedMessageIds[conversationId]) {
+          s.failedMessageIds[conversationId].delete(tempId);
+        }
       }),
 
     setTyping: (conversationId, userId, isTyping) =>
@@ -178,9 +196,49 @@ export const useChatStore = create<ChatState>()(
       set((s) => {
         s.unreadCounts[conversationId] = 0;
       }),
+
+    markMessageFailed: (conversationId, tempId) =>
+      set((s) => {
+        if (!s.failedMessageIds[conversationId]) {
+          s.failedMessageIds[conversationId] = new Set();
+        }
+        s.failedMessageIds[conversationId].add(tempId);
+      }),
+
+    clearFailedMessage: (conversationId, tempId) =>
+      set((s) => {
+        if (s.failedMessageIds[conversationId]) {
+          s.failedMessageIds[conversationId].delete(tempId);
+        }
+      }),
+
+    removeFailedMessage: (conversationId, tempId) =>
+      set((s) => {
+        if (s.failedMessageIds[conversationId]) {
+          s.failedMessageIds[conversationId].delete(tempId);
+        }
+        const store = s.messageStore[conversationId];
+        if (store) {
+          store.messages = store.messages.filter((m) => m.tempId !== tempId);
+        }
+      }),
+
+    setSelectedConversationId: (id) =>
+      set((s) => {
+        s.selectedConversationId = id;
+      }),
   }))
 );
 
 /* Selector helpers */
 export const selectConversation = (id: string | null) =>
   (s: ChatState) => s.conversations.find((c) => c._id === id);
+
+export const selectMessages = (conversationId: string) =>
+  (s: ChatState) => s.messageStore[conversationId]?.messages ?? [];
+
+export const selectTypingUsers = (conversationId: string) =>
+  (s: ChatState) => s.typing[conversationId] ?? [];
+
+export const selectIsMessageFailed = (conversationId: string, tempId: string) =>
+  (s: ChatState) => s.failedMessageIds[conversationId]?.has(tempId) ?? false;

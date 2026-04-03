@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -88,6 +89,14 @@ export default {
   				'0%': { transform: 'scale(1)' },
   				'50%': { transform: 'scale(1.3)' },
   				'100%': { transform: 'scale(1)' }
+  			},
+  			'fade-msg': {
+  				'0%': { opacity: '0', transform: 'translateY(6px) scale(0.98)' },
+  				'100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
+  			},
+  			'bounce-in-fab': {
+  				'0%': { opacity: '0', transform: 'scale(0.5)' },
+  				'100%': { opacity: '1', transform: 'scale(1)' }
   			}
   		},
   		animation: {
@@ -96,7 +105,9 @@ export default {
   			'fade-in': 'fade-in 0.5s ease-out forwards',
   			'scale-in': 'scale-in 0.3s ease-out forwards',
   			'slide-up': 'slide-up 0.4s ease-out forwards',
-  			'heart-pop': 'heart-pop 0.3s ease-out'
+  			'heart-pop': 'heart-pop 0.3s ease-out',
+  			'fade-msg': 'fade-msg 0.25s cubic-bezier(0.16,1,0.3,1) forwards',
+  			'bounce-in-fab': 'bounce-in-fab 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards'
   		},
   		boxShadow: {
   			'2xs': 'var(--shadow-2xs)',
@@ -114,5 +125,5 @@ export default {
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

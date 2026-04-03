@@ -17,6 +17,16 @@ const conversationSchema = new mongoose.Schema(
     },
 
     /* ──────────────────────────────────────────
+       UNIQUE PAIR KEY (UserA_ID_UserB_ID sorted)
+       Used for deterministic get-or-create constraints
+    ────────────────────────────────────────── */
+    participantKey: {
+      type: String,
+      unique: true,
+      required: true,
+    },
+
+    /* ──────────────────────────────────────────
        LAST MESSAGE SNAPSHOT (for conversation list)
     ────────────────────────────────────────── */
     lastMessage: {
@@ -38,14 +48,7 @@ const conversationSchema = new mongoose.Schema(
    INDEXES
 ────────────────────────────────────────── */
 
-// Fast get-or-create lookup (guaranteed uniqueness for a pair)
-conversationSchema.index(
-  { participants: 1 },
-  {
-    unique: true,
-    // Sparse so the validator above fires before the index check
-  }
-);
+conversationSchema.index({ participants: 1 });
 
 const Conversation = mongoose.model("Conversation", conversationSchema);
 
