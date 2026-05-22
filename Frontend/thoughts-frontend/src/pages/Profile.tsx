@@ -139,7 +139,6 @@ const Profile = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <ThemeToggle />
           </div>
         </div>
 

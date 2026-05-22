@@ -373,9 +373,9 @@ export function ThoughtCard({
               <Repeat2 className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
             </ActionBtn>
 
-            <ActionBtn>
+            {/* <ActionBtn>
               <Send className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
-            </ActionBtn>
+            </ActionBtn> */}
           </div>
         </div>
       </div>

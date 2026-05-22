@@ -149,7 +149,7 @@ export function Navbar() {
                 }}
               />
             </button>
-
+            <ThemeToggle />
             {/* Avatar / profile button */}
             {!loading && isLoggedIn && user && (
               <Link
