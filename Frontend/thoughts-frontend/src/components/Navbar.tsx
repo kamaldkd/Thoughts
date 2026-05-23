@@ -64,6 +64,7 @@ export function Navbar() {
             <span className="text-lg font-semibold tracking-tight">Thoughts</span>
           </Link>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Link
               to="/feed"
               className="inline-flex h-9 px-4 items-center rounded-full bg-primary text-primary-foreground text-sm font-medium transition-all duration-300 hover:opacity-90"
