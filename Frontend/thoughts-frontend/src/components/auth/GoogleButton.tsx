@@ -6,10 +6,10 @@ interface GoogleButtonProps {
 
 export function GoogleButton({ isLoading }: GoogleButtonProps) {
   const handleGoogleLogin = () => {
-    // Redirects natively to strict passport.js API which routes back with cookies
-    // Fallback to production Render URL if VITE_API_URL wasn't baked in at build time
-    const apiUrl = import.meta.env.VITE_API_URL || "https://thoughts-5bxn.onrender.com/api";
-    window.location.href = `${apiUrl}/auth/google`;
+    // Use relative URL → Vercel proxies /api/* to Render (see vercel.json)
+    // In local dev, VITE_API_URL is set and used directly
+    const apiBase = import.meta.env.VITE_API_URL || "/api";
+    window.location.href = `${apiBase}/auth/google`;
   };
 
   return (

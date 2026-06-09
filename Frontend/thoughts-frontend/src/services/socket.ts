@@ -1,6 +1,11 @@
 import { io, Socket } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") ?? "http://localhost:5000";
+// Socket.IO must connect DIRECTLY to Render — Vercel rewrites do NOT support WebSocket proxying.
+// HTTP API calls go through /api → Vercel proxy → Render (cookies are first-party).
+// Socket connections go directly to Render using the token from the first-party cookie.
+const RENDER_URL = "https://thoughts-5bxn.onrender.com";
+const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") ?? RENDER_URL;
+
 
 let socket: Socket | null = null;
 

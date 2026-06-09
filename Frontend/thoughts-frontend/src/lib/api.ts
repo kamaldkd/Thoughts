@@ -1,8 +1,10 @@
 import axios from "axios";
 
-// VITE_API_URL is baked in at build time by Vite.
-// Fallback to the production Render URL if the env var wasn't set during the Vercel build.
-const BASE_URL = import.meta.env.VITE_API_URL || "https://thoughts-5bxn.onrender.com/api";
+// In production: VITE_API_URL is not set on Vercel → falls back to "/api"
+// Vercel proxies /api/* → https://thoughts-5bxn.onrender.com/api/* (see vercel.json)
+// This makes cookies SAME-ORIGIN (vercel.app) — fixes Samsung Browser / Safari ITP / third-party cookie blocking.
+// In local dev: VITE_API_URL=http://localhost:5000/api (set in .env)
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
