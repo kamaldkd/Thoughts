@@ -8,11 +8,15 @@ import csurf from "csurf";
  * in the future without refactoring all route logic.
  */
 
+// Detect production reliably — mirrors the same logic in authController.js
+const isProduction = process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
+
 export const csrfProtection = csurf({ 
   cookie: { 
     httpOnly: true, 
-    secure: process.env.NODE_ENV === 'production', 
-    // CRITICAL: SameSite must be 'none' in production to allow Vercel <-> Render cross-domain cookie pipelines
-    sameSite: process.env.NODE_ENV === 'production' ? "none" : "lax"
+    secure: isProduction,
+    // SameSite must be 'none' for cross-domain cookie flow (Vercel ↔ Render)
+    sameSite: isProduction ? "none" : "lax"
   } 
 });
+

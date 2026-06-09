@@ -3,11 +3,15 @@ import { deleteToken } from "../repositories/TokenRepository.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import ExpressError from "../utils/ExpressError.js";
 
+// Detect production reliably: NODE_ENV OR presence of FRONTEND_URL (set in Render dashboard)
+// This guards against NODE_ENV not being explicitly set on the hosting platform.
+const isProduction = process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
+
 const getCookieOptions = (maxAge = null) => {
   const options = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: isProduction,           // HTTPS only in production
+    sameSite: isProduction ? "none" : "lax",  // 'none' required for cross-domain (Vercel ↔ Render)
   };
   if (maxAge) options.maxAge = maxAge;
   return options;
