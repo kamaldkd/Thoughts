@@ -7,8 +7,9 @@ interface GoogleButtonProps {
 export function GoogleButton({ isLoading }: GoogleButtonProps) {
   const handleGoogleLogin = () => {
     // Redirects natively to strict passport.js API which routes back with cookies
-    // Uses import.meta.env to dynamically route to Vercel/Production backend instead of localhost
-    window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/auth/google`;
+    // Fallback to production Render URL if VITE_API_URL wasn't baked in at build time
+    const apiUrl = import.meta.env.VITE_API_URL || "https://thoughts-5bxn.onrender.com/api";
+    window.location.href = `${apiUrl}/auth/google`;
   };
 
   return (

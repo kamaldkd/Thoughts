@@ -1,11 +1,14 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+// VITE_API_URL is baked in at build time by Vite.
+// Fallback to the production Render URL if the env var wasn't set during the Vercel build.
+const BASE_URL = import.meta.env.VITE_API_URL || "https://thoughts-5bxn.onrender.com/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
 });
+
 
 /* ─────────────────────────────────────────────
    CSRF PROTECTION & REFRESH TOKEN QUEUES (Priority 4 & 5)
