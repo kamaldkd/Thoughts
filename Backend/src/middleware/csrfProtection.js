@@ -8,8 +8,9 @@ import csurf from "csurf";
  * in the future without refactoring all route logic.
  */
 
-// Detect production reliably — mirrors the same logic in authController.js
-const isProduction = process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
+// Detect production environment reliably.
+// Render.com automatically injects RENDER=true into every deployment — no manual config needed.
+const isProduction = process.env.RENDER === "true" || process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
 
 export const csrfProtection = csurf({ 
   cookie: { 

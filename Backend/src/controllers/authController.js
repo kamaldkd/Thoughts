@@ -3,9 +3,10 @@ import { deleteToken } from "../repositories/TokenRepository.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import ExpressError from "../utils/ExpressError.js";
 
-// Detect production reliably: NODE_ENV OR presence of FRONTEND_URL (set in Render dashboard)
-// This guards against NODE_ENV not being explicitly set on the hosting platform.
-const isProduction = process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
+// Detect production environment reliably.
+// Render.com automatically injects RENDER=true into every deployment — no manual config needed.
+// This is the most reliable signal vs NODE_ENV (often not set) or FRONTEND_URL (requires manual setup).
+const isProduction = process.env.RENDER === "true" || process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
 
 const getCookieOptions = (maxAge = null) => {
   const options = {

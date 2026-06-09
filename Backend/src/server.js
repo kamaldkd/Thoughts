@@ -28,6 +28,10 @@ const startServer = async () => {
     httpServer.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Socket.IO attached on port ${PORT}`);
+      // Diagnostic: confirm cookie mode so we can verify in Render logs
+      const isRender = process.env.RENDER === "true";
+      const isProd = isRender || process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
+      console.log(`[COOKIE MODE] RENDER=${process.env.RENDER} | NODE_ENV=${process.env.NODE_ENV} | isProduction=${isProd} | SameSite=${isProd ? "none" : "lax"}`);
       initCronJobs();
     });
   } catch (err) {
