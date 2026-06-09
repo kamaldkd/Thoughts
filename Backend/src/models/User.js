@@ -15,8 +15,15 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
+      // Not required at schema level — Google OAuth users have password: null
+      required: function() { return !this.googleId; },
       select: false,
+    },
+
+    googleId: {
+      type: String,
+      default: null,
+      index: true,
     },
 
     username: {
@@ -35,6 +42,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      default: "",
     },
 
     bio: {

@@ -38,11 +38,20 @@ app.use(helmet());
 setupPassport(passport);
 app.use(passport.initialize());
 
-// Enable strict CSRF for ALL state-changing routes (including login)
-app.use("/api", csrfProtection);
-
-app.get("/api/csrf-token", (req, res) => {
+// CSRF-token bootstrap endpoint MUST be exempted from CSRF protection
+// (it's the endpoint that issues the token in the first place)
+app.get("/api/csrf-token", csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
+});
+
+// Enable strict CSRF for ALL state-changing routes EXCEPT OAuth redirects
+// Google OAuth uses server-side redirects, not client-driven AJAX — no token needed
+const csrfExcludedPaths = ["/api/auth/google", "/api/auth/google/callback"];
+app.use("/api", (req, res, next) => {
+  if (csrfExcludedPaths.some(p => req.path.startsWith(p.replace("/api", "")))) {
+    return next();
+  }
+  return csrfProtection(req, res, next);
 });
 
 // Configure Rate Limiting specifically for Auth routes to block brute-force

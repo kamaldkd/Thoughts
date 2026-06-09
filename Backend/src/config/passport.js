@@ -27,10 +27,13 @@ export default function setupPassport(passport) {
           }
 
           if (!user) {
+            const baseUsername = profile.displayName
+              ? profile.displayName.toLowerCase().replace(/\s+/g, "_")
+              : (email ? email.split("@")[0] : `google_${profile.id}`);
+            
             user = await User.create({
-              username:
-                profile.displayName ||
-                (email ? email.split("@")[0] : `google_${profile.id}`),
+              name: profile.displayName || (email ? email.split("@")[0] : `User_${profile.id}`),
+              username: `${baseUsername}_${profile.id.slice(-6)}`,
               email: email || `${profile.id}@google.com`,
               password: null,
               googleId: profile.id,
