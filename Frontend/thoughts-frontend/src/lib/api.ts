@@ -32,29 +32,29 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-export const fetchCsrfToken = async (retries = 3, delayMs = 1000) => {
+export const fetchCsrfToken = async (retries = 2, delayMs = 800) => {
   if (csrfPromise) return csrfPromise;
   
   csrfPromise = (async () => {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        // Intentionally use base axios to avoid hitting interceptors if not needed
         const res = await axios.get(`${BASE_URL}/csrf-token`, { 
           withCredentials: true,
-          timeout: 15000, // 15s timeout to handle Render cold starts
+          timeout: 8000, // 8s — Vercel proxy is fast, no need for 15s
         });
         csrfTokenInMemory = res.data.csrfToken;
-        return; // success — exit loop
+        return;
       } catch (err) {
         console.warn(`CSRF token fetch attempt ${attempt}/${retries} failed:`, err);
         if (attempt < retries) {
-          await new Promise(res => setTimeout(res, delayMs * attempt)); // backoff
+          await new Promise(res => setTimeout(res, delayMs * attempt));
         } else {
           console.error("Failed to fetch CSRF token after all retries. Auth routes that require CSRF may fail.");
         }
       }
     }
   })();
+
   
   csrfPromise = csrfPromise.finally(() => { csrfPromise = null; });
   return csrfPromise;

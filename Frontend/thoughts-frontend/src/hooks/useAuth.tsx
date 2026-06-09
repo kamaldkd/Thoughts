@@ -53,16 +53,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function login(email: string, password: string) {
     await api.post("/auth/login", { email, password });
-    // Backend wiped the old CSRF secret, explicitly fast-fetch the rotated one.
-    await fetchCsrfToken();
-    await fetchUserDetails();
+    // Fetch CSRF token and user details in parallel — don't let a slow CSRF
+    // endpoint block the user from being logged in.
+    await Promise.allSettled([
+      fetchCsrfToken(),
+      fetchUserDetails(),
+    ]);
   }
 
   async function register(name: string, username: string, email: string, password: string) {
     await api.post("/auth/register", { name, username, email, password });
-    // Backend wiped the old CSRF secret, explicitly fast-fetch the rotated one.
-    await fetchCsrfToken();
-    await fetchUserDetails();
+    // Fetch CSRF token and user details in parallel.
+    await Promise.allSettled([
+      fetchCsrfToken(),
+      fetchUserDetails(),
+    ]);
   }
 
   async function logout() {
