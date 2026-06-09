@@ -27,23 +27,34 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-export const fetchCsrfToken = async () => {
+export const fetchCsrfToken = async (retries = 3, delayMs = 1000) => {
   if (csrfPromise) return csrfPromise;
   
   csrfPromise = (async () => {
-    try {
-      // Intentionally use base axios to avoid hitting interceptors if not needed
-      const res = await axios.get(`${BASE_URL}/csrf-token`, { withCredentials: true });
-      csrfTokenInMemory = res.data.csrfToken;
-    } catch (err) {
-      console.error("Failed to fetch CSRF token on boot", err);
-    } finally {
-      csrfPromise = null;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        // Intentionally use base axios to avoid hitting interceptors if not needed
+        const res = await axios.get(`${BASE_URL}/csrf-token`, { 
+          withCredentials: true,
+          timeout: 15000, // 15s timeout to handle Render cold starts
+        });
+        csrfTokenInMemory = res.data.csrfToken;
+        return; // success — exit loop
+      } catch (err) {
+        console.warn(`CSRF token fetch attempt ${attempt}/${retries} failed:`, err);
+        if (attempt < retries) {
+          await new Promise(res => setTimeout(res, delayMs * attempt)); // backoff
+        } else {
+          console.error("Failed to fetch CSRF token after all retries. Auth routes that require CSRF may fail.");
+        }
+      }
     }
   })();
   
+  csrfPromise = csrfPromise.finally(() => { csrfPromise = null; });
   return csrfPromise;
 };
+
 
 api.interceptors.request.use(async (config) => {
   // Await global CSRF readiness before ANY request fires (eliminates Race Conditions)

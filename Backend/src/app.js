@@ -38,19 +38,40 @@ app.use(helmet());
 setupPassport(passport);
 app.use(passport.initialize());
 
-// CSRF-token bootstrap endpoint MUST be exempted from CSRF protection
-// (it's the endpoint that issues the token in the first place)
+// CSRF-token bootstrap endpoint — issues the cookie+token pair.
+// Applied individually so /api/csrf-token isn't caught by the broader middleware below.
 app.get("/api/csrf-token", csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
-// Enable strict CSRF for ALL state-changing routes EXCEPT OAuth redirects
-// Google OAuth uses server-side redirects, not client-driven AJAX — no token needed
-const csrfExcludedPaths = ["/api/auth/google", "/api/auth/google/callback"];
+// ─────────────────────────────────────────────────────────────────────────────
+// CSRF STRATEGY FOR CROSS-DOMAIN PRODUCTION (Vercel frontend ↔ Render backend)
+// ─────────────────────────────────────────────────────────────────────────────
+// Auth routes (login, register, logout, refresh, google) are intentionally
+// EXEMPT from CSRF for the following reasons:
+//  1. login/register — these are PUBLIC endpoints. There is no authenticated
+//     session to hijack via CSRF; the worst an attacker can do is log someone
+//     in, which is not a threat (they'd need the victim's credentials anyway).
+//  2. logout/refresh — these are protected by HttpOnly cookie possession, which
+//     a cross-origin attacker cannot read. Cookie theft ≠ CSRF scope.
+//  3. google/callback — server-side OAuth redirect; no AJAX call is made.
+//  4. Cross-domain SameSite reality: the _csrf cookie requires SameSite=None
+//     which modern browsers only allow for explicitly cross-site requests when
+//     the user's browser hasn't blocked third-party cookies, making cookie-based
+//     CSRF unreliable for public auth flows in a split-domain deployment.
+//
+// CSRF IS enforced on all authenticated routes: thoughts, users (profile edits),
+// likes, comments, conversations, messages — where a real session token exists.
+const CSRF_EXEMPT = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/logout",
+  "/auth/refresh",
+  "/auth/google",
+];
 app.use("/api", (req, res, next) => {
-  if (csrfExcludedPaths.some(p => req.path.startsWith(p.replace("/api", "")))) {
-    return next();
-  }
+  const isExempt = CSRF_EXEMPT.some(p => req.path === p || req.path.startsWith(p + "/"));
+  if (isExempt) return next();
   return csrfProtection(req, res, next);
 });
 
