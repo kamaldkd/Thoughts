@@ -32,7 +32,9 @@ export const register = async (req, res) => {
   req.userId = user._id;
   setAuthCookies(res, accessToken, refreshToken);
 
-  res.status(201).json({ success: true, message: "User registered successfully" });
+  // Also return accessToken in body — frontend stores in memory and sends as
+  // Authorization: Bearer header. This bypasses ALL cookie issues on mobile browsers.
+  res.status(201).json({ success: true, message: "User registered successfully", accessToken });
 };
 
 export const login = async (req, res) => {
@@ -47,7 +49,9 @@ export const login = async (req, res) => {
   req.userId = user._id;
   setAuthCookies(res, accessToken, refreshToken);
 
-  res.json({ success: true, message: "Login successful" });
+  // Also return accessToken in body — frontend stores in memory and sends as
+  // Authorization: Bearer header. This bypasses ALL cookie issues on mobile browsers.
+  res.json({ success: true, message: "Login successful", accessToken });
 };
 
 export const oauthCallback = async (req, res) => {
@@ -87,7 +91,8 @@ export const refresh = async (req, res) => {
   try {
     const { accessToken: newAccess, refreshToken: newRefresh } = await rotateRefreshTokens(refreshToken);
     setAuthCookies(res, newAccess, newRefresh);
-    res.json({ success: true, message: "Token refreshed" });
+    // Return new accessToken in body so frontend can update its in-memory token.
+    res.json({ success: true, message: "Token refreshed", accessToken: newAccess });
   } catch (error) {
     res.cookie("accessToken", "", getCookieOptions(0));
     res.cookie("refreshToken", "", getCookieOptions(0));

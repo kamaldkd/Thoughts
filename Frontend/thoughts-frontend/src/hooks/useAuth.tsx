@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import api, { fetchCsrfToken } from "@/lib/api";
+import api, { fetchCsrfToken, setAccessToken } from "@/lib/api";
+
 
 interface User {
   _id: string;
@@ -52,34 +53,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function login(email: string, password: string) {
-    await api.post("/auth/login", { email, password });
-    // Fetch CSRF token and user details in parallel — don't let a slow CSRF
-    // endpoint block the user from being logged in.
-    await Promise.allSettled([
-      fetchCsrfToken(),
-      fetchUserDetails(),
-    ]);
+    const res = await api.post("/auth/login", { email, password });
+    // Store accessToken in memory → sent as Authorization: Bearer on all subsequent requests.
+    // This works on ALL browsers regardless of cookie policy.
+    if (res.data?.accessToken) setAccessToken(res.data.accessToken);
+    // Fetch CSRF token and user details in parallel — don't block on slow CSRF.
+    await Promise.allSettled([fetchCsrfToken(), fetchUserDetails()]);
   }
 
   async function register(name: string, username: string, email: string, password: string) {
-    await api.post("/auth/register", { name, username, email, password });
-    // Fetch CSRF token and user details in parallel.
-    await Promise.allSettled([
-      fetchCsrfToken(),
-      fetchUserDetails(),
-    ]);
+    const res = await api.post("/auth/register", { name, username, email, password });
+    if (res.data?.accessToken) setAccessToken(res.data.accessToken);
+    await Promise.allSettled([fetchCsrfToken(), fetchUserDetails()]);
   }
 
   async function logout() {
     try {
       await api.post("/auth/logout");
-      // Destroy the unauthenticated old token and fetch the public zero-state token
       await fetchCsrfToken();
     } catch (err) {
       console.error("Logout failed:", err);
     }
+    setAccessToken(null);  // clear in-memory token
     setUser(null);
   }
+
 
   return (
     <AuthContext.Provider

@@ -2,24 +2,33 @@ import axios from "axios";
 
 // In production: VITE_API_URL is not set on Vercel → falls back to "/api"
 // Vercel proxies /api/* → https://thoughts-5bxn.onrender.com/api/* (see vercel.json)
-// This makes cookies SAME-ORIGIN (vercel.app) — fixes Samsung Browser / Safari ITP / third-party cookie blocking.
 // In local dev: VITE_API_URL=http://localhost:5000/api (set in .env)
 const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true,
+  withCredentials: true,  // still send cookies as secondary fallback
 });
 
 
 /* ─────────────────────────────────────────────
-   CSRF PROTECTION & REFRESH TOKEN QUEUES (Priority 4 & 5)
+   TOKEN STORAGE — Authorization header approach
+   Stores accessToken in memory (not localStorage — avoids XSS risk).
+   Cleared on page refresh; refreshToken cookie handles session restoration.
 ───────────────────────────────────────────── */
 
-// Secure in-memory token storage (prevents XSS extraction from localStorage)
+export let accessTokenInMemory: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+  accessTokenInMemory = token;
+};
+
+/* ─────────────────────────────────────────────
+   CSRF PROTECTION & REFRESH TOKEN QUEUES
+───────────────────────────────────────────── */
+
 export let csrfTokenInMemory: string | null = null;
 
-// Promise locks and Queues
 let csrfPromise: Promise<void> | null = null;
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (value?: unknown) => void; reject: (reason?: any) => void }> = [];
@@ -40,7 +49,7 @@ export const fetchCsrfToken = async (retries = 2, delayMs = 800) => {
       try {
         const res = await axios.get(`${BASE_URL}/csrf-token`, { 
           withCredentials: true,
-          timeout: 8000, // 8s — Vercel proxy is fast, no need for 15s
+          timeout: 8000,
         });
         csrfTokenInMemory = res.data.csrfToken;
         return;
@@ -49,23 +58,28 @@ export const fetchCsrfToken = async (retries = 2, delayMs = 800) => {
         if (attempt < retries) {
           await new Promise(res => setTimeout(res, delayMs * attempt));
         } else {
-          console.error("Failed to fetch CSRF token after all retries. Auth routes that require CSRF may fail.");
+          console.error("Failed to fetch CSRF token after all retries.");
         }
       }
     }
   })();
 
-  
   csrfPromise = csrfPromise.finally(() => { csrfPromise = null; });
   return csrfPromise;
 };
 
 
 api.interceptors.request.use(async (config) => {
-  // Await global CSRF readiness before ANY request fires (eliminates Race Conditions)
+  // Await global CSRF readiness before ANY request fires
   if (csrfPromise) await csrfPromise;
 
-  // csurf natively looks for CSRF-Token, XSRF-Token, X-CSRF-Token
+  // PRIMARY AUTH: Send Authorization: Bearer header — works on ALL browsers/devices.
+  // This eliminates reliance on cookies which are blocked by Samsung Browser, Safari ITP, etc.
+  if (accessTokenInMemory) {
+    config.headers["Authorization"] = `Bearer ${accessTokenInMemory}`;
+  }
+
+  // CSRF token for state-changing requests
   if (csrfTokenInMemory && ["post", "put", "patch", "delete"].includes(config.method?.toLowerCase() || "")) {
     config.headers["CSRF-Token"] = csrfTokenInMemory;
   }
@@ -112,9 +126,15 @@ api.interceptors.response.use(
 
       try {
         console.warn("Access Token Expired. Refreshing session...");
-        await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+        const refreshRes = await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
         
-        // Backend destroys the old _csrf token during auth/refresh rotation. Fetch a new one instantly.
+        // Store new accessToken from response body
+        if (refreshRes.data?.accessToken) {
+          setAccessToken(refreshRes.data.accessToken);
+          originalRequest.headers["Authorization"] = `Bearer ${refreshRes.data.accessToken}`;
+        }
+
+        // Fetch refreshed CSRF token
         await fetchCsrfToken();
         if (csrfTokenInMemory) {
            originalRequest.headers["CSRF-Token"] = csrfTokenInMemory;
@@ -123,12 +143,13 @@ api.interceptors.response.use(
         processQueue(null, "Refreshed");
         return api(originalRequest);
       } catch (refreshError) {
+        setAccessToken(null); // clear stale token
         processQueue(refreshError, null);
-        // Refresh token died / theft detected: redirect to login or clear state realistically
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
+
     }
 
     return Promise.reject(error);

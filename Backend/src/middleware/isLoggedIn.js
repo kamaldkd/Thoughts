@@ -2,23 +2,26 @@ import jwt from "jsonwebtoken";
 import ExpressError from "../utils/ExpressError.js";
 
 export const isLoggedIn = (req, res, next) => {
-  const token = req.cookies.accessToken;
+  // Check Authorization: Bearer <token> header first (primary — works on all browsers/devices).
+  // Fall back to httpOnly cookie (secondary — may be blocked by mobile browsers cross-domain).
+  let token = null;
 
-  // no token sent
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.slice(7);
+  } else {
+    token = req.cookies?.accessToken || null;
+  }
+
   if (!token) {
     throw new ExpressError(401, "You must be logged in");
   }
 
   try {
-    // verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // save user id for next middlewares/ controllers
     req.userId = decoded.userId;
-
-    next(); // user is valid, continue
+    next();
   } catch (err) {
-    //token invalid or expired
     throw new ExpressError(401, "Invalid or expired token");
   }
 };
