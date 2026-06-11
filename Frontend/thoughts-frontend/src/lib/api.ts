@@ -42,6 +42,7 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 export const fetchCsrfToken = async (retries = 2, delayMs = 800) => {
+  // If a fetch is already in-flight, reuse it — prevents duplicate parallel requests.
   if (csrfPromise) return csrfPromise;
   
   csrfPromise = (async () => {
@@ -64,8 +65,15 @@ export const fetchCsrfToken = async (retries = 2, delayMs = 800) => {
     }
   })();
 
-  csrfPromise = csrfPromise.finally(() => { csrfPromise = null; });
-  return csrfPromise;
+  // Reset the promise reference only AFTER it resolves/rejects so that concurrent
+  // callers who check `if (csrfPromise)` after we set it will all await the same promise.
+  // Previously the .finally() reset csrfPromise = null before the outer await chain
+  // completed, creating a window where a second fetchCsrfToken() would start a duplicate request.
+  const p = csrfPromise;
+  p.finally(() => { 
+    if (csrfPromise === p) csrfPromise = null; 
+  });
+  return p;
 };
 
 
@@ -126,7 +134,13 @@ api.interceptors.response.use(
 
       try {
         console.warn("Access Token Expired. Refreshing session...");
-        const refreshRes = await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+        // Use raw axios (not the `api` instance) for the refresh call to avoid re-triggering
+        // this interceptor, which would cause an infinite loop. withCredentials ensures
+        // the refreshToken HttpOnly cookie is sent with the request.
+        const refreshRes = await axios.post(`${BASE_URL}/auth/refresh`, {}, { 
+          withCredentials: true,
+          timeout: 10000,
+        });
         
         // Store new accessToken from response body
         if (refreshRes.data?.accessToken) {

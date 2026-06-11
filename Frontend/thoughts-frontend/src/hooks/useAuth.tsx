@@ -44,10 +44,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchUserDetails() {
     try {
+      // On page refresh, accessTokenInMemory is null. The api interceptor will:
+      // 1. Send the request without a Bearer header (no in-memory token)
+      // 2. If the server returns 401, automatically call /auth/refresh using the
+      //    refreshToken HttpOnly cookie, obtain a new accessToken, store it in memory,
+      //    then retry this request transparently.
+      // So this single call handles both "already have token" and "need to restore session".
       const res = await api.get("/users/me");
       setUser(res.data.user);
-    } catch (err) {
-      console.error("Failed to fetch user details:", err);
+    } catch (err: any) {
+      // 401 after failed refresh = no valid session → user needs to log in
+      // Other errors (network, 500, etc.) → treat as not logged in for safety
+      if (err?.response?.status !== 401) {
+        console.error("Failed to fetch user details:", err);
+      }
       setUser(null);
     }
   }

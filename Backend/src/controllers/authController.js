@@ -5,8 +5,11 @@ import ExpressError from "../utils/ExpressError.js";
 
 // Detect production environment reliably.
 // Render.com automatically injects RENDER=true into every deployment — no manual config needed.
-// This is the most reliable signal vs NODE_ENV (often not set) or FRONTEND_URL (requires manual setup).
-const isProduction = process.env.RENDER === "true" || process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
+// We intentionally do NOT use !!process.env.FRONTEND_URL here because that env var is also
+// present in the local .env file for OAuth redirects, which would make isProduction=true
+// in local development and cause cookies to require HTTPS (secure:true), silently dropping
+// them over HTTP. RENDER=true and NODE_ENV=production are deployment-only signals.
+const isProduction = process.env.RENDER === "true" || process.env.NODE_ENV === "production";
 
 const getCookieOptions = (maxAge = null) => {
   const options = {
@@ -21,7 +24,10 @@ const getCookieOptions = (maxAge = null) => {
 const setAuthCookies = (res, accessToken, refreshToken) => {
   res.cookie("accessToken", accessToken, getCookieOptions(15 * 60 * 1000));
   res.cookie("refreshToken", refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
-  res.clearCookie("_csrf", getCookieOptions());
+  // NOTE: Do NOT clear the _csrf cookie here. Clearing it on login/register creates a
+  // race condition where CSRF-protected requests can fire before the frontend fetches a new
+  // CSRF token, producing spurious 403 errors. The CSRF token lifecycle is managed
+  // independently by the frontend's fetchCsrfToken() call after auth actions.
 };
 
 export const register = async (req, res) => {
@@ -75,9 +81,10 @@ export const logout = async (req, res) => {
     await deleteToken(refreshToken);
   }
 
+  // Clear auth cookies using the same security attributes they were set with.
+  // Mismatched attributes (e.g., different sameSite/secure) cause browsers to ignore clearCookie.
   res.cookie("accessToken", "", getCookieOptions(0));
   res.cookie("refreshToken", "", getCookieOptions(0));
-  res.clearCookie("_csrf", getCookieOptions());
   
   res.json({ success: true, message: "Logged out successfully" });
 };
@@ -94,9 +101,9 @@ export const refresh = async (req, res) => {
     // Return new accessToken in body so frontend can update its in-memory token.
     res.json({ success: true, message: "Token refreshed", accessToken: newAccess });
   } catch (error) {
+    // On failure, clear auth cookies so the browser doesn't keep sending an invalid refreshToken.
     res.cookie("accessToken", "", getCookieOptions(0));
     res.cookie("refreshToken", "", getCookieOptions(0));
-    res.clearCookie("_csrf", getCookieOptions());
     throw error;
   }
 };

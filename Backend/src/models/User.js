@@ -82,6 +82,16 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
 
+    location: {
+      type: String,
+      default: "",
+    },
+
+    isPrivate: {
+      type: Boolean,
+      default: false,
+    },
+
     /* =======================
        ACTIVITY / STATUS
     ======================== */

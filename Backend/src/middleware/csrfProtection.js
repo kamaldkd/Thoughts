@@ -10,7 +10,10 @@ import csurf from "csurf";
 
 // Detect production environment reliably.
 // Render.com automatically injects RENDER=true into every deployment — no manual config needed.
-const isProduction = process.env.RENDER === "true" || process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
+// We intentionally do NOT use !!process.env.FRONTEND_URL because that var also exists in the
+// local .env file (for OAuth dev config), which would make isProduction=true locally and
+// set secure:true on the CSRF cookie — silently breaking login over HTTP.
+const isProduction = process.env.RENDER === "true" || process.env.NODE_ENV === "production";
 
 export const csrfProtection = csurf({ 
   cookie: { 
