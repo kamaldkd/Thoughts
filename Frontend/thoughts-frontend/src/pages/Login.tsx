@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { InputField } from "@/components/auth/InputField";
@@ -13,7 +13,15 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, isLoggedIn } = useAuth();
+
+  // Show error message if redirected back from OAuth with an error
+  useEffect(() => {
+    if (searchParams.get("error") === "oauth_failed") {
+      setError("Google sign-in failed. Please try again or use email/password.");
+    }
+  }, [searchParams]);
 
   // Route Guard: Redirect logged-in users out of the Auth silo
   if (isLoggedIn) {

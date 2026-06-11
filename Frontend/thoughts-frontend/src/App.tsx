@@ -18,6 +18,7 @@ import EditProfile from "./pages/EditProfile";
 import Activity from "./pages/Activity";
 import UserProfile from "./pages/UserProfile";
 import ChatPage from "./pages/ChatPage";
+import OAuthCallback from "./pages/OAuthCallback";
 import { useEffect, useState } from "react";
 import AppLoader from "@/components/AppLoader";
 import { fetchCsrfToken } from "@/lib/api";
@@ -44,6 +45,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/auth/callback" element={<OAuthCallback />} />
       <Route
         path="/profile/:username"
         element={

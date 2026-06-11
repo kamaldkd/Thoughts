@@ -15,7 +15,7 @@ const getCookieOptions = (maxAge = null) => {
   const options = {
     httpOnly: true,
     secure: isProduction,           // HTTPS only in production
-    sameSite: isProduction ? "none" : "lax",  // 'none' required for cross-domain (Vercel ↔ Render)
+    sameSite: isProduction ? "none" : "lax",  // 'none' required for cross-domain (Vercel <-> Render)
   };
   if (maxAge) options.maxAge = maxAge;
   return options;
@@ -62,16 +62,26 @@ export const login = async (req, res) => {
 
 export const oauthCallback = async (req, res) => {
   const user = req.user;
+  const frontendUrl = process.env.OAUTH_SUCCESS_REDIRECT || process.env.FRONTEND_URL || "http://localhost:8080";
+
   if (!user) {
-    return res.status(400).json({ success: false, message: "OAuth failed" });
+    return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
   }
 
   const { accessToken, refreshToken } = await oauthLogin(user);
 
-  setAuthCookies(res, accessToken, refreshToken);
+  // Set refreshToken as HttpOnly cookie for silent token refresh later.
+  // We do NOT rely on the accessToken cookie for the initial OAuth redirect because
+  // this callback runs on the Render domain (thoughts-5bxn.onrender.com) and the
+  // browser is about to navigate to the Vercel domain (thoughts-social.vercel.app).
+  // Cross-domain Set-Cookie headers are silently dropped in this redirect flow —
+  // the cookie is scoped to .onrender.com but the destination is .vercel.app.
+  // Fix: pass the accessToken as a short-lived URL query param. The frontend
+  // /auth/callback page extracts it immediately, stores it in memory, then
+  // replaces the URL so the token never stays visible in the address bar.
+  res.cookie("refreshToken", refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
-  const redirectUrl = process.env.OAUTH_SUCCESS_REDIRECT || process.env.FRONTEND_URL || "http://localhost:8080";
-  res.redirect(`${redirectUrl}/feed`);
+  res.redirect(`${frontendUrl}/auth/callback?token=${encodeURIComponent(accessToken)}`);
 };
 
 export const logout = async (req, res) => {
