@@ -120,15 +120,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/messages/:conversationId"
-          element={
-            <ProtectedRoute>
-              <ChatPage />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
