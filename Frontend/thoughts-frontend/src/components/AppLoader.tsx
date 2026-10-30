@@ -12,7 +12,7 @@ export default function AppLoader() {
       </div>
 
       <p className="mt-4 text-sm text-gray-400">
-        Loading your feed...
+        Loading Thoughts...
       </p>
     </div>
   );
