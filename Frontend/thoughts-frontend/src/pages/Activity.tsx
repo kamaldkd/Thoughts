@@ -185,14 +185,14 @@ export default function Activity() {
         </div>
 
         <Tabs defaultValue="all" className="w-full">
-          <div className="px-4 pt-2">
+          {/* <div className="px-4 pt-2">
             <TabsList className="w-full bg-secondary/50">
               <TabsTrigger value="all" className="flex-1 text-xs">All</TabsTrigger>
               <TabsTrigger value="likes" className="flex-1 text-xs">Likes</TabsTrigger>
               <TabsTrigger value="comments" className="flex-1 text-xs">Comments</TabsTrigger>
               <TabsTrigger value="follows" className="flex-1 text-xs">Follows</TabsTrigger>
             </TabsList>
-          </div>
+          </div> */}
 
           <TabsContent value="all" className="mt-1">
             <div className="divide-y divide-border/40">
