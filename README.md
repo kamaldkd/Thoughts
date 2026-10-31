@@ -12,9 +12,9 @@ The project focuses on real-world features like authentication, CRUD operations,
 - 🔐 User Authentication (Register / Login / Logout)
 - 📝 Create, Read, Update, Delete Thoughts
 - 🖼️ Image support with fallback avatars
-- ❤️ Like & interact with thoughts
+- ❤️ Like,Comment & interact with thoughts
 - 👤 User profiles
-- 🔄 Persistent login using JWT
+- 🔄 Persistent login using JWT and OAuth 2.0
 - 📱 Fully responsive design
 - ⚡ Fast and optimized frontend
 
