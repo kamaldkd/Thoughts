@@ -120,6 +120,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+      </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
