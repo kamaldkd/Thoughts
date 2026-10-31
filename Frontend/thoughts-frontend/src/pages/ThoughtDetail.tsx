@@ -17,6 +17,7 @@ import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import ThoughtSkeleton from "@/components/ThoughtSkeleton";
 import CommentSection from "@/components/CommentSection";
 import defaultAvatar from "../assets/hero-bg.jpg";
+import { ActionBtn } from "@/components/ThoughtCard";
 
 /* ─── Types ─────────────────────────────────────────── */
 interface MediaItem { url: string; type: "image" | "video" }
@@ -163,7 +164,7 @@ export default function ThoughtDetail() {
         </div>
 
         {/* Thought */}
-        <article className="pb-4 border-b border-border/60 animate-fade-in">
+        <article className="pb-4  border-border/60 animate-fade-in">
           <div className="flex gap-3">
             <img
               src={thought.author.avatar || defaultAvatar}
@@ -178,9 +179,9 @@ export default function ThoughtDetail() {
                   </Link>
                   <span className="text-xs text-muted-foreground">{timeText}</span>
                 </div>
-                <button className="p-1 rounded-full hover:bg-secondary transition-colors">
+                {/* <button className="p-1 rounded-full hover:bg-secondary transition-colors">
                   <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
@@ -231,13 +232,41 @@ export default function ThoughtDetail() {
           )}
 
           {/* Stats */}
-          <div className="flex items-center gap-6 mt-4 py-3 border-t border-border/40 text-sm text-muted-foreground">
-            <span><strong className="text-foreground">{likeCount}</strong> likes</span>
-            <span><strong className="text-foreground">{commentCount}</strong> comments</span>
+          <div className="flex items-center gap-6 mt-4 py-3 border-t border-border/40 text-lg text-muted-foreground">
+            <ActionBtn onClick={handleLike}>
+              <Heart
+                className={`h-[18px] w-[18px] transition-all duration-200 ${
+                  liked
+                    ? "fill-destructive text-destructive scale-110"
+                    : "text-muted-foreground group-hover:text-foreground"
+                }`}
+              />
+              {(
+                <span
+                  className={`text-lg tabular-nums text-white`}
+                >
+                  {likeCount}
+                </span>
+              )}
+            </ActionBtn>
+
+            <ActionBtn>
+              <MessageCircle
+                className={`h-[18px] w-[18px] transition-all duration-200`}
+              />
+              {(
+                <span
+                  className={`text-lg tabular-nums text-white`}
+                >
+                  {commentCount}
+                </span>
+              )}
+            </ActionBtn>
+            
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-around py-2 border-t border-b border-border/40">
+          {/* <div className="flex items-center py-2 border-t border-b border-border/40">
             <button
               onClick={handleLike}
               className="flex items-center gap-2 py-2 px-4 rounded-lg hover:bg-secondary transition-colors group"
@@ -260,7 +289,7 @@ export default function ThoughtDetail() {
               <Send className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
               <span className="text-sm text-muted-foreground">Share</span>
             </button>
-          </div>
+          </div> */}
         </article>
 
         {/* Real comment section */}

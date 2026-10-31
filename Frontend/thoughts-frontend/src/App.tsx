@@ -153,9 +153,9 @@ const App = () => {
       <TooltipProvider>
         <AuthProvider>
           <ActivityBadgeProvider>
+            <BrowserRouter>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
               <AppRoutes />
             </BrowserRouter>
           </ActivityBadgeProvider>

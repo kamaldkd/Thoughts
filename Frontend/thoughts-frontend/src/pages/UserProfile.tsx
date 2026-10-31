@@ -11,6 +11,7 @@ import {
   Image,
   User,
   Repeat2,
+  Grid3X3,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -160,7 +161,8 @@ function EmptyState({ tab }: { tab: string }) {
 }
 
 /* ── Tab Bar ─────────────────────────────────────────────────────────────── */
-const TABS = ["posts", "reposts", "media"] as const;
+// const TABS = ["posts", "reposts", "media"] as const;
+const TABS = ["posts", "media"] as const;
 type Tab = (typeof TABS)[number];
 
 function TabBar({
@@ -184,18 +186,10 @@ function TabBar({
           )}
         >
           {t === "posts" ? (
-            <Image
-              className="w-4 h-4 mx-auto"
-              strokeWidth={active === t ? 2.2 : 1.8}
-            />
-          ) : t === "reposts" ? (
-            <Repeat2
-              className="w-4 h-4 mx-auto"
-              strokeWidth={active === t ? 2.2 : 1.8}
-            />
+            <Grid3X3 className="h-5 w-5 mx-auto" />
           ) : (
-            <MessageCircle
-              className="w-4 h-4 mx-auto"
+            <Image
+              className="h-5 w-5 mx-auto"
               strokeWidth={active === t ? 2.2 : 1.8}
             />
           )}
@@ -364,10 +358,7 @@ export default function UserProfile() {
   const tabContent = () => {
     const list =
       tab === "media"
-        ? mediaThoughts
-        : tab === "reposts"
-        ? [] // placeholder
-        : thoughts;
+        ? mediaThoughts : thoughts;
 
     if (tab === "media") {
       if (list.length === 0) return <EmptyState tab="media" />;
@@ -384,7 +375,7 @@ export default function UserProfile() {
       );
     }
 
-    if (tab === "reposts") return <EmptyState tab="reposts" />;
+    // if (tab === "reposts") return <EmptyState tab="reposts" />;
 
     // Posts tab — use grid
     if (list.length === 0) return <EmptyState tab="posts" />;
@@ -407,7 +398,7 @@ export default function UserProfile() {
       <div
         ref={headerRef}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 transition-all duration-200",
+          "fixed top-0 left-0 right-0 z-50 flex items-center justify-start px-2 h-14 transition-all duration-200",
           isScrolled
             ? "bg-background/90 backdrop-blur-md border-b border-border/40 shadow-sm"
             : "bg-transparent"
@@ -418,21 +409,18 @@ export default function UserProfile() {
           className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors active:scale-90"
           aria-label="Go back"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-6 h-6" />
         </button>
 
         <span
           className={cn(
-            "font-semibold text-base transition-all duration-200",
-            isScrolled
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 -translate-y-1"
+            "font-semibold text-base transition-all duration-200 opacity-100 translate-y-0"
           )}
         >
-          {profile?.username || username}
+          &nbsp; {profile?.username || username}
         </span>
 
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors active:scale-90">
               <MoreHorizontal className="w-5 h-5" />
@@ -447,7 +435,7 @@ export default function UserProfile() {
               Block
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
       </div>
 
       {/* ── Content ─────────────────────────────────────────────────────── */}
@@ -552,7 +540,7 @@ export default function UserProfile() {
               </div>
 
               {/* Mutual followers */}
-              {MOCK_MUTUAL_AVATARS.length > 0 && (
+              {/* {MOCK_MUTUAL_AVATARS.length > 0 && (
                 <div className="flex items-center gap-2 mt-3">
                   <div className="flex -space-x-1.5">
                     {MOCK_MUTUAL_AVATARS.map((a, i) => (
@@ -573,7 +561,7 @@ export default function UserProfile() {
                     </span>
                   </p>
                 </div>
-              )}
+              )} */}
 
               {/* Action buttons */}
               {!isOwnProfile && (

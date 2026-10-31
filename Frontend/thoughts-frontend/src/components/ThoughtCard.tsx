@@ -204,7 +204,7 @@ function MediaGallery({ items }: { items: MediaItem[] }) {
 }
 
 /* ─── Action Button ──────────────────────────────────────────────────────── */
-function ActionBtn({
+export function ActionBtn({
   children,
   onClick,
 }: {
@@ -317,9 +317,9 @@ export function ThoughtCard({
                   Delete
                 </button>
               )}
-              <button className="p-1 rounded-full hover:bg-muted transition-colors">
+              {/* <button className="p-1 rounded-full hover:bg-muted transition-colors">
                 <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -369,9 +369,9 @@ export function ThoughtCard({
               )}
             </Link>
 
-            <ActionBtn>
+            {/* <ActionBtn>
               <Repeat2 className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
-            </ActionBtn>
+            </ActionBtn> */}
 
             {/* <ActionBtn>
               <Send className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
