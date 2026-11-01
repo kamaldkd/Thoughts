@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useActivityBadge } from "@/hooks/useActivityBadge";
+import { EmptyState } from "./UserProfile";
 
 type ActivityType = "like" | "comment" | "follow" | "repost" | "mention";
 
@@ -108,7 +109,7 @@ export default function Activity() {
 
   return (
     <main className="min-h-screen bg-background pb-20">
-      {<div className="max-w-lg mx-auto">
+      <div className="max-w-lg mx-auto">
         {/* Header */}
         <div className="sticky top-0 z-200 bg-background/90 backdrop-blur-xl border-b border-border/50 px-4 py-3">
           <div className="flex items-center justify-between">
@@ -121,15 +122,16 @@ export default function Activity() {
           </div>
         </div>
 
-        <Tabs defaultValue="all" className="w-full">
-          {/* <div className="px-4 pt-2">
-            <TabsList className="w-full bg-secondary/50">
-              <TabsTrigger value="all" className="flex-1 text-xs">All</TabsTrigger>
-              <TabsTrigger value="likes" className="flex-1 text-xs">Likes</TabsTrigger>
-              <TabsTrigger value="comments" className="flex-1 text-xs">Comments</TabsTrigger>
-              <TabsTrigger value="follows" className="flex-1 text-xs">Follows</TabsTrigger>
-            </TabsList>
-          // </div> */}
+        {activities.length > 0 ? (
+          <Tabs defaultValue="all" className="w-full">
+            {/* <div className="px-4 pt-2">
+              <TabsList className="w-full bg-secondary/50">
+                <TabsTrigger value="all" className="flex-1 text-xs">All</TabsTrigger>
+                <TabsTrigger value="likes" className="flex-1 text-xs">Likes</TabsTrigger>
+                <TabsTrigger value="comments" className="flex-1 text-xs">Comments</TabsTrigger>
+                <TabsTrigger value="follows" className="flex-1 text-xs">Follows</TabsTrigger>
+              </TabsList>
+            </div> */}
 
           <TabsContent value="all" className="mt-1">
             <div className="divide-y divide-border/40">
@@ -162,8 +164,12 @@ export default function Activity() {
               ))}
             </div>
           </TabsContent>
-        </Tabs>
-      </div>}
+        </Tabs>) : ( 
+          <div className="flex justify-center align-center px-4 pt-20">
+          <EmptyState tab="activity" />
+          </div>
+        )}
+      </div>
     </main>
   );
 }

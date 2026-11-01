@@ -135,7 +135,7 @@ function GridItem({ thought, onClick }: { thought: any; onClick: () => void }) {
 }
 
 /* ── Empty State ─────────────────────────────────────────────────────────── */
-function EmptyState({ tab }: { tab: string }) {
+export function EmptyState({ tab }: { tab: string }) {
   const icons: Record<string, React.ReactNode> = {
     posts: (
       <Image className="w-10 h-10 text-muted-foreground/50" strokeWidth={1.2} />
@@ -148,6 +148,11 @@ function EmptyState({ tab }: { tab: string }) {
     ),
     media: (
       <Image className="w-10 h-10 text-muted-foreground/50" strokeWidth={1.2} />
+    ),
+    activity: (
+      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+        <Heart className="w-5 h-5 text-muted-foreground/50" strokeWidth={1.2} />
+      </div>
     ),
   };
   return (
