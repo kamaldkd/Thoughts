@@ -52,6 +52,7 @@ function UserAvatar({ avatarUrl, username, size = 32 }: UserAvatarProps) {
 export function Navbar() {
   const location = useLocation();
   const isLanding = location.pathname === "/";
+  const isActivity = location.pathname === "/activity";
   const { user, isLoggedIn, loading } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -82,7 +83,11 @@ export function Navbar() {
       </header>
     );
   }
-
+  if (isActivity) { 
+    return (
+      <></>
+    );
+  }
   return (
     <>
       {/* App nav bar — solid, iOS-style */}

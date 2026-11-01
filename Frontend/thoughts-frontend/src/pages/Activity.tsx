@@ -113,7 +113,7 @@ export default function Activity() {
         {/* Header */}
         <div className="sticky top-0 z-200 bg-background/90 backdrop-blur-xl border-b border-border/50 px-4 py-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">Activity</h1>
+            <h1 className="text-lg font-bold">Activity</h1>
             {unreadCount > 0 && (
               <span className="text-xs font-medium text-primary bg-accent px-2 py-0.5 rounded-full">
                 {unreadCount} new
