@@ -18,72 +18,9 @@ interface ActivityItem {
   read: boolean;
 }
 
-const mockActivity: ActivityItem[] = [
-  {
-    id: "1",
-    type: "like",
-    user: { username: "sarah_j", avatar: "https://i.pravatar.cc/150?img=1" },
-    time: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    thoughtPreview: "The beauty of simplicity in design...",
-    read: false,
-  },
-  {
-    id: "2",
-    type: "comment",
-    user: { username: "mikael", avatar: "https://i.pravatar.cc/150?img=3" },
-    time: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    thoughtPreview: "Morning coffee rituals ☕",
-    commentText: "Totally agree! Nothing beats a good pour-over.",
-    read: false,
-  },
-  {
-    id: "3",
-    type: "follow",
-    user: { username: "elena_writes", avatar: "https://i.pravatar.cc/150?img=5" },
-    time: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    read: false,
-  },
-  {
-    id: "4",
-    type: "repost",
-    user: { username: "devraj", avatar: "https://i.pravatar.cc/150?img=7" },
-    time: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    thoughtPreview: "Why I switched to TypeScript and never looked back",
-    read: true,
-  },
-  {
-    id: "5",
-    type: "mention",
-    user: { username: "alex_codes", avatar: "https://i.pravatar.cc/150?img=8" },
-    time: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
-    thoughtPreview: "Shoutout to @you for the great thread yesterday!",
-    read: true,
-  },
-  {
-    id: "6",
-    type: "like",
-    user: { username: "priya_m", avatar: "https://i.pravatar.cc/150?img=9" },
-    time: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    thoughtPreview: "Late night coding sessions hit different...",
-    read: true,
-  },
-  {
-    id: "7",
-    type: "follow",
-    user: { username: "jordan_k", avatar: "https://i.pravatar.cc/150?img=11" },
-    time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-    read: true,
-  },
-  {
-    id: "8",
-    type: "comment",
-    user: { username: "luna_dev", avatar: "https://i.pravatar.cc/150?img=12" },
-    time: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-    thoughtPreview: "React Server Components are the future",
-    commentText: "Great insight! Have you tried the new patterns?",
-    read: true,
-  },
-];
+// const mockActivity: ActivityItem[] = [
+const mockActivity: ActivityItem[] = [];
+
 
 const iconMap: Record<ActivityType, { icon: typeof Heart; color: string }> = {
   like: { icon: Heart, color: "text-destructive" },
@@ -171,9 +108,9 @@ export default function Activity() {
 
   return (
     <main className="min-h-screen bg-background pb-20">
-      <div className="max-w-lg mx-auto">
+      {<div className="max-w-lg mx-auto">
         {/* Header */}
-        <div className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/50 px-4 py-3">
+        <div className="sticky top-0 z-200 bg-background/90 backdrop-blur-xl border-b border-border/50 px-4 py-3">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">Activity</h1>
             {unreadCount > 0 && (
@@ -192,7 +129,7 @@ export default function Activity() {
               <TabsTrigger value="comments" className="flex-1 text-xs">Comments</TabsTrigger>
               <TabsTrigger value="follows" className="flex-1 text-xs">Follows</TabsTrigger>
             </TabsList>
-          </div> */}
+          // </div> */}
 
           <TabsContent value="all" className="mt-1">
             <div className="divide-y divide-border/40">
@@ -226,7 +163,7 @@ export default function Activity() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+      </div>}
     </main>
   );
 }

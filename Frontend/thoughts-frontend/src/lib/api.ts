@@ -100,9 +100,11 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     
     // 1. Handle CSRF Expiration (403)
-    const errText = String(error.response?.data || "").toLowerCase() + String(error.response?.data?.message || "").toLowerCase();
+    const errMsg = String(
+      error.response?.data?.message || error.response?.data?.error || ""
+    ).toLowerCase();
     
-    if (error.response?.status === 403 && errText.includes("csrf") && !originalRequest._csrfRetried) {
+    if (error.response?.status === 403 && errMsg.includes("csrf") && !originalRequest._csrfRetried) {
       originalRequest._csrfRetried = true;
       
       console.warn("CSRF Token Invalid/Expired. Fetching fresh token and retrying request...");
