@@ -48,8 +48,8 @@ export default function Login() {
 
   return (
     <AuthLayout title="Welcome back" subtitle="Log in to your account to continue">
-      <GoogleButton isLoading={isLoading} />
-      <Divider />
+      
+      
       <form onSubmit={handleSubmit} className="flex flex-col gap-1">
         {error && (
           <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
@@ -88,6 +88,8 @@ export default function Login() {
           </Link>
         </p>
       </div>
+      <Divider />
+      <GoogleButton isLoading={isLoading} />
     </AuthLayout>
   );
 }

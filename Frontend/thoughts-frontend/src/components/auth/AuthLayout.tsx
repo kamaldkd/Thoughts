@@ -50,7 +50,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
       {/* Auth Content Right Panel */}
       <div className="flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-y-auto hidden-scrollbar">
         {/* Mobile Logo Overlay */}
-        <div className="lg:hidden absolute top-8 left-8">
+        <div className="lg:hidden absolute top-4 left-4">
           <Link to="/">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
               Thoughts
