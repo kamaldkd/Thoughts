@@ -44,7 +44,8 @@ export function CreateThoughtModal({ open, onClose }: Props) {
             <X className="h-5 w-5" />
           </button>
           <span className="text-sm font-semibold">New Thought</span>
-          <button
+          <div className="w-5" /> {/* Placeholder for spacing */}  
+          {/* <button
               disabled={text.length === 0 || overLimit}
               onClick={async (e) => {
                 e.preventDefault();
@@ -77,7 +78,7 @@ export function CreateThoughtModal({ open, onClose }: Props) {
             >
               {loading && <span className="animate-spin">⏳</span>}
               {loading ? "Posting..." : "Post"}
-            </button>
+            </button> */}
         </div>
 
         {/* Body */}
