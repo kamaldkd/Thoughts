@@ -303,4 +303,32 @@ export function deleteComment(commentId: string) {
   return api.delete(`/comments/${commentId}`);
 }
 
+
+// ─────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────
+
+export function getNotifications(params?: {
+  limit?: number;
+  cursor?: string;
+}) {
+  return api.get("/notifications", { params });
+}
+
+export function getUnreadNotificationCount() {
+  return api.get("/notifications/unread-count");
+}
+
+export function markNotificationRead(id: string) {
+  return api.patch(`/notifications/${id}/read`);
+}
+
+export function markAllNotificationsRead() {
+  return api.patch("/notifications/read-all");
+}
+
+export function deleteNotification(id: string) {
+  return api.delete(`/notifications/${id}`);
+}
+
 export default api;

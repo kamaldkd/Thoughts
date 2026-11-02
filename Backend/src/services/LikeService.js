@@ -1,5 +1,15 @@
-import { findLike, createLike, deleteLike, checkLikeExists } from "../repositories/LikeRepository.js";
-import { atomicIncrement, atomicDecrement, findThoughtById } from "../repositories/ThoughtRepository.js";
+import {
+  findLike,
+  createLike,
+  deleteLike,
+  checkLikeExists,
+} from "../repositories/LikeRepository.js";
+import {
+  atomicIncrement,
+  atomicDecrement,
+  findThoughtById,
+} from "../repositories/ThoughtRepository.js";
+import { createNotification } from "./NotificationService.js";
 import ExpressError from "../utils/ExpressError.js";
 
 /**
@@ -28,6 +38,16 @@ export const toggleLike = async (userId, thoughtId) => {
   // Like: create like doc (unique index rejects race-condition duplicates), increment counter atomically
   try {
     await createLike(userId, thoughtId);
+    try {
+      await createNotification({
+        recipient: thought.author?._id || thought.author,
+        actor: userId,
+        type: "like",
+        thought: thoughtId,
+      });
+    } catch (error) {
+      console.error("Failed to create like notification:", error.message);
+    }
   } catch (err) {
     // Duplicate key error (code 11000) = concurrent like already landed, treat as already liked
     if (err.code === 11000) {

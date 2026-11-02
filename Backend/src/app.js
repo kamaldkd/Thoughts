@@ -7,6 +7,7 @@ import thoughtRoutes from "./routes/thoughtRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import cors from "cors";
 import passport from "passport";
 import setupPassport from "./config/passport.js";
@@ -90,6 +91,8 @@ app.use("/api/likes", likeRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/notifications", notificationRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Thoughts API is running");
