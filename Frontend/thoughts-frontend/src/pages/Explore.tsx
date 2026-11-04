@@ -1,8 +1,33 @@
 import { useState } from "react";
-import { Search, TrendingUp, Hash, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Search,
+  TrendingUp,
+  Hash,
+  X,
+  Loader2,
+  Users,
+  UserRound,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+
 import { Input } from "@/components/ui/input";
 import { mockThoughts } from "@/data/mockThoughts";
-import { Link } from "react-router-dom";
+import { FollowButton } from "@/components/profile/FollowButton";
+
+import { searchUsers, followUser, unfollowUser } from "@/lib/api";
+
+import { useDebounce } from "@/hooks/useDebounce";
+
+type TabKey = "trending" | "people" | "thoughts";
+
+interface SearchUser {
+  _id: string;
+  username: string;
+  name?: string;
+  avatar?: string;
+  isFollowing: boolean;
+}
 
 const trendingTags = [
   { tag: "mindfulness", count: "2.4k thoughts" },
@@ -39,21 +64,67 @@ const suggestedUsers = [
 
 export default function Explore() {
   const [query, setQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<
-    "trending" | "people" | "thoughts"
-  >("trending");
 
+  const [activeTab, setActiveTab] = useState<TabKey>("people");
+
+  const queryClient = useQueryClient();
+
+  const debouncedQuery = useDebounce(query.trim(), 350);
+
+
+  // Real backend user search
+  const {
+    data: searchResults = [],
+    isLoading: isSearching,
+    isError,
+  } = useQuery<SearchUser[]>({
+    queryKey: ["user-search", debouncedQuery],
+
+    queryFn: async ({ signal }) => {
+      const response = await searchUsers(debouncedQuery, signal);
+
+      return response.data.data;
+    },
+
+    enabled: activeTab === "people" && debouncedQuery.length >= 2,
+
+    staleTime: 30 * 1000,
+  });
+
+
+  // Search thoughts (existing mock implementation)
   const filteredThoughts = mockThoughts.filter(
-    (t) =>
-      t.content.toLowerCase().includes(query.toLowerCase()) ||
-      t.username.toLowerCase().includes(query.toLowerCase())
+    (thought) =>
+      thought.content.toLowerCase().includes(query.toLowerCase()) ||
+      thought.username.toLowerCase().includes(query.toLowerCase())
   );
 
-  const tabs = [
-    { key: "trending" as const, label: "Trending" },
-    { key: "people" as const, label: "People" },
-    { key: "thoughts" as const, label: "Thoughts" },
+  const tabs: {
+    key: TabKey;
+    label: string;
+  }[] = [
+    // { key: "trending", label: "Trending" },
+    { key: "people", label: "People" },
+    // { key: "thoughts", label: "Thoughts" },
   ];
+
+  // Follow a user from search results
+  const handleFollow = async (userId: string) => {
+    await followUser(userId);
+
+    await queryClient.invalidateQueries({
+      queryKey: ["user-search"],
+    });
+  };
+
+  // Unfollow a user from search results
+  const handleUnfollow = async (userId: string) => {
+    await unfollowUser(userId);
+
+    await queryClient.invalidateQueries({
+      queryKey: ["user-search"],
+    });
+  };
 
   return (
     <div className="min-h-screen pt-14 pb-20 md:pb-8">
@@ -62,16 +133,22 @@ export default function Explore() {
         <div className="py-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+
             <Input
-              placeholder="Search thoughts, people, tags…"
+              placeholder="Search thoughts, people, tags..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => {
+                if (query.trim()) setActiveTab("people");
+              }}
               className="pl-10 pr-10 h-11 rounded-full bg-secondary border-none"
             />
+
             {query && (
               <button
                 onClick={() => setQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted transition-colors"
+                aria-label="Clear search"
               >
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -80,7 +157,7 @@ export default function Explore() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border/60 mb-4">
+        {/* <div className="flex border-b border-border/60 mb-4">
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -94,7 +171,7 @@ export default function Explore() {
               {tab.label}
             </button>
           ))}
-        </div>
+        </div> */}
 
         {/* Trending */}
         {activeTab === "trending" && (
@@ -103,17 +180,26 @@ export default function Explore() {
               <TrendingUp className="h-4 w-4" />
               Trending Tags
             </h2>
+
             {trendingTags.map((item, i) => (
               <button
                 key={item.tag}
+                onClick={() => {
+                  setQuery(item.tag);
+                  setActiveTab("thoughts");
+                }}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary transition-colors text-left"
-                style={{ animationDelay: `${i * 0.05}s` }}
+                style={{
+                  animationDelay: `${i * 0.05}s`,
+                }}
               >
                 <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                   <Hash className="h-4 w-4 text-accent-foreground" />
                 </div>
+
                 <div>
                   <div className="text-sm font-semibold">#{item.tag}</div>
+
                   <div className="text-xs text-muted-foreground">
                     {item.count}
                   </div>
@@ -126,37 +212,163 @@ export default function Explore() {
         {/* People */}
         {activeTab === "people" && (
           <div className="space-y-1 animate-fade-in">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Suggested for you
-            </h2>
-            {suggestedUsers.map((user) => (
-              <div
-                key={user.username}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary transition-colors"
-              >
-                <img
-                  src={user.avatar}
-                  alt={user.username}
-                  className="h-11 w-11 rounded-full object-cover flex-shrink-0 bg-muted"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold">{user.username}</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {user.bio}
+            {/* Search heading */}
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                {debouncedQuery.length >= 2
+                  ? "Search Results"
+                  : "Suggested for you"}
+              </h2>
+
+              {searchResults.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {searchResults.length} users
+                </span>
+              )}
+            </div>
+
+            {/* Empty search - suggested users */}
+            {!query.trim() && (
+              <div className="space-y-1">
+                {suggestedUsers.map((user) => (
+                  <div
+                    key={user.username}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary transition-colors"
+                  >
+                    <img
+                      src={user.avatar}
+                      alt={user.username}
+                      className="h-11 w-11 rounded-full object-cover flex-shrink-0 bg-muted"
+                    />
+
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold">
+                        @{user.username}
+                      </div>
+
+                      <div className="text-xs text-muted-foreground truncate">
+                        {user.bio}
+                      </div>
+
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {user.followers} followers
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {user.followers} followers
-                  </div>
-                </div>
-                <button className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-xs font-medium transition-all hover:opacity-90">
-                  Follow
-                </button>
+                ))}
               </div>
-            ))}
+            )}
+
+            {/* Query too short */}
+            {query.trim().length === 1 && (
+              <div className="text-center py-12">
+                <Search className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+
+                <p className="text-sm text-muted-foreground">
+                  Enter at least 2 characters to search.
+                </p>
+              </div>
+            )}
+
+            {/* Waiting for debounce */}
+            {query.trim().length >= 2 && query.trim() !== debouncedQuery && (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {/* Loading */}
+            {debouncedQuery.length >= 2 &&
+              query.trim() === debouncedQuery &&
+              isSearching && (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+
+            {/* Error */}
+            {debouncedQuery.length >= 2 &&
+              query.trim() === debouncedQuery &&
+              isError && (
+                <div className="text-center py-12">
+                  <p className="text-sm text-destructive">
+                    Unable to search users. Please try again.
+                  </p>
+                </div>
+              )}
+
+            {/* Real search results */}
+            {debouncedQuery.length >= 2 &&
+              query.trim() === debouncedQuery &&
+              !isSearching &&
+              !isError &&
+              searchResults.length > 0 && (
+                <div className="space-y-1">
+                  {searchResults.map((user) => (
+                    <div
+                      key={user._id}
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary/70 transition-colors"
+                    >
+                      <Link
+                        to={`/profile/${encodeURIComponent(user.username)}`}
+                        className="flex items-center gap-3 flex-1 min-w-0"
+                      >
+                        {user.avatar ? (
+                          <img
+                            src={user.avatar}
+                            alt={user.username}
+                            className="h-11 w-11 rounded-full object-cover flex-shrink-0 bg-muted"
+                          />
+                        ) : (
+                          <div className="h-11 w-11 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                            <UserRound className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold truncate">
+                            {user.name || user.username}
+                          </div>
+
+                          <div className="text-xs text-muted-foreground truncate">
+                            @{user.username}
+                          </div>
+                        </div>
+                      </Link>
+
+                      <FollowButton
+                        initialState={
+                          user.isFollowing ? "following" : "not_following"
+                        }
+                        onFollow={() => handleFollow(user._id)}
+                        onUnfollow={() => handleUnfollow(user._id)}
+                        className="h-8 px-4 text-xs flex-shrink-0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            {/* No results */}
+            {debouncedQuery.length >= 2 &&
+              query.trim() === debouncedQuery &&
+              !isSearching &&
+              !isError &&
+              searchResults.length === 0 && (
+                <div className="text-center py-12">
+                  <Users className="h-9 w-9 text-muted-foreground/50 mx-auto mb-3" />
+
+                  <p className="font-medium text-sm">No users found</p>
+
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Try searching with another name or username.
+                  </p>
+                </div>
+              )}
           </div>
         )}
 
-        {/* Thoughts search results */}
+        {/* Thoughts */}
         {activeTab === "thoughts" && (
           <div className="animate-fade-in">
             {query ? (
@@ -172,15 +384,14 @@ export default function Explore() {
                       alt={t.username}
                       className="h-9 w-9 rounded-full object-cover flex-shrink-0 bg-muted"
                     />
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold">
                           {t.username}
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          {t.time}
-                        </span>
                       </div>
+
                       <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
                         {t.content}
                       </p>
@@ -197,8 +408,9 @@ export default function Explore() {
             ) : (
               <div className="text-center py-12">
                 <Search className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+
                 <p className="text-muted-foreground text-sm">
-                  Search for thoughts by keyword or username
+                  Search for thoughts by keyword or username.
                 </p>
               </div>
             )}

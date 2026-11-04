@@ -1,4 +1,9 @@
-import { getMyProfile, getProfileByUsername, updateProfileData } from "../services/UserService.js";
+import {
+  getMyProfile,
+  getProfileByUsername,
+  updateProfileData,
+  searchUsersService,
+} from "../services/UserService.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const updateProfile = async (req, res) => {
@@ -14,14 +19,20 @@ export const getMe = async (req, res) => {
 export const getUserByUsername = async (req, res) => {
   const { username } = req.params;
   const currentUserId = req.userId; // Optional, handled by middleware
-  
+
   const userProfile = await getProfileByUsername(username, currentUserId);
   res.status(200).json(userProfile);
 };
 
 export const searchUsers = async (req, res) => {
   const { q } = req.query;
-  const { searchUsersService } = await import("../services/UserService.js");
-  const users = await searchUsersService(q);
-  res.status(200).json({ success: true, data: users });
+
+  const users = await searchUsersService(q, req.userId);
+
+  res.status(200).json({
+    success: true,
+    data: users,
+  });
+
+  console.log(res.json);
 };

@@ -6,7 +6,7 @@ import { useActivityBadge } from "@/hooks/useActivityBadge";
 
 const navItems = [
   { icon: Home, to: "/feed", label: "Home" },
-  // { icon: Search, to: "/explore", label: "Search" },
+  { icon: Search, to: "/explore", label: "Search" },
   { icon: Heart, to: "/activity", label: "Activity", showBadge: true },
 ];
 

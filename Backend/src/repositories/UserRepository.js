@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import Follow from "../models/Follow.js";
 
 export const findUserByEmail = async (email, includePassword = false) => {
   let query = User.findOne({ email });
@@ -35,13 +36,53 @@ export const updateUser = async (userId, updates) => {
   ).select("-password");
 };
 
-export const searchUsersQuery = async (query, limit = 10) => {
-  if (!query) return [];
-  const regex = new RegExp(query, "i");
-  return await User.find({
-    $or: [{ username: regex }, { name: regex }]
+export const searchUsersQuery = async (query, currentUserId, limit = 10) => {
+  const searchTerm = query?.trim().toLowerCase();
+
+  if (!searchTerm || searchTerm.length < 2) {
+    return [];
+  }
+
+  // Escape special regex characters to prevent regex injection
+  const escapedQuery = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const users = await User.find({
+    ...(currentUserId ? { _id: { $ne: currentUserId } } : {}),
+
+    $or: [
+      { username: { $regex: `^${escapedQuery}` } },
+      { name: { $regex: `^${escapedQuery}`, $options: "i" } },
+    ],
   })
-    .select("username name avatar _id")
+    .select("username name avatar isPrivate _id")
+    .sort({ username: 1, _id: 1 })
     .limit(limit)
     .lean();
+
+  // Guests can search, but cannot have a follow status.
+  if (!currentUserId || users.length === 0) {
+    return users.map((user) => ({
+      ...user,
+      isFollowing: false,
+    }));
+  }
+
+  // Fetch all follow relationships in ONE query.
+  const userIds = users.map((user) => user._id);
+
+  const following = await Follow.find({
+    follower: currentUserId,
+    following: { $in: userIds },
+  })
+    .select("following")
+    .lean();
+
+  const followingIds = new Set(
+    following.map((item) => item.following.toString())
+  );
+
+  return users.map((user) => ({
+    ...user,
+    isFollowing: followingIds.has(user._id.toString()),
+  }));
 };

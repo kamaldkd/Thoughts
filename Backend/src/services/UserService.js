@@ -1,4 +1,10 @@
-import { findUserById, checkUsernameExists, updateUser } from "../repositories/UserRepository.js";
+import {
+  findUserById,
+  findUserByUsername,
+  checkUsernameExists,
+  updateUser,
+  searchUsersQuery,
+} from "../repositories/UserRepository.js";
 import Follow from "../models/Follow.js";
 import { cloudinary } from "../config/cloudinary.js";
 import fs from "fs";
@@ -90,7 +96,19 @@ export const updateProfileData = async (userId, body, file) => {
   return updatedUser;
 };
 
-export const searchUsersService = async (query, limit = 10) => {
-  const { searchUsersQuery } = await import("../repositories/UserRepository.js");
-  return await searchUsersQuery(query, limit);
+export const searchUsersService = async (
+  query,
+  currentUserId
+) => {
+  const searchTerm = query?.trim();
+
+  if (!searchTerm || searchTerm.length < 2) {
+    return [];
+  }
+
+  return await searchUsersQuery(
+    searchTerm,
+    currentUserId,
+    10
+  );
 };

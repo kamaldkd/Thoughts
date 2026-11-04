@@ -7,9 +7,8 @@ const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true,  // still send cookies as secondary fallback
+  withCredentials: true, // still send cookies as secondary fallback
 });
-
 
 /* ─────────────────────────────────────────────
    TOKEN STORAGE — Authorization header approach
@@ -31,10 +30,13 @@ export let csrfTokenInMemory: string | null = null;
 
 let csrfPromise: Promise<void> | null = null;
 let isRefreshing = false;
-let failedQueue: Array<{ resolve: (value?: unknown) => void; reject: (reason?: any) => void }> = [];
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: any) => void;
+}> = [];
 
 const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(token);
   });
@@ -44,20 +46,23 @@ const processQueue = (error: any, token: string | null = null) => {
 export const fetchCsrfToken = async (retries = 2, delayMs = 800) => {
   // If a fetch is already in-flight, reuse it — prevents duplicate parallel requests.
   if (csrfPromise) return csrfPromise;
-  
+
   csrfPromise = (async () => {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const res = await axios.get(`${BASE_URL}/csrf-token`, { 
+        const res = await axios.get(`${BASE_URL}/csrf-token`, {
           withCredentials: true,
           timeout: 8000,
         });
         csrfTokenInMemory = res.data.csrfToken;
         return;
       } catch (err) {
-        console.warn(`CSRF token fetch attempt ${attempt}/${retries} failed:`, err);
+        console.warn(
+          `CSRF token fetch attempt ${attempt}/${retries} failed:`,
+          err
+        );
         if (attempt < retries) {
-          await new Promise(res => setTimeout(res, delayMs * attempt));
+          await new Promise((res) => setTimeout(res, delayMs * attempt));
         } else {
           console.error("Failed to fetch CSRF token after all retries.");
         }
@@ -70,12 +75,11 @@ export const fetchCsrfToken = async (retries = 2, delayMs = 800) => {
   // Previously the .finally() reset csrfPromise = null before the outer await chain
   // completed, creating a window where a second fetchCsrfToken() would start a duplicate request.
   const p = csrfPromise;
-  p.finally(() => { 
-    if (csrfPromise === p) csrfPromise = null; 
+  p.finally(() => {
+    if (csrfPromise === p) csrfPromise = null;
   });
   return p;
 };
-
 
 api.interceptors.request.use(async (config) => {
   // Await global CSRF readiness before ANY request fires
@@ -88,7 +92,12 @@ api.interceptors.request.use(async (config) => {
   }
 
   // CSRF token for state-changing requests
-  if (csrfTokenInMemory && ["post", "put", "patch", "delete"].includes(config.method?.toLowerCase() || "")) {
+  if (
+    csrfTokenInMemory &&
+    ["post", "put", "patch", "delete"].includes(
+      config.method?.toLowerCase() || ""
+    )
+  ) {
     config.headers["CSRF-Token"] = csrfTokenInMemory;
   }
   return config;
@@ -98,37 +107,45 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // 1. Handle CSRF Expiration (403)
     const errMsg = String(
       error.response?.data?.message || error.response?.data?.error || ""
     ).toLowerCase();
-    
-    if (error.response?.status === 403 && errMsg.includes("csrf") && !originalRequest._csrfRetried) {
+
+    if (
+      error.response?.status === 403 &&
+      errMsg.includes("csrf") &&
+      !originalRequest._csrfRetried
+    ) {
       originalRequest._csrfRetried = true;
-      
-      console.warn("CSRF Token Invalid/Expired. Fetching fresh token and retrying request...");
+
+      console.warn(
+        "CSRF Token Invalid/Expired. Fetching fresh token and retrying request..."
+      );
       await fetchCsrfToken();
-      
+
       if (csrfTokenInMemory) {
-         originalRequest.headers["CSRF-Token"] = csrfTokenInMemory;
+        originalRequest.headers["CSRF-Token"] = csrfTokenInMemory;
       }
       return api(originalRequest); // Retry instantly
     }
-    
+
     // 2. Handle Access Token Expiration (401)
     if (
-      error.response?.status === 401 && 
-      !originalRequest._authRetried && 
-      originalRequest.url !== '/auth/refresh' && 
-      originalRequest.url !== '/auth/login' && 
-      originalRequest.url !== '/auth/logout'
+      error.response?.status === 401 &&
+      !originalRequest._authRetried &&
+      originalRequest.url !== "/auth/refresh" &&
+      originalRequest.url !== "/auth/login" &&
+      originalRequest.url !== "/auth/logout"
     ) {
       if (isRefreshing) {
         // Queue the request until the token refresh completes
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(() => api(originalRequest)).catch(err => Promise.reject(err));
+        })
+          .then(() => api(originalRequest))
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._authRetried = true;
@@ -139,21 +156,27 @@ api.interceptors.response.use(
         // Use raw axios (not the `api` instance) for the refresh call to avoid re-triggering
         // this interceptor, which would cause an infinite loop. withCredentials ensures
         // the refreshToken HttpOnly cookie is sent with the request.
-        const refreshRes = await axios.post(`${BASE_URL}/auth/refresh`, {}, { 
-          withCredentials: true,
-          timeout: 10000,
-        });
-        
+        const refreshRes = await axios.post(
+          `${BASE_URL}/auth/refresh`,
+          {},
+          {
+            withCredentials: true,
+            timeout: 10000,
+          }
+        );
+
         // Store new accessToken from response body
         if (refreshRes.data?.accessToken) {
           setAccessToken(refreshRes.data.accessToken);
-          originalRequest.headers["Authorization"] = `Bearer ${refreshRes.data.accessToken}`;
+          originalRequest.headers[
+            "Authorization"
+          ] = `Bearer ${refreshRes.data.accessToken}`;
         }
 
         // Fetch refreshed CSRF token
         await fetchCsrfToken();
         if (csrfTokenInMemory) {
-           originalRequest.headers["CSRF-Token"] = csrfTokenInMemory;
+          originalRequest.headers["CSRF-Token"] = csrfTokenInMemory;
         }
 
         processQueue(null, "Refreshed");
@@ -165,7 +188,6 @@ api.interceptors.response.use(
       } finally {
         isRefreshing = false;
       }
-
     }
 
     return Promise.reject(error);
@@ -254,7 +276,6 @@ export function checkIsFollowing(id: string) {
   return api.get(`/users/${id}/is-following`);
 }
 
-
 /* ─────────────────────────────────────────────
    PROFILE UPDATE
 ───────────────────────────────────────────── */
@@ -291,8 +312,14 @@ export function addComment(thoughtId: string, text: string) {
   return api.post(`/thoughts/${thoughtId}/comments`, { text });
 }
 
-export function replyToComment(thoughtId: string, commentId: string, text: string) {
-  return api.post(`/thoughts/${thoughtId}/comments/${commentId}/reply`, { text });
+export function replyToComment(
+  thoughtId: string,
+  commentId: string,
+  text: string
+) {
+  return api.post(`/thoughts/${thoughtId}/comments/${commentId}/reply`, {
+    text,
+  });
 }
 
 export function editComment(commentId: string, text: string) {
@@ -303,15 +330,11 @@ export function deleteComment(commentId: string) {
   return api.delete(`/comments/${commentId}`);
 }
 
-
 // ─────────────────────────────────
 // NOTIFICATIONS
 // ─────────────────────────────────
 
-export function getNotifications(params?: {
-  limit?: number;
-  cursor?: string;
-}) {
+export function getNotifications(params?: { limit?: number; cursor?: string }) {
   return api.get("/notifications", { params });
 }
 
@@ -332,3 +355,14 @@ export function deleteNotification(id: string) {
 }
 
 export default api;
+
+// ─────────────────────────────────
+// SEARCH
+// ─────────────────────────────────
+
+export function searchUsers(query: string, signal?: AbortSignal) {
+  return api.get("/users/search", {
+    params: { q: query },
+    signal,
+  });
+}
