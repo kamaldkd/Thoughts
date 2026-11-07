@@ -135,7 +135,7 @@ export default function Explore() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 
             <Input
-              placeholder="Search thoughts, people, tags..."
+              placeholder="Search people"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => {
@@ -213,11 +213,10 @@ export default function Explore() {
         {activeTab === "people" && (
           <div className="space-y-1 animate-fade-in">
             {/* Search heading */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center ml-2 justify-between mb-3">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                 {debouncedQuery.length >= 2
-                  ? "Search Results"
-                  : "Suggested for you"}
+                  && "Search Results"}
               </h2>
 
               {searchResults.length > 0 && (
@@ -228,7 +227,7 @@ export default function Explore() {
             </div>
 
             {/* Empty search - suggested users */}
-            {!query.trim() && (
+            {/* {!query.trim() && (
               <div className="space-y-1">
                 {suggestedUsers.map((user) => (
                   <div
@@ -257,7 +256,7 @@ export default function Explore() {
                   </div>
                 ))}
               </div>
-            )}
+            )} */}
 
             {/* Query too short */}
             {query.trim().length === 1 && (
@@ -303,7 +302,7 @@ export default function Explore() {
               !isSearching &&
               !isError &&
               searchResults.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-1 animate-fade-in">
                   {searchResults.map((user) => (
                     <div
                       key={user._id}
