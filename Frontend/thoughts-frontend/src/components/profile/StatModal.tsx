@@ -7,7 +7,6 @@ import {
 import { User } from "lucide-react";
 import { FollowButton } from "./FollowButton";
 import { useAuth } from "@/hooks/useAuth";
-import { useParams } from "react-router-dom";
 
 interface StatUser {
   id?: string;
@@ -27,10 +26,8 @@ interface StatModalProps {
 }
 
 function UserRow({ user }: { user: StatUser }) {
-  const { username } = useParams<{ username: string }>();
   const { user: me } = useAuth();
 
-  const isOwnProfile = me?.username === username;
   return (
     <div className="flex items-center gap-3 py-3 px-1">
       <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center">
@@ -55,10 +52,12 @@ function UserRow({ user }: { user: StatUser }) {
           </p>
         )}
       </div>
-      {!isOwnProfile && (<FollowButton
-        initialState={user.isFollowing ? "following" : "not_following"}
-        className="text-xs h-8 px-4"
-      />)}
+      {me?.username !== user.username && (
+        <FollowButton
+          initialState={user.isFollowing ? "following" : "not_following"}
+          className="text-xs h-8 px-4"
+        />
+      )}
     </div>
   );
 }
