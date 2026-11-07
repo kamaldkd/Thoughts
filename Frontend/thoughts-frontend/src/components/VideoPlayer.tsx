@@ -10,6 +10,7 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [controlsPinned, setControlsPinned] = useState(false);
 
   useEffect(() => {
     const vid = videoRef.current;
@@ -83,7 +84,17 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     <div
       className="relative"
       onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
+      onMouseLeave={() => {
+        if (!controlsPinned) setShowControls(false);
+      }}
+      onClick={() => {
+        setShowControls(true);
+        setControlsPinned(true);
+      }}
+      onTouchStart={() => {
+        setShowControls(true);
+        setControlsPinned(true);
+      }}
     >
       <video
         ref={videoRef}

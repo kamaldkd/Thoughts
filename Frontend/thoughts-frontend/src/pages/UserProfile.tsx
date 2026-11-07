@@ -123,11 +123,11 @@ function GridItem({ thought, onClick }: { thought: any; onClick: () => void }) {
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-all duration-200 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
         <span className="flex items-center gap-1 text-white text-xs font-semibold">
           <Heart className="w-3.5 h-3.5 fill-white" />
-          {thought.likes || 0}
+          {thought.likesCount ?? thought.likes ?? 0}
         </span>
         <span className="flex items-center gap-1 text-white text-xs font-semibold">
           <MessageCircle className="w-3.5 h-3.5 fill-white" />
-          {thought.comments || 0}
+          {thought.commentsCount ?? thought.comments ?? 0}
         </span>
       </div>
     </button>
@@ -625,8 +625,8 @@ export default function UserProfile() {
               time={postModal.createdAt}
               content={postModal.text}
               media={postModal.media}
-              likes={postModal.likes || 0}
-              comments={postModal.comments || 0}
+              likes={postModal.likesCount ?? postModal.likes ?? 0}
+              comments={postModal.commentsCount ?? postModal.comments ?? 0}
               authorId={postModal.author?._id}
               currentUserId={me?._id}
             />

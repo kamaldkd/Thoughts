@@ -64,23 +64,6 @@ interface ExploreThoughtPage {
   hasMore: boolean;
 }
 
-function MediaGridSkeleton() {
-  return (
-    <div className="grid grid-cols-3 gap-0">
-      {Array.from({ length: 18 }, (_, index) => (
-        <div
-          key={index}
-          className="relative aspect-square animate-pulse overflow-hidden bg-gradient-to-br from-secondary via-muted to-secondary"
-        >
-          {index % 5 === 0 && (
-            <div className="absolute right-2 top-2 h-4 w-4 rounded-sm bg-background/25" />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 const trendingTags = [
   { tag: "mindfulness", count: "2.4k thoughts" },
   { tag: "design", count: "1.8k thoughts" },
@@ -223,7 +206,7 @@ export default function Explore() {
 
   return (
     <div className="min-h-screen pt-14 pb-20 md:pb-8">
-      <div className="max-w-xl mx-auto px-4">
+      <div className="max-w-xl mx-auto px-3">
         {/* Search bar */}
         <div className="py-4">
           <div className="relative">
@@ -251,15 +234,21 @@ export default function Explore() {
           </div>
         </div>
 
-        {/* Show discovery media only when the user is not searching. */}
-        {!query.trim() && (
-          <section
-            aria-label="Explore photos and videos"
-            className="mb-6 -mx-4 w-[calc(100%+2rem)]"
-          >
+        {/* Media discovery grid */}
+        <section
+          aria-label="Explore photos and videos"
+          className="mb-6 -mx-4"
+        >
 
           {isLoadingThoughts ? (
-            <MediaGridSkeleton />
+            <div className="grid grid-cols-3 gap-0">
+              {Array.from({ length: 9 }, (_, index) => (
+                <div
+                  key={index}
+                  className="aspect-square animate-pulse bg-secondary"
+                />
+              ))}
+            </div>
           ) : isThoughtsError ? (
             <div className="py-10 text-center">
               <p className="mb-3 text-sm text-muted-foreground">
@@ -276,7 +265,14 @@ export default function Explore() {
           ) : mediaThoughts.length === 0 ? (
             hasNextPage ? (
               <>
-                <MediaGridSkeleton />
+                <div className="grid grid-cols-3 gap-0">
+                  {Array.from({ length: 9 }, (_, index) => (
+                    <div
+                      key={index}
+                      className="aspect-square animate-pulse bg-secondary"
+                    />
+                  ))}
+                </div>
                 <div
                   ref={loadMoreRef}
                   className="flex justify-center py-4"
@@ -357,8 +353,7 @@ export default function Explore() {
               )}
             </>
           )}
-          </section>
-        )}
+        </section>
 
         {/* Tabs */}
         {/* <div className="flex border-b border-border/60 mb-4">
