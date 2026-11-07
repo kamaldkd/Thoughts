@@ -8,14 +8,11 @@ import {
   Send,
   ArrowLeft,
   MoreHorizontal,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import ThoughtSkeleton from "@/components/ThoughtSkeleton";
 import CommentSection from "@/components/CommentSection";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import defaultAvatar from "../assets/hero-bg.jpg";
 import { ActionBtn } from "@/components/ThoughtCard";
 
@@ -36,11 +33,6 @@ export default function ThoughtDetail() {
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
-
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isMuted, setIsMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showControls, setShowControls] = useState(false);
 
   // Fetch thought, comments, and like status in parallel
   useEffect(() => {
@@ -83,27 +75,6 @@ export default function ThoughtDetail() {
     fetchAll();
   }, [id]);
 
-  // Intersection-observer based video autoplay
-  useEffect(() => {
-    const mediaUrl = thought?.media?.[0]?.url;
-    const mediaType = thought?.media?.[0]?.type;
-    if (!mediaUrl || mediaType !== "video") return;
-
-    const vid = videoRef.current;
-    if (!vid) return;
-
-    vid.muted = true;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) { vid.play().catch(() => {}); setIsPlaying(true); }
-        else { vid.pause(); setIsPlaying(false); }
-      },
-      { threshold: 0.5 }
-    );
-    observer.observe(vid);
-    return () => observer.disconnect();
-  }, [thought]);
-
   // Optimistic like toggle
   const handleLike = async () => {
     if (!thought) return;
@@ -123,24 +94,6 @@ export default function ThoughtDetail() {
   const handleCommentCountChange = useCallback((delta: number) => {
     setCommentCount((c) => Math.max(0, c + delta));
   }, []);
-
-  const handleVideoClick = () => {
-    const vid = videoRef.current;
-    if (!vid) return;
-    const newMuted = !isMuted;
-    vid.muted = newMuted;
-    setIsMuted(newMuted);
-    if (!newMuted) { vid.play().catch(() => {}); setIsPlaying(true); }
-  };
-
-  const togglePlay = async () => {
-    const vid = videoRef.current;
-    if (!vid) return;
-    try {
-      if (vid.paused) { await vid.play(); setIsPlaying(true); }
-      else { vid.pause(); setIsPlaying(false); }
-    } catch {}
-  };
 
   if (loading) return <div className="min-h-screen pt-14"><ThoughtSkeleton /></div>;
   if (!thought) return <div className="pt-20 text-center text-muted-foreground">Thought not found</div>;
@@ -197,37 +150,8 @@ export default function ThoughtDetail() {
           )}
 
           {mediaUrl && mediaType === "video" && (
-            <div
-              className="mt-3 rounded-xl overflow-hidden border border-border/40 relative"
-              onMouseEnter={() => setShowControls(true)}
-              onMouseLeave={() => setShowControls(false)}
-            >
-              <video
-                ref={videoRef}
-                src={mediaUrl}
-                muted={isMuted}
-                loop
-                playsInline
-                preload="metadata"
-                onContextMenu={(e) => e.preventDefault()}
-                disablePictureInPicture
-                controlsList="nodownload noremoteplayback"
-                className="w-full object-cover max-h-80 bg-black"
-              />
-              {showControls && (
-                <button
-                  onClick={togglePlay}
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 flex items-center justify-center text-white z-10"
-                  aria-label={isPlaying ? "Pause" : "Play"}
-                >
-                  {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                </button>
-              )}
-              {showControls && (
-                <button onClick={handleVideoClick} className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white">
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-              )}
+            <div className="mt-3 rounded-xl overflow-hidden border border-border/40">
+              <VideoPlayer src={mediaUrl} />
             </div>
           )}
 
