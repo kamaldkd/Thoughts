@@ -8,6 +8,7 @@ export const withTransactionRetry = async (operations, maxRetries = 5) => {
 
   while (attempt < maxRetries) {
     const session = await mongoose.startSession();
+    let runWithoutTransaction = false;
     try {
       session.startTransaction();
 
@@ -31,23 +32,59 @@ export const withTransactionRetry = async (operations, maxRetries = 5) => {
       }
 
     } catch (error) {
-      await session.abortTransaction();
-      
-      // Target MongoDB Transient / WriteConflict Errors exclusively 
-      if (error.hasErrorLabel && error.hasErrorLabel("TransientTransactionError")) {
-        attempt++;
-        if (attempt >= maxRetries) throw new Error("Transaction permanently failed after maximum concurrency retries.");
-        
-        // Exponential Backoff algorithm: 25 * 2^1 (50ms), 2^2 (100ms), etc.
-        const backoff = 25 * Math.pow(2, attempt);
-        console.warn(JSON.stringify({ level: "WARN", event: "WRITE_CONFLICT_RETRY", attempt, maxRetries, backoffMs: backoff }));
-        
-        await pause(backoff);
+      if (
+        process.env.NODE_ENV !== "production" &&
+        error.code === 20 &&
+        /Transaction numbers are only allowed on a replica set member or mongos/i.test(
+          error.message
+        )
+      ) {
+        runWithoutTransaction = true;
       } else {
-        throw error; // Let Validation or Unique Constraint errors flow normally natively
+        await session.abortTransaction();
+
+        // Target MongoDB Transient / WriteConflict Errors exclusively
+        if (
+          error.hasErrorLabel &&
+          error.hasErrorLabel("TransientTransactionError")
+        ) {
+          attempt++;
+          if (attempt >= maxRetries)
+            throw new Error(
+              "Transaction permanently failed after maximum concurrency retries."
+            );
+
+          // Exponential Backoff algorithm: 25 * 2^1 (50ms), 2^2 (100ms), etc.
+          const backoff = 25 * Math.pow(2, attempt);
+          console.warn(
+            JSON.stringify({
+              level: "WARN",
+              event: "WRITE_CONFLICT_RETRY",
+              attempt,
+              maxRetries,
+              backoffMs: backoff,
+            })
+          );
+
+          await pause(backoff);
+        } else {
+          throw error; // Let Validation or Unique Constraint errors flow normally natively
+        }
       }
     } finally {
       session.endSession(); // Prevent persistent RAM locking absolutely 
+    }
+
+    if (runWithoutTransaction) {
+      console.warn(
+        JSON.stringify({
+          level: "WARN",
+          event: "TRANSACTION_UNSUPPORTED_FALLBACK",
+          message:
+            "MongoDB transactions are unavailable; running this operation without a transaction in a non-production environment.",
+        })
+      );
+      return operations(null);
     }
   }
 };

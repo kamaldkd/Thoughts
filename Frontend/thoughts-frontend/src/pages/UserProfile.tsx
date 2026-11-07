@@ -23,7 +23,7 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import api, { getUserThoughts, getUserProfile } from "@/lib/api";
+import api, { getUserThoughts, getUserProfile, getFollowers, getFollowing } from "@/lib/api";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton";
 import { StatModal } from "@/components/profile/StatModal";
@@ -220,6 +220,8 @@ export default function UserProfile() {
 
   const [profile, setProfile] = useState<any>(null);
   const [thoughts, setThoughts] = useState<any[]>([]);
+  const [followers, setFollowers] = useState<any[]>([]);
+  const [followings, setFollowings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("posts");
   const [modalOpen, setModalOpen] = useState<"followers" | "following" | null>(
@@ -249,19 +251,26 @@ export default function UserProfile() {
 
     const loadData = async () => {
       try {
-        const [profileRes, thoughtsRes] = await Promise.all([
+        const [profileRes, thoughtsRes, followerRes, followingRes] = await Promise.all([
           getUserProfileByUsername(username),
           getThoughtsByUsername(username),
+          getFollowers(username),
+          getFollowing(username)
         ]);
 
         if (!mounted) return;
 
         setProfile(profileRes.data);
         setThoughts(thoughtsRes.data.thoughts || []);
+
+        setFollowers(followerRes.data.users);
+        setFollowings(followingRes.data.users);
       } catch (error) {
         console.error("Error loading profile:", error);
         setProfile(null);
         setThoughts([]);
+        setFollowers([]);
+        setFollowings([]);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -296,7 +305,7 @@ export default function UserProfile() {
     // Optimistically update
     const prevFollowState = followState;
     const prevFollowersCount = profile.followersCount || 0;
-    
+
     setFollowState(profile.isPrivate ? "requested" : "following");
     setProfile((prev: any) => ({
       ...prev,
@@ -361,9 +370,7 @@ export default function UserProfile() {
   const mediaThoughts = thoughts.filter((t) => t.media && t.media.length > 0);
 
   const tabContent = () => {
-    const list =
-      tab === "media"
-        ? mediaThoughts : thoughts;
+    const list = tab === "media" ? mediaThoughts : thoughts;
 
     if (tab === "media") {
       if (list.length === 0) return <EmptyState tab="media" />;
@@ -598,13 +605,13 @@ export default function UserProfile() {
         open={modalOpen === "followers"}
         onOpenChange={(v) => !v && setModalOpen(null)}
         title="Followers"
-        users={[]}
+        users={followers}
       />
       <StatModal
         open={modalOpen === "following"}
         onOpenChange={(v) => !v && setModalOpen(null)}
         title="Following"
-        users={[]}
+        users={followings}
       />
 
       {/* ── Full Post Modal ─────────────────────────────────────────────── */}

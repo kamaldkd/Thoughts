@@ -7,11 +7,6 @@ export const getFollowers = async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 20, 50);
   const cursor = req.query.cursor;
 
-  // 🔴 GUARD: never assume req.userId exists
-  if (!req.userId) {
-    throw new ExpressError(401, "Unauthorized");
-  }
-
   const currentUserId = req.userId;
 
   const user = await User.findOne({ username }).select("_id");
@@ -72,11 +67,6 @@ export const getFollowing = async (req, res) => {
   const { username } = req.params;
   const limit = Math.min(Number(req.query.limit) || 20, 50);
   const cursor = req.query.cursor;
-
-  // 🔴 GUARD: never assume req.userId exists
-  if (!req.userId) {
-    throw new ExpressError(401, "Unauthorized");
-  }
 
   const currentUserId = req.userId;
 

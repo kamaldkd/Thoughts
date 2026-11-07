@@ -296,17 +296,6 @@ async function runTests() {
       fail("Follow blocked by CSRF", JSON.stringify(res.data));
     } else if (res.status === 401) {
       fail("Follow blocked — not authenticated", JSON.stringify(res.data));
-    } else if (res.status === 500 && res.data?.message?.includes("Server error during follow")) {
-      // This typically means MongoDB transactions aren't supported (standalone instance)
-      console.log(YELLOW(`  ⚠️  Follow returned 500 — "${res.data?.message}"`));
-      console.log(YELLOW(`       Likely cause: MongoDB is running as a standalone instance.`));
-      console.log(YELLOW(`       The followController uses MongoDB transactions which require`));
-      console.log(YELLOW(`       a replica set. In production (MongoDB Atlas), this works fine.`));
-      console.log(YELLOW(`       For local dev, either:`));
-      console.log(YELLOW(`         1. Enable replica set on local MongoDB`));
-      console.log(YELLOW(`         2. OR remove transaction wrapper in followController.js for local dev`));
-      passed++; // Mark as known issue, not a test failure
-      console.log(YELLOW(`  ⚠️  KNOWN ISSUE  Follow/Unfollow fails on standalone MongoDB (no transactions)`));
     } else {
       fail("Follow failed", `status=${res.status}, ${JSON.stringify(res.data)}`);
     }

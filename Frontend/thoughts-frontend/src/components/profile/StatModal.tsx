@@ -6,12 +6,16 @@ import {
 } from "@/components/ui/dialog";
 import { User } from "lucide-react";
 import { FollowButton } from "./FollowButton";
+import { useAuth } from "@/hooks/useAuth";
+import { useParams } from "react-router-dom";
 
 interface StatUser {
-  id: string;
+  id?: string;
+  _id?: string;
   username: string;
   avatar?: string;
   fullName?: string;
+  name?: string;
   isFollowing?: boolean;
 }
 
@@ -23,6 +27,10 @@ interface StatModalProps {
 }
 
 function UserRow({ user }: { user: StatUser }) {
+  const { username } = useParams<{ username: string }>();
+  const { user: me } = useAuth();
+
+  const isOwnProfile = me?.username === username;
   return (
     <div className="flex items-center gap-3 py-3 px-1">
       <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center">
@@ -41,16 +49,16 @@ function UserRow({ user }: { user: StatUser }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold truncate">{user.username}</p>
-        {user.fullName && (
+        {(user.fullName || user.name) && (
           <p className="text-xs text-muted-foreground truncate">
-            {user.fullName}
+            {user.fullName || user.name}
           </p>
         )}
       </div>
-      <FollowButton
+      {!isOwnProfile && (<FollowButton
         initialState={user.isFollowing ? "following" : "not_following"}
         className="text-xs h-8 px-4"
-      />
+      />)}
     </div>
   );
 }
@@ -75,7 +83,9 @@ export function StatModal({
               No {title.toLowerCase()} yet
             </p>
           ) : (
-            users.map((u) => <UserRow key={u.id} user={u} />)
+            users.map((u) => (
+              <UserRow key={u.id || u._id || u.username} user={u} />
+            ))
           )}
         </div>
       </DialogContent>
