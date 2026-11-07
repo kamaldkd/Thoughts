@@ -5,6 +5,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { FollowButton } from "./FollowButton";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -25,7 +26,13 @@ interface StatModalProps {
   users: StatUser[];
 }
 
-function UserRow({ user }: { user: StatUser }) {
+function UserRow({
+  user,
+  onSelect,
+}: {
+  user: StatUser;
+  onSelect: () => void;
+}) {
   const { user: me } = useAuth();
 
   return (
@@ -45,7 +52,13 @@ function UserRow({ user }: { user: StatUser }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate">{user.username}</p>
+        <Link
+          to={`/profile/${user.username}`}
+          onClick={onSelect}
+          className="text-sm font-semibold truncate"
+        >
+          {user.username}
+        </Link>
         {(user.fullName || user.name) && (
           <p className="text-xs text-muted-foreground truncate">
             {user.fullName || user.name}
@@ -83,7 +96,11 @@ export function StatModal({
             </p>
           ) : (
             users.map((u) => (
-              <UserRow key={u.id || u._id || u.username} user={u} />
+              <UserRow
+                key={u.id || u._id || u.username}
+                user={u}
+                onSelect={() => onOpenChange(false)}
+              />
             ))
           )}
         </div>
