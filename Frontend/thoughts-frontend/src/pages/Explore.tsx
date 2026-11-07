@@ -1,5 +1,9 @@
-import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   Search,
   TrendingUp,
@@ -8,6 +12,10 @@ import {
   Loader2,
   Users,
   UserRound,
+  Heart,
+  MessageCircle,
+  Images,
+  Play,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -15,7 +23,12 @@ import { Input } from "@/components/ui/input";
 import { mockThoughts } from "@/data/mockThoughts";
 import { FollowButton } from "@/components/profile/FollowButton";
 
-import { searchUsers, followUser, unfollowUser } from "@/lib/api";
+import {
+  getThoughts,
+  searchUsers,
+  followUser,
+  unfollowUser,
+} from "@/lib/api";
 
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -27,6 +40,28 @@ interface SearchUser {
   name?: string;
   avatar?: string;
   isFollowing: boolean;
+}
+
+interface ExploreMedia {
+  url: string;
+  type: "image" | "video";
+}
+
+interface ExploreThought {
+  _id: string;
+  text: string;
+  media: ExploreMedia[];
+  author?: {
+    username?: string;
+  };
+  likesCount?: number;
+  commentsCount?: number;
+}
+
+interface ExploreThoughtPage {
+  thoughts: ExploreThought[];
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 const trendingTags = [
@@ -68,8 +103,51 @@ export default function Explore() {
   const [activeTab, setActiveTab] = useState<TabKey>("people");
 
   const queryClient = useQueryClient();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const debouncedQuery = useDebounce(query.trim(), 350);
+
+  const {
+    data: thoughtPages,
+    isLoading: isLoadingThoughts,
+    isError: isThoughtsError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    refetch: refetchThoughts,
+  } = useInfiniteQuery({
+    queryKey: ["explore-media"],
+    queryFn: async ({ pageParam }) => {
+      const response = await getThoughts({
+        ...(pageParam ? { cursor: pageParam } : {}),
+        limit: 30,
+      });
+      return response.data as ExploreThoughtPage;
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextCursor ?? undefined : undefined,
+  });
+
+  const mediaThoughts =
+    thoughtPages?.pages
+      .flatMap((page) => page.thoughts)
+      .filter((thought) => thought.media?.some((media) => media.url)) ?? [];
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void fetchNextPage();
+      },
+      { rootMargin: "300px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
 
   // Real backend user search
@@ -155,6 +233,129 @@ export default function Explore() {
             )}
           </div>
         </div>
+
+        {/* Show discovery media only when the user is not searching. */}
+        {!query.trim() && (
+          <section
+            aria-label="Explore photos and videos"
+            className="mb-6 -mx-4"
+          >
+
+          {isLoadingThoughts ? (
+            <div className="grid grid-cols-3 gap-0">
+              {Array.from({ length: 9 }, (_, index) => (
+                <div
+                  key={index}
+                  className="aspect-square animate-pulse bg-secondary"
+                />
+              ))}
+            </div>
+          ) : isThoughtsError ? (
+            <div className="py-10 text-center">
+              <p className="mb-3 text-sm text-muted-foreground">
+                Could not load photos and videos.
+              </p>
+              <button
+                type="button"
+                onClick={() => void refetchThoughts()}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Try again
+              </button>
+            </div>
+          ) : mediaThoughts.length === 0 ? (
+            hasNextPage ? (
+              <>
+                <div className="grid grid-cols-3 gap-0">
+                  {Array.from({ length: 9 }, (_, index) => (
+                    <div
+                      key={index}
+                      className="aspect-square animate-pulse bg-secondary"
+                    />
+                  ))}
+                </div>
+                <div
+                  ref={loadMoreRef}
+                  className="flex justify-center py-4"
+                  aria-label="Loading more thoughts to find photos and videos"
+                >
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              </>
+            ) : (
+              <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+                No photos or videos to explore yet.
+              </p>
+            )
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-0">
+                {mediaThoughts.map((thought) => {
+                  const media = thought.media.find((item) => item.url);
+                  if (!media) return null;
+
+                  return (
+                    <Link
+                      key={thought._id}
+                      to={`/thought/${thought._id}`}
+                      aria-label={`View thought by ${thought.author?.username || "user"}`}
+                      className="group relative aspect-square overflow-hidden bg-secondary"
+                    >
+                      {media.type === "video" ? (
+                        <video
+                          src={media.url}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={media.url}
+                          alt={thought.text || "Thought"}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      )}
+
+                      {thought.media.length > 1 && (
+                        <Images
+                          aria-hidden="true"
+                          className="absolute right-2 top-2 h-4 w-4 text-white drop-shadow"
+                        />
+                      )}
+                      {thought.media.length === 1 &&
+                        media.type === "video" && (
+                          <Play
+                            aria-hidden="true"
+                            className="absolute right-2 top-2 h-4 w-4 fill-white text-white drop-shadow"
+                          />
+                        )}
+
+                      <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-4 w-4 fill-white" />
+                          {thought.likesCount ?? 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageCircle className="h-4 w-4 fill-white" />
+                          {thought.commentsCount ?? 0}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              <div ref={loadMoreRef} aria-hidden="true" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
+          )}
+          </section>
+        )}
 
         {/* Tabs */}
         {/* <div className="flex border-b border-border/60 mb-4">
