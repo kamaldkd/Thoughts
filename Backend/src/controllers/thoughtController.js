@@ -4,6 +4,7 @@ import {
   editThought, removeThought, fetchUserThoughtsPaginated 
 } from "../services/ThoughtService.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import ExpressError from "../utils/ExpressError.js";
 
 // @desc    Create a thought
 // @route   POST /api/thoughts
@@ -23,8 +24,12 @@ export const createThought = async (req, res) => {
 export const getThoughts = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const cursor = req.query.cursor;
+  const feed = req.query.feed || "for-you";
+  if (!["for-you", "following"].includes(feed)) {
+    throw new ExpressError(400, "Invalid feed type");
+  }
   
-  const result = await fetchThoughts(limit, cursor);
+  const result = await fetchThoughts(limit, cursor, req.userId, feed);
   
   res.json({ thoughts: result.thoughts, nextCursor: result.nextCursor, hasMore: result.hasMore });
 };

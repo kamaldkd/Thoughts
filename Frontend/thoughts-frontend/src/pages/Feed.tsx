@@ -8,7 +8,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import defaultAvatar from "../assets/hero-bg.jpg";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import ThoughtSkeleton from "@/components/ThoughtSkeleton";
 
 type FeedLocationState = {
@@ -17,6 +17,8 @@ type FeedLocationState = {
 
 const Feed = () => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const feed = searchParams.get("feed") === "following" ? "following" : "for-you";
   const state = location.state as FeedLocationState | null;
   const { user } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
@@ -38,9 +40,12 @@ const Feed = () => {
     status,
     error,
   } = useInfiniteQuery({
-    queryKey: ['thoughts', 'feed'],
+    queryKey: ['thoughts', 'feed', feed],
     queryFn: async ({ pageParam = null as string | null }) => {
-      const res = await getThoughts(pageParam ? { cursor: pageParam } : {});
+      const res = await getThoughts({
+        feed,
+        ...(pageParam ? { cursor: pageParam } : {}),
+      });
       return res.data;
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.nextCursor : undefined,
@@ -53,7 +58,7 @@ const Feed = () => {
   const deleteMutation = useMutation({
     mutationFn: deleteThought,
     onSuccess: (_, deletedId) => {
-      queryClient.setQueryData(['thoughts', 'feed'], (oldData: any) => {
+      queryClient.setQueryData(['thoughts', 'feed', feed], (oldData: any) => {
         if (!oldData) return oldData;
         return {
           ...oldData,
@@ -150,7 +155,9 @@ const Feed = () => {
         {/* Feed */}
         {thoughts.length === 0 ? (
           <p className="text-muted-foreground">
-            No thoughts yet — be the first to post!
+            {feed === "following"
+              ? "No thoughts from your followings yet."
+              : "No thoughts yet — be the first to post!"}
           </p>
         ) : (
           thoughts.map((t) => (

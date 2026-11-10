@@ -1,9 +1,20 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { ChevronDown, Plus, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { CreateThoughtModal } from "./CreateThoughtModal";
 import { ThemeToggle } from "./ThemeToggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface UserAvatarProps {
   avatarUrl?: string | null;
@@ -51,10 +62,29 @@ function UserAvatar({ avatarUrl, username, size = 32 }: UserAvatarProps) {
 
 export function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isLanding = location.pathname === "/";
   const isActivity = location.pathname === "/activity";
+  const isFeedPage =
+    location.pathname === "/feed" || location.pathname === "/create";
   const { user, isLoggedIn, loading } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
+  const selectedFeed =
+    isFeedPage && searchParams.get("feed") === "following"
+      ? "following"
+      : "for-you";
+  const pageTitle = location.pathname.startsWith("/messages")
+    ? "Messages"
+    : location.pathname === "/explore"
+      ? "Explore"
+      : location.pathname === "/profile"
+        ? "Your Profile"
+        : location.pathname === "/edit-profile"
+          ? "Edit Profile"
+          : location.pathname.startsWith("/thought/")
+            ? "Thought"
+            : "Thoughts";
 
   // Hide the new nav on the landing page — keep original transparent look
   if (isLanding) {
@@ -103,11 +133,52 @@ export function Navbar() {
           className="max-w-2xl mx-auto flex items-center justify-between"
           style={{ height: 52, paddingLeft: 16, paddingRight: 12 }}
         >
-          {/* Left — Feed label + dropdown arrow */}
-          <button
-            className="flex items-center gap-1 transition-opacity duration-150 active:opacity-60"
-            aria-label="Switch feed"
-          >
+          {/* Keep feed selection scoped to feed screens; label other pages by context. */}
+          {isFeedPage ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-1 transition-opacity duration-150 active:opacity-60"
+                  aria-label="Switch feed"
+                >
+                  <span
+                    className="text-foreground"
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 650,
+                      letterSpacing: "-0.3px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {selectedFeed === "following" ? "Followings" : "For You"}
+                  </span>
+                  <ChevronDown
+                    style={{
+                      width: 16,
+                      height: 16,
+                      stroke: "hsl(var(--foreground))",
+                      strokeWidth: 2.2,
+                      marginTop: 1,
+                    }}
+                  />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem
+                  onSelect={() => navigate("/feed")}
+                  aria-current={selectedFeed === "for-you" ? "true" : undefined}
+                >
+                  For You
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => navigate("/feed?feed=following")}
+                  aria-current={selectedFeed === "following" ? "true" : undefined}
+                >
+                  Followings
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
             <span
               className="text-foreground"
               style={{
@@ -117,18 +188,9 @@ export function Navbar() {
                 lineHeight: 1,
               }}
             >
-              For You
+              {pageTitle}
             </span>
-            <ChevronDown
-              style={{
-                width: 16,
-                height: 16,
-                stroke: "hsl(var(--foreground))",
-                strokeWidth: 2.2,
-                marginTop: 1,
-              }}
-            />
-          </button>
+          )}
           
           {/* Center — intentionally empty */}
           <div />
@@ -169,7 +231,7 @@ export function Navbar() {
                 }}
               >
                 <UserAvatar
-                  avatarUrl={(user as any).avatar ?? null}
+                  avatarUrl={user.avatar ?? null}
                   username={user.username}
                   size={34}
                 />

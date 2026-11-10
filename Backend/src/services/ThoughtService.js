@@ -6,6 +6,7 @@ import {
   updateThoughtDoc, deleteThoughtDoc, findThoughtsByAuthorId, countThoughtsByAuthorId
 } from "../repositories/ThoughtRepository.js";
 import { findUserById, findUserByUsername } from "../repositories/UserRepository.js";
+import Follow from "../models/Follow.js";
 import ExpressError from "../utils/ExpressError.js";
 
 export const addThought = async (userId, text, files) => {
@@ -44,14 +45,25 @@ export const addThought = async (userId, text, files) => {
   return thought;
 };
 
-export const fetchThoughts = async (limitNum, cursor) => {
-  let query = {};
+export const fetchThoughts = async (limitNum, cursor, userId, feed = "for-you") => {
+  const query = {};
+  if (feed === "following") {
+    const followedUserIds = await Follow.distinct("following", {
+      follower: userId,
+    });
+    if (followedUserIds.length === 0) {
+      return { thoughts: [], nextCursor: null, hasMore: false };
+    }
+    query.author = { $in: followedUserIds };
+  }
   if (cursor) query._id = { $lt: cursor };
   
-  const thoughts = await getThoughtsList(query, { limit: limitNum });
+  const thoughts = await getThoughtsList(query, { limit: limitNum + 1 });
+  const hasMore = thoughts.length > limitNum;
+  if (hasMore) thoughts.pop();
   const nextCursor = thoughts.length > 0 ? thoughts[thoughts.length - 1]._id : null;
   
-  return { thoughts, nextCursor, hasMore: thoughts.length === limitNum };
+  return { thoughts, nextCursor, hasMore };
 };
 
 export const fetchThoughtById = async (id) => {

@@ -208,7 +208,10 @@ export function postMultipart(path: string, formData: FormData) {
    THOUGHTS
 ───────────────────────────────────────────── */
 
-export function getThoughts(params?: any) {
+export function getThoughts(params?: {
+  cursor?: string;
+  feed?: "for-you" | "following";
+}) {
   return api.get("/thoughts", { params });
 }
 
