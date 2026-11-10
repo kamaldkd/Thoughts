@@ -11,6 +11,7 @@ import {
   getFollowing,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { StatModal } from "@/components/profile/StatModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,12 +21,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+interface ProfileStats {
+  followersCount?: number;
+  followingCount?: number;
+}
 
 const Profile = () => {
   const [view, setView] = useState<"list" | "grid">("list");
   const [thoughts, setThoughts] = useState<any[]>([]);
   const [followers, setFollowers] = useState<any[]>([]);
   const [following, setFollowing] = useState<any[]>([]);
+  const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
+  const [modalOpen, setModalOpen] = useState<"followers" | "following" | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const { id: userId } = useParams();
   const { user, logout } = useAuth();
@@ -36,18 +45,20 @@ const Profile = () => {
     navigate("/login");
   }
 
-  let res1: any = {};
-  let res2: any = {};
-
   useEffect(() => {
     let mounted = true;
     async function loadProfile() {
+      if (!user?.username) return;
       try {
-        res1 = await getFollowers(user.username);
-        res2 = await getFollowing(user.username);
+        const [profileRes, followersRes, followingRes] = await Promise.all([
+          getUserProfile(user.username),
+          getFollowers(user.username),
+          getFollowing(user.username),
+        ]);
         if (mounted) {
-          setFollowers(res1.data.followers.length || []);
-          setFollowing(res2.data.following.length || []);
+          setProfileStats(profileRes.data);
+          setFollowers(followersRes.data.users || []);
+          setFollowing(followingRes.data.users || []);
         }
       } catch (err) {
         console.error("Failed to load profile:", err);
@@ -80,6 +91,24 @@ const Profile = () => {
     };
   }, [userId]);
 
+  const stats: {
+    label: string;
+    value: number;
+    onClick?: () => void;
+  }[] = [
+    { label: "Thoughts", value: thoughts.length },
+    {
+      label: "Followers",
+      value: profileStats?.followersCount ?? followers.length,
+      onClick: () => setModalOpen("followers"),
+    },
+    {
+      label: "Following",
+      value: profileStats?.followingCount ?? following.length,
+      onClick: () => setModalOpen("following"),
+    },
+  ];
+
   return (
     <div className="min-h-screen pt-14 pb-20 md:pb-8">
       <div className="max-w-xl mx-auto px-4">
@@ -97,15 +126,19 @@ const Profile = () => {
 
           {/* Stats */}
           <div className="flex justify-center gap-8 mt-5">
-            {[
-              { label: "Thoughts", value: thoughts.length },
-              { label: "Followers", value: user?._id ? followers.length : 0 },
-              { label: "Following", value: user?._id ? following.length : 0 },
-            ].map((s) => (
-              <div key={s.label} className="text-center">
+            {stats.map((s) => (
+              <button
+                key={s.label}
+                type="button"
+                onClick={s.onClick}
+                disabled={!s.onClick}
+                className={`text-center ${
+                  s.onClick ? "cursor-pointer hover:text-primary" : "cursor-default"
+                }`}
+              >
                 <div className="text-lg font-semibold">{s.value}</div>
                 <div className="text-xs text-muted-foreground">{s.label}</div>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -219,6 +252,18 @@ const Profile = () => {
           </div>
         )}
       </div>
+      <StatModal
+        open={modalOpen === "followers"}
+        onOpenChange={(open) => !open && setModalOpen(null)}
+        title="Followers"
+        users={followers}
+      />
+      <StatModal
+        open={modalOpen === "following"}
+        onOpenChange={(open) => !open && setModalOpen(null)}
+        title="Following"
+        users={following}
+      />
     </div>
   );
 };

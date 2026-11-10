@@ -223,7 +223,7 @@ export default function Explore() {
 
   return (
     <div className="min-h-screen pt-14 pb-20 md:pb-8">
-      <div className="max-w-xl mx-auto px-3">
+      <div className="max-w-xl mx-auto px-4">
         {/* Search bar */}
         <div className="py-4">
           <div className="relative">
@@ -251,11 +251,12 @@ export default function Explore() {
           </div>
         </div>
 
-        {/* Media discovery grid */}
-        <section
-          aria-label="Explore photos and videos"
-          className="mb-6 -mx-4 w-[calc(100%+2rem)]"
-        >
+        {/* Show discovery media only when the user is not searching. */}
+        {!query.trim() && (
+          <section
+            aria-label="Explore photos and videos"
+            className="mb-6 -mx-4 w-[calc(100%+2rem)]"
+          >
 
           {isLoadingThoughts ? (
             <MediaGridSkeleton />
@@ -356,7 +357,8 @@ export default function Explore() {
               )}
             </>
           )}
-        </section>
+          </section>
+        )}
 
         {/* Tabs */}
         {/* <div className="flex border-b border-border/60 mb-4">

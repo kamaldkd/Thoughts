@@ -5,7 +5,7 @@ import {
   createThoughtDoc, findThoughtById, getThoughtsList, 
   updateThoughtDoc, deleteThoughtDoc, findThoughtsByAuthorId, countThoughtsByAuthorId
 } from "../repositories/ThoughtRepository.js";
-import { findUserByUsername } from "../repositories/UserRepository.js";
+import { findUserById, findUserByUsername } from "../repositories/UserRepository.js";
 import ExpressError from "../utils/ExpressError.js";
 
 export const addThought = async (userId, text, files) => {
@@ -61,15 +61,15 @@ export const fetchThoughtById = async (id) => {
 };
 
 export const fetchThoughtsOfUser = async (userId) => {
-  const thoughts = await findThoughtsByAuthorId(userId);
-  if (!thoughts.length) throw new ExpressError(404, "No thoughts found for this user");
-  return thoughts;
+  return findThoughtsByAuthorId(userId);
 };
 
 export const fetchThoughtsByParamsUserId = async (userId) => {
+  const user = await findUserById(userId);
+  if (!user) throw new ExpressError(404, "User not found");
+
   const thoughts = await findThoughtsByAuthorId(userId);
   const thoughtsCount = await countThoughtsByAuthorId(userId);
-  if (!thoughts.length) throw new ExpressError(404, "No thoughts found for this user");
   return { thoughts, thoughtsCount };
 };
 
