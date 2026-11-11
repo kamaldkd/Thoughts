@@ -77,7 +77,7 @@ export function BottomNav() {
                   <span className="absolute top-[12px] right-[11px] w-[7px] h-[7px] rounded-full bg-destructive ring-background z-20" />
                 )}
                 {showMessageBadge && (
-                  <span className="absolute -right-0.5 -top-0.5 z-20 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-background">
+                  <span className="absolute right-1 top-1 z-20 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-semibold leading-none text-white">
                     {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
                   </span>
                 )}

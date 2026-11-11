@@ -116,7 +116,7 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
           </div>
 
           {unreadCount > 0 && (
-            <span className="flex h-[18px] min-w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+            <span className="flex h-[18px] min-w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
