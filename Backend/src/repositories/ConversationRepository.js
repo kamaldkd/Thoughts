@@ -41,6 +41,10 @@ export const findConversationsByUser = async (userId) => {
     .lean();
 };
 
+export const findConversationIdsByUser = async (userId) => {
+  return Conversation.find({ participants: userId }).distinct("_id");
+};
+
 /**
  * Update the lastMessage snapshot after a new message is saved.
  */

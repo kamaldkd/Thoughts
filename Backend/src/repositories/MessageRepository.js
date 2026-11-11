@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Message from "../models/Message.js";
 
 /**
@@ -82,6 +83,25 @@ export const markConversationSeen = async (conversationId, readerId) => {
  */
 export const countMessages = async (conversationId) => {
   return Message.countDocuments({ conversationId });
+};
+
+export const countUnreadMessagesByConversation = async (conversationIds, userId) => {
+  if (conversationIds.length === 0) return {};
+
+  const unreadCounts = await Message.aggregate([
+    {
+      $match: {
+        conversationId: { $in: conversationIds },
+        senderId: { $ne: new mongoose.Types.ObjectId(userId.toString()) },
+        status: { $ne: "seen" },
+      },
+    },
+    { $group: { _id: "$conversationId", count: { $sum: 1 } } },
+  ]);
+
+  return Object.fromEntries(
+    unreadCounts.map(({ _id, count }) => [_id.toString(), count])
+  );
 };
 
 /**

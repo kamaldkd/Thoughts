@@ -2,8 +2,10 @@ import {
   findConversationByParticipants,
   createConversation,
   findConversationsByUser,
+  findConversationIdsByUser,
   isParticipant,
 } from "../repositories/ConversationRepository.js";
+import { countUnreadMessagesByConversation } from "../repositories/MessageRepository.js";
 import User from "../models/User.js";
 import ExpressError from "../utils/ExpressError.js";
 
@@ -46,6 +48,10 @@ export const getOrCreateConversation = async (requesterId, participantId) => {
  */
 export const listConversations = async (userId) => {
   const conversations = await findConversationsByUser(userId);
+  const unreadCounts = await countUnreadMessagesByConversation(
+    conversations.map((conversation) => conversation._id),
+    userId
+  );
 
   // Shape each conversation to include the "other" participant's info
   return conversations.map((conv) => {
@@ -58,8 +64,15 @@ export const listConversations = async (userId) => {
       lastMessage: conv.lastMessage,
       lastMessageAt: conv.lastMessageAt,
       createdAt: conv.createdAt,
+      unreadCount: unreadCounts[conv._id.toString()] ?? 0,
     };
   });
+};
+
+export const getUnreadMessageCount = async (userId) => {
+  const conversationIds = await findConversationIdsByUser(userId);
+  const unreadCounts = await countUnreadMessagesByConversation(conversationIds, userId);
+  return Object.values(unreadCounts).reduce((total, count) => total + count, 0);
 };
 
 /**

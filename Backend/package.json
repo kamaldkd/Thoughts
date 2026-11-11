@@ -10,7 +10,7 @@
     "start": "NODE_ENV=production node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate:conversation-index": "node testing/migrate-conversation-index.js",
-    "test:message": "node --test testing/message-idempotency.test.js"
+    "test:message": "node --test testing/message-idempotency.test.js testing/message-unread.test.js"
   },
   "keywords": [],
   "author": "",

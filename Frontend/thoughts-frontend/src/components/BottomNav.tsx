@@ -3,6 +3,7 @@ import { Home, Search, MessageCircle, Heart } from "lucide-react";
 import { useState } from "react";
 import { CreateThoughtModal } from "./CreateThoughtModal";
 import { useActivityBadge } from "@/hooks/useActivityBadge";
+import { useChatStore } from "@/store/useChatStore";
 
 const navItems = [
   { icon: Home, to: "/feed", label: "Home" },
@@ -15,6 +16,7 @@ export function BottomNav() {
   const location = useLocation();
   const [createOpen, setCreateOpen] = useState(false);
   const { hasUnread: hasUnreadActivity } = useActivityBadge();
+  const unreadMessageCount = useChatStore((state) => state.unreadMessageCount);
 
   if (location.pathname === "/") return null;
 
@@ -38,12 +40,17 @@ export function BottomNav() {
             const active = to === "/messages"
               ? location.pathname.startsWith("/messages")
               : location.pathname === to;
+            const showMessageBadge = to === "/messages" && unreadMessageCount > 0;
             return (
               <Link
                 key={to}
                 to={to}
                 className="relative flex items-center justify-center w-12 h-11 rounded-full transition-all duration-200"
-                aria-label={label}
+                aria-label={
+                  showMessageBadge
+                    ? `${label}, ${unreadMessageCount} unread`
+                    : label
+                }
               >
                 {/* Active bg highlight */}
                 {active && (
@@ -68,6 +75,11 @@ export function BottomNav() {
                 {/* Notification badge */}
                 {showBadge && hasUnreadActivity && !active && (
                   <span className="absolute top-[12px] right-[11px] w-[7px] h-[7px] rounded-full bg-destructive ring-background z-20" />
+                )}
+                {showMessageBadge && (
+                  <span className="absolute -right-0.5 -top-0.5 z-20 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-background">
+                    {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                  </span>
                 )}
               </Link>
             );

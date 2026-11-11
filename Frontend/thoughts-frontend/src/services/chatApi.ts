@@ -23,6 +23,7 @@ export interface Conversation {
   lastMessage?: LastMessage;
   lastMessageAt?: string;
   createdAt: string;
+  unreadCount?: number;
 }
 
 export interface Message {
@@ -71,6 +72,9 @@ export interface PaginationMeta {
 
 export const getConversations = (): Promise<Conversation[]> =>
   api.get("/conversations").then((r) => r.data.data);
+
+export const getUnreadMessageCount = (): Promise<number> =>
+  api.get("/conversations/unread-count").then((r) => r.data.count);
 
 export const createOrGetConversation = async (
   participantId: string

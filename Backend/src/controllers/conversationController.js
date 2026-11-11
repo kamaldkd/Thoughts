@@ -1,5 +1,6 @@
 import {
   getOrCreateConversation,
+  getUnreadMessageCount,
   listConversations,
 } from "../services/ConversationService.js";
 
@@ -31,4 +32,9 @@ export const createOrGetConversation = async (req, res) => {
 export const getConversations = async (req, res) => {
   const conversations = await listConversations(req.userId);
   res.status(200).json({ success: true, data: conversations });
+};
+
+export const getUnreadCount = async (req, res) => {
+  const count = await getUnreadMessageCount(req.userId);
+  res.status(200).json({ success: true, count });
 };

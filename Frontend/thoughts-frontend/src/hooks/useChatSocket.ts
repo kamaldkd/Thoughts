@@ -17,6 +17,7 @@ export const useChatSocket = (currentUserId: string) => {
   const replaceTempMessage = useChatStore((s) => s.replaceTempMessage);
   const setTyping = useChatStore((s) => s.setTyping);
   const incrementUnread = useChatStore((s) => s.incrementUnread);
+  const clearUnread = useChatStore((s) => s.clearUnread);
   const updateLastMessage = useChatStore((s) => s.updateLastMessage);
 
   useEffect(() => {
@@ -59,8 +60,9 @@ export const useChatSocket = (currentUserId: string) => {
     /* ────────────────────────────────────
        message_seen
     ──────────────────────────────────── */
-    const onSeen = ({ conversationId }: { conversationId: string; seenBy: string }) => {
+    const onSeen = ({ conversationId, seenBy }: { conversationId: string; seenBy: string }) => {
       updateConversationMessageStatus(conversationId, "seen");
+      if (seenBy === currentUserId) clearUnread(conversationId);
     };
 
     /* ────────────────────────────────────
@@ -104,6 +106,7 @@ export const useChatSocket = (currentUserId: string) => {
     replaceTempMessage,
     setTyping,
     incrementUnread,
+    clearUnread,
     updateLastMessage,
   ]);
 };

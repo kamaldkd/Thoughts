@@ -27,6 +27,7 @@ interface ChatState {
 
   /* ── Unread counts ── */
   unreadCounts: Record<string, number>;
+  unreadMessageCount: number;
 
   /* ── Failed messages ── */
   failedMessageIds: Record<string, Set<string>>; // conversationId → Set<tempId>
@@ -36,6 +37,8 @@ interface ChatState {
 
   /* ── Actions ── */
   setConversations: (convs: Conversation[]) => void;
+  setUnreadCounts: (counts: Record<string, number>) => void;
+  setUnreadMessageCount: (count: number) => void;
   setConversationsLoading: (v: boolean) => void;
 
   upsertConversation: (conv: Conversation) => void;
@@ -68,12 +71,28 @@ export const useChatStore = create<ChatState>()(
     messageStore: {},
     typing: {},
     unreadCounts: {},
+    unreadMessageCount: 0,
     failedMessageIds: {},
     selectedConversationId: null,
 
     setConversations: (convs) =>
       set((s) => {
         s.conversations = convs;
+        convs.forEach((conversation) => {
+          if (conversation.unreadCount !== undefined) {
+            s.unreadCounts[conversation._id] = conversation.unreadCount;
+          }
+        });
+      }),
+
+    setUnreadCounts: (counts) =>
+      set((s) => {
+        s.unreadCounts = counts;
+      }),
+
+    setUnreadMessageCount: (count) =>
+      set((s) => {
+        s.unreadMessageCount = count;
       }),
 
     setConversationsLoading: (v) =>
