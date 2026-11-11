@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { emitMarkAsSeen, getSocket } from "@/services/socket";
 import { useChatStore } from "@/store/useChatStore";
-import type { Message } from "@/services/chatApi";
+import { getMessageSenderId, type Message } from "@/services/chatApi";
 
 /**
  * useChatSocket — registers all Socket.IO event listeners once.
@@ -28,9 +28,11 @@ export const useChatSocket = (currentUserId: string) => {
     ──────────────────────────────────── */
     const onReceiveMessage = (msg: Message) => {
       const convId = msg.conversationId;
+      const senderId = getMessageSenderId(msg.senderId);
+      const ownId = getMessageSenderId(currentUserId);
 
       // If this message is ours (echoed back), replace temp
-      if (typeof msg.senderId === "object" && msg.senderId._id === currentUserId) {
+      if (senderId && ownId && senderId === ownId) {
         // Will be handled by the ack — skip
         return;
       }

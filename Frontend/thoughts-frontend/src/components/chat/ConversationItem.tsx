@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { Conversation } from "@/services/chatApi";
+import { getMessageSenderId, type Conversation } from "@/services/chatApi";
 import { formatDistanceToNowStrict } from "date-fns";
 import { useChatStore } from "@/store/useChatStore";
 import { Check, CheckCheck } from "lucide-react";
@@ -35,9 +35,10 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
   const typingUsers = useChatStore((s) => s.typing[conversation._id]) ?? [];
   const { participant, lastMessage, lastMessageAt } = conversation;
 
-  const isOwnMsg = lastMessage && user && (
-    lastMessage.senderId === user._id
-  );
+  const senderId = getMessageSenderId(lastMessage?.senderId);
+  const ownId = getMessageSenderId(user?._id);
+  const isOwnMsg =
+    Boolean(lastMessage && user && senderId && ownId && senderId === ownId);
 
   const isTyping = typingUsers.length > 0;
 
@@ -67,7 +68,7 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
 
       <ParticipantAvatar
         src={participant?.avatar}
-        name={participant?.name ?? "?"}
+        name={participant?.name || participant?.username || "?"}
       />
 
       <div className="flex-1 min-w-0">

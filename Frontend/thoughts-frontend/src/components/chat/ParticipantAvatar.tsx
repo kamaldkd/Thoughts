@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 interface ParticipantAvatarProps {
   src?: string | null;
-  name: string;
+  name?: string | null;
   className?: string;
 }
 
@@ -13,7 +13,8 @@ export const ParticipantAvatar = ({
   className,
 }: ParticipantAvatarProps) => {
   const [imageFailed, setImageFailed] = useState(false);
-  const initials = name
+  const displayName = typeof name === "string" ? name : "";
+  const initials = displayName
     .trim()
     .split(/\s+/)
     .map((part) => part[0])
@@ -35,7 +36,7 @@ export const ParticipantAvatar = ({
       {src && !imageFailed ? (
         <img
           src={src}
-          alt={`${name}'s profile`}
+          alt={`${displayName || "User"}'s profile`}
           onError={() => setImageFailed(true)}
           className="absolute inset-0 h-full w-full object-cover"
         />

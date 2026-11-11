@@ -4,7 +4,7 @@ import { MessageBubble } from "./MessageBubble";
 import { MessageInput } from "./MessageInput";
 import { TypingIndicator } from "./TypingIndicator";
 import { joinConversation, leaveConversation, emitSendMessage, emitMarkAsSeen } from "@/services/socket";
-import { getMessages } from "@/services/chatApi";
+import { getMessageSenderId, getMessages } from "@/services/chatApi";
 import { useAuth } from "@/hooks/useAuth";
 import { ParticipantAvatar } from "./ParticipantAvatar";
 import { Link } from "react-router-dom";
@@ -384,14 +384,14 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
           >
             <ParticipantAvatar
               src={participant.avatar}
-              name={participant.name}
+              name={participant.name || participant.username}
               className="h-10 w-10"
             />
           </Link>
         ) : (
           <ParticipantAvatar
             src={participant?.avatar}
-            name={participant?.name ?? "?"}
+            name={participant?.name || participant?.username || "?"}
             className="h-10 w-10"
           />
         )}
@@ -453,9 +453,9 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
                 <div key={gi}>
                   <DateSeparator date={group.date} />
                   {group.messages.map((msg) => {
-                    const senderId =
-                      typeof msg.senderId === "object" ? msg.senderId._id : msg.senderId;
-                    const isOwn = senderId === user?._id;
+                    const senderId = getMessageSenderId(msg.senderId);
+                    const isOwn =
+                      senderId !== "" && senderId === getMessageSenderId(user?._id);
                     const isFailed = Boolean(msg.tempId && failedIds?.has(msg.tempId));
                     const isSending = Boolean(msg.tempId && !isFailed && !failedIds?.has(msg.tempId));
 

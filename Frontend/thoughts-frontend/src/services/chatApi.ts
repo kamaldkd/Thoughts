@@ -36,6 +36,25 @@ export interface Message {
   tempId?: string; // client-side dedup
 }
 
+export const getMessageSenderId = (senderId: unknown): string => {
+  let id = senderId;
+  if (typeof id === "object" && id !== null && "_id" in id) {
+    id = id._id;
+  }
+
+  if (typeof id === "string") return id.toLowerCase();
+  if (
+    typeof id === "object" &&
+    id !== null &&
+    "toHexString" in id &&
+    typeof id.toHexString === "function"
+  ) {
+    return id.toHexString().toLowerCase();
+  }
+
+  return "";
+};
+
 export interface PaginationMeta {
   page: number;
   limit: number;
