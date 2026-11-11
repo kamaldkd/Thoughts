@@ -18,6 +18,11 @@ const messageSchema = new mongoose.Schema(
       required: true,
     },
 
+    clientMessageId: {
+      type: String,
+      maxlength: 100,
+    },
+
     /* ──────────────────────────────────────────
        CONTENT
        Extensible: add mediaUrl, replyTo, etc. later
@@ -56,6 +61,13 @@ const messageSchema = new mongoose.Schema(
    efficiently sort & paginate per conversation.
 ────────────────────────────────────────── */
 messageSchema.index({ conversationId: 1, createdAt: -1 });
+messageSchema.index(
+  { conversationId: 1, senderId: 1, clientMessageId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { clientMessageId: { $type: "string" } },
+  }
+);
 
 const Message = mongoose.model("Message", messageSchema);
 

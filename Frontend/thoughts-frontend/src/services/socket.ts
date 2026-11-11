@@ -1,4 +1,6 @@
 import { io, Socket } from "socket.io-client";
+import { accessTokenInMemory } from "../lib/api";
+import type { Message } from "./chatApi";
 
 // Socket.IO must connect DIRECTLY to Render — Vercel rewrites do NOT support WebSocket proxying.
 // HTTP API calls go through /api → Vercel proxy → Render (cookies are first-party).
@@ -11,17 +13,19 @@ let socket: Socket | null = null;
 
 /**
  * Initialize and return the singleton Socket.IO client.
- * Reads the accessToken cookie automatically via `withCredentials`.
+ * Supplies the current access token on every connection and reconnection.
  */
 export const getSocket = (): Socket => {
   if (!socket) {
     socket = io(SOCKET_URL, {
       withCredentials: true,   // sends the httpOnly accessToken cookie
       transports: ["websocket", "polling"],
+      auth: (callback) => callback({ token: accessTokenInMemory }),
       autoConnect: true,
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
     });
 
     socket.on("connect", () => console.info("[Socket] Connected:", socket?.id));
@@ -54,12 +58,15 @@ export const emitSendMessage = (
   conversationId: string,
   content: string,
   tempId: string
-): Promise<{ success: boolean; message?: any; error?: string }> => {
-  return new Promise((resolve) => {
-    getSocket().emit(
+): Promise<{ success: boolean; message?: Message; error?: string }> => {
+  return new Promise((resolve, reject) => {
+    getSocket().timeout(10000).emit(
       "send_message",
       { conversationId, content, tempId },
-      (ack: any) => resolve(ack)
+      (error, ack: { success: boolean; message?: Message; error?: string }) => {
+        if (error) reject(error);
+        else resolve(ack);
+      }
     );
   });
 };
@@ -72,6 +79,10 @@ export const emitTyping = (conversationId: string, isTyping: boolean) => {
 /** Emit mark-as-seen. */
 export const emitMarkAsSeen = (conversationId: string): Promise<{ success: boolean }> => {
   return new Promise((resolve) => {
-    getSocket().emit("mark_as_seen", { conversationId }, (ack: any) => resolve(ack ?? { success: true }));
+    getSocket().emit(
+      "mark_as_seen",
+      { conversationId },
+      (ack: { success: boolean } | undefined) => resolve(ack ?? { success: true })
+    );
   });
 };

@@ -1,4 +1,5 @@
 import api, { csrfTokenInMemory, fetchCsrfToken } from "@/lib/api";
+import { emitSendMessage } from "@/services/socket";
 
 export interface Participant {
   _id: string;
@@ -79,6 +80,25 @@ export const createOrGetConversation = async (
     throw new Error("Could not initialize a secure connection. Please reload and try again.");
   }
   const response = await api.post("/conversations/create", { participantId });
+  return response.data.data;
+};
+
+export const sendChatMessage = async (
+  conversationId: string,
+  content: string,
+  clientMessageId: string
+): Promise<Message> => {
+  try {
+    const ack = await emitSendMessage(conversationId, content, clientMessageId);
+    if (ack.success && ack.message) return ack.message;
+  } catch (error) {
+    console.warn("Socket message send failed; retrying over HTTP", error);
+  }
+
+  const response = await api.post(`/messages/${conversationId}`, {
+    content,
+    clientMessageId,
+  });
   return response.data.data;
 };
 

@@ -3,8 +3,8 @@ import { useChatStore } from "@/store/useChatStore";
 import { MessageBubble } from "./MessageBubble";
 import { MessageInput } from "./MessageInput";
 import { TypingIndicator } from "./TypingIndicator";
-import { joinConversation, leaveConversation, emitSendMessage, emitMarkAsSeen } from "@/services/socket";
-import { getMessageSenderId, getMessages } from "@/services/chatApi";
+import { joinConversation, leaveConversation, emitMarkAsSeen } from "@/services/socket";
+import { getMessageSenderId, getMessages, sendChatMessage } from "@/services/chatApi";
 import { useAuth } from "@/hooks/useAuth";
 import { ParticipantAvatar } from "./ParticipantAvatar";
 import { Link } from "react-router-dom";
@@ -300,16 +300,13 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
       });
 
       try {
-        const ack = await emitSendMessage(conversationId, content, tempId);
-        if (ack.success && ack.message) {
-          replaceTempMessage(conversationId, tempId, { ...ack.message, tempId: undefined });
-          updateLastMessage(conversationId, ack.message);
-        } else {
-          markMessageFailed(conversationId, tempId);
-        }
+        const message = await sendChatMessage(conversationId, content, tempId);
+        replaceTempMessage(conversationId, tempId, { ...message, tempId: undefined });
+        updateLastMessage(conversationId, message);
       } catch (err) {
         console.error("Failed to send message", err);
         markMessageFailed(conversationId, tempId);
+        toast.error("Message failed to send. Check your connection and try again.");
       }
     },
     [user, conversationId, appendMessage, updateLastMessage, replaceTempMessage, markMessageFailed]

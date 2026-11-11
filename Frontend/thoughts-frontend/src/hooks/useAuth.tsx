@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
 import api, { fetchCsrfToken, setAccessToken } from "@/lib/api";
+import { disconnectSocket } from "@/services/socket";
 
 
 interface User {
@@ -52,10 +54,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // So this single call handles both "already have token" and "need to restore session".
       const res = await api.get("/users/me");
       setUser(res.data.user);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // 401 after failed refresh = no valid session → user needs to log in
       // Other errors (network, 500, etc.) → treat as not logged in for safety
-      if (err?.response?.status !== 401) {
+      const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+      if (status !== 401) {
         console.error("Failed to fetch user details:", err);
       }
       setUser(null);
@@ -78,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout() {
+    disconnectSocket();
     try {
       await api.post("/auth/logout");
       await fetchCsrfToken();

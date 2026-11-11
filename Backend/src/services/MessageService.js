@@ -15,6 +15,7 @@ import { z } from "zod";
 const sendMessageSchema = z.object({
   content: z.string().trim().min(1, "Message cannot be empty").max(2000, "Message too long"),
   messageType: z.enum(["text", "image"]).default("text"),
+  clientMessageId: z.string().min(1).max(100).optional(),
 });
 
 /* ──────────────────────────────────────────
@@ -36,9 +37,15 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
   // Security: caller must be a participant
   await assertParticipant(conversationId, senderId);
 
-  const { content, messageType } = parsed.data;
+  const { content, messageType, clientMessageId } = parsed.data;
 
-  const message = await createMessage({ conversationId, senderId, content, messageType });
+  const message = await createMessage({
+    conversationId,
+    senderId,
+    content,
+    messageType,
+    clientMessageId,
+  });
 
   // Update conversation snapshot (non-blocking update — no wait needed for response)
   updateConversationLastMessage(conversationId, message._id, message.createdAt).catch((err) =>

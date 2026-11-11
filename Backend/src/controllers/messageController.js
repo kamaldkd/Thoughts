@@ -1,7 +1,22 @@
 import {
+  sendMessageService,
   getMessagesService,
   markSeenService,
 } from "../services/MessageService.js";
+import { findOtherParticipantId } from "../repositories/ConversationRepository.js";
+
+export const sendMessage = async (req, res) => {
+  const { conversationId } = req.params;
+  const message = await sendMessageService(conversationId, req.userId, req.body);
+  const receiverId = await findOtherParticipantId(conversationId, req.userId);
+
+  if (!receiverId) {
+    return res.status(404).json({ success: false, message: "Conversation recipient not found" });
+  }
+
+  req.app.get("io")?.to(receiverId.toString()).emit("receive_message", message);
+  res.status(201).json({ success: true, data: message });
+};
 
 /**
  * GET /api/messages/:conversationId?page=1&limit=20

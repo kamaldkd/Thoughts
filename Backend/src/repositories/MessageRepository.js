@@ -3,9 +3,38 @@ import Message from "../models/Message.js";
 /**
  * Persist a new message document.
  */
-export const createMessage = async ({ conversationId, senderId, content, messageType = "text" }) => {
-  const message = await Message.create({ conversationId, senderId, content, messageType });
-  return message.toObject();
+export const createMessage = async ({
+  conversationId,
+  senderId,
+  content,
+  messageType = "text",
+  clientMessageId,
+}) => {
+  const identity = clientMessageId
+    ? { conversationId, senderId, clientMessageId }
+    : null;
+
+  if (identity) {
+    const existing = await Message.findOne(identity).lean();
+    if (existing) return existing;
+  }
+
+  try {
+    const message = await Message.create({
+      conversationId,
+      senderId,
+      content,
+      messageType,
+      ...(clientMessageId ? { clientMessageId } : {}),
+    });
+    return message.toObject();
+  } catch (error) {
+    if (error.code !== 11000 || !identity) throw error;
+
+    const existing = await Message.findOne(identity).lean();
+    if (!existing) throw error;
+    return existing;
+  }
 };
 
 /**

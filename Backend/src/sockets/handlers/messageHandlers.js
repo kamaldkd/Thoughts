@@ -69,7 +69,11 @@ export const registerMessageHandlers = (socket, io, userSocketMap) => {
 
     try {
       // Persist via service (validates participant, saves, updates lastMessage)
-      const message = await sendMessageService(conversationId, userId, { content, messageType });
+      const message = await sendMessageService(conversationId, userId, {
+        content,
+        messageType,
+        clientMessageId: tempId,
+      });
 
       // Acknowledge sender with the saved message + their tempId for dedup
       if (typeof ack === "function") {
