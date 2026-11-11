@@ -177,6 +177,7 @@ const Feed = () => {
               comments={t.comments || 0}
               authorId={t.author?._id}
               currentUserId={user?._id}
+              showFollowButton
               onDelete={handleDelete}
             />
           ))

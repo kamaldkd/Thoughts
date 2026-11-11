@@ -88,12 +88,9 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
         if (!controlsPinned) setShowControls(false);
       }}
       onClick={() => {
-        setShowControls(true);
-        setControlsPinned(true);
-      }}
-      onTouchStart={() => {
-        setShowControls(true);
-        setControlsPinned(true);
+        const shouldShowControls = !controlsPinned;
+        setShowControls(shouldShowControls);
+        setControlsPinned(shouldShowControls);
       }}
     >
       <video

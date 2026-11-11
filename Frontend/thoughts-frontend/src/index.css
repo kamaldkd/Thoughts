@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 14%;
 
-    --primary: 168 40% 40%;
+    --primary: 204 100% 48%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 40 15% 93%;
@@ -24,30 +24,30 @@
     --muted: 40 10% 92%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 168 30% 94%;
-    --accent-foreground: 168 40% 30%;
+    --accent: 204 100% 96%;
+    --accent-foreground: 204 100% 33%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 40 10% 88%;
     --input: 40 10% 88%;
-    --ring: 168 40% 40%;
+    --ring: 204 100% 48%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 220 20% 14%;
-    --sidebar-primary: 168 40% 40%;
+    --sidebar-primary: 204 100% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 168 30% 94%;
-    --sidebar-accent-foreground: 168 40% 30%;
+    --sidebar-accent: 204 100% 96%;
+    --sidebar-accent-foreground: 204 100% 33%;
     --sidebar-border: 40 10% 88%;
-    --sidebar-ring: 168 40% 40%;
+    --sidebar-ring: 204 100% 48%;
 
-    --chart-1: 168 40% 40%;
-    --chart-2: 168 30% 55%;
-    --chart-3: 168 20% 70%;
+    --chart-1: 204 100% 48%;
+    --chart-2: 204 80% 60%;
+    --chart-3: 204 60% 75%;
     --chart-4: 40 15% 80%;
     --chart-5: 220 10% 46%;
 
@@ -58,7 +58,7 @@
     --shadow-card: 0 1px 3px hsl(220 20% 14% / 0.04),
       0 4px 16px hsl(220 20% 14% / 0.04);
     --shadow-elevated: 0 8px 30px hsl(220 20% 14% / 0.08);
-    --shadow-glow: 0 0 20px hsl(168 40% 40% / 0.15);
+    --shadow-glow: 0 0 20px hsl(204 100% 48% / 0.15);
   }
 
   .dark {
@@ -71,7 +71,7 @@
     --popover: 220 16% 14%;
     --popover-foreground: 40 10% 92%;
 
-    --primary: 168 35% 55%;
+    --primary: 204 100% 48%;
     --primary-foreground: 220 18% 10%;
 
     --secondary: 220 14% 18%;
@@ -81,34 +81,34 @@
     --muted-foreground: 220 10% 55%;
 
     --accent: 220 14% 18%;
-    --accent-foreground: 168 35% 55%;
+    --accent-foreground: 204 100% 68%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 12% 20%;
     --input: 220 12% 20%;
-    --ring: 168 35% 55%;
+    --ring: 204 100% 48%;
 
     --sidebar-background: 220 18% 8%;
     --sidebar-foreground: 40 10% 92%;
-    --sidebar-primary: 168 35% 55%;
+    --sidebar-primary: 204 100% 48%;
     --sidebar-primary-foreground: 220 18% 10%;
     --sidebar-accent: 220 14% 18%;
-    --sidebar-accent-foreground: 168 35% 55%;
+    --sidebar-accent-foreground: 204 100% 68%;
     --sidebar-border: 220 12% 20%;
-    --sidebar-ring: 168 35% 55%;
+    --sidebar-ring: 204 100% 48%;
 
-    --chart-1: 168 35% 55%;
-    --chart-2: 168 30% 45%;
-    --chart-3: 168 20% 35%;
+    --chart-1: 204 100% 48%;
+    --chart-2: 204 80% 38%;
+    --chart-3: 204 60% 30%;
     --chart-4: 220 14% 30%;
     --chart-5: 220 10% 55%;
 
     --shadow-soft: 0 2px 20px -4px hsl(0 0% 0% / 0.3);
     --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.2), 0 4px 16px hsl(0 0% 0% / 0.15);
     --shadow-elevated: 0 8px 30px hsl(0 0% 0% / 0.3);
-    --shadow-glow: 0 0 20px hsl(168 35% 55% / 0.2);
+    --shadow-glow: 0 0 20px hsl(204 100% 48% / 0.2);
 
     /* ── Chat UI tokens ── */
     --chat-own-from: 225 70% 55%;

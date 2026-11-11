@@ -15,6 +15,9 @@ import { useMinuteTick } from "@/hooks/useMinuteTick";
 import { useFadeOnChange } from "@/hooks/useFadeOnChange";
 import { format, parseISO } from "date-fns";
 import api from "@/lib/api";
+import { checkIsFollowing, followUser } from "@/lib/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { FollowButton } from "@/components/profile/FollowButton";
 import { VideoPlayer } from "@/components/VideoPlayer";
 
 interface MediaItem {
@@ -35,6 +38,7 @@ interface ThoughtProps {
   comments: number;
   authorId?: string;
   currentUserId?: string;
+  showFollowButton?: boolean;
   onDelete?: (id: any) => void;
 }
 
@@ -88,7 +92,7 @@ function MediaGallery({ items }: { items: MediaItem[] }) {
 
   return (
     <div
-      className="mt-3 rounded-2xl overflow-hidden relative select-none"
+      className="mt-3 rounded-lg overflow-hidden relative select-none"
       style={{
         background: "hsl(var(--muted))",
         border: "1px solid hsl(var(--border) / 0.4)",
@@ -235,6 +239,7 @@ export function ThoughtCard({
   id,
   authorId,
   currentUserId,
+  showFollowButton = false,
   onDelete,
 }: ThoughtProps) {
   const mediaItems: MediaItem[] =
@@ -246,6 +251,48 @@ export function ThoughtCard({
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
+  const queryClient = useQueryClient();
+  const canFollow =
+    showFollowButton &&
+    !!currentUserId &&
+    !!authorId &&
+    currentUserId !== authorId;
+  const followStatusKey = ["follow-status", currentUserId, authorId];
+  const {
+    data: isFollowing,
+    isPending: isFollowStatusPending,
+    isError: isFollowStatusError,
+    error: followStatusError,
+  } = useQuery({
+    queryKey: followStatusKey,
+    queryFn: async () => {
+      if (!authorId) {
+        throw new Error("Cannot check follow status without an author ID");
+      }
+      const response = await checkIsFollowing(authorId);
+      return Boolean(response.data.isFollowing);
+    },
+    enabled: canFollow,
+    staleTime: 60_000,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (isFollowStatusError) {
+      console.error("Failed to load feed author follow status:", followStatusError);
+    }
+  }, [isFollowStatusError, followStatusError]);
+
+  const handleFollow = async () => {
+    if (!authorId) return;
+    try {
+      await followUser(authorId);
+      queryClient.setQueryData(followStatusKey, true);
+    } catch (error) {
+      console.error("Failed to follow feed author:", error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -309,6 +356,16 @@ export function ThoughtCard({
             </div>
 
             <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+              {canFollow &&
+                !isFollowStatusPending &&
+                !isFollowStatusError &&
+                isFollowing === false && (
+                  <FollowButton
+                    initialState="not_following"
+                    onFollow={handleFollow}
+                    className="h-8 rounded-md bg-neutral-800 px-3 text-xs text-white shadow-none hover:bg-neutral-700 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+                  />
+                )}
               {isOwner && (
                 <button
                   onClick={() => onDelete!(id)}
