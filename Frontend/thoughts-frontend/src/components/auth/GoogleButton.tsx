@@ -17,10 +17,10 @@ export function GoogleButton({ isLoading }: GoogleButtonProps) {
       type="button"
       onClick={handleGoogleLogin}
       disabled={isLoading}
-      className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-900/30 hover:bg-slate-800/80 border border-slate-700 hover:border-slate-600 rounded-xl text-sm font-medium text-slate-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
     >
       {isLoading ? (
-        <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       ) : (
         <>
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -41,12 +41,21 @@ export default function Register() {
   }
 
   return (
-    <AuthLayout title="Create an account" subtitle="Join the platform to share your thoughts">
-      <GoogleButton isLoading={isLoading} />
-      <Divider />
+    <AuthLayout
+      title="Create an account"
+      subtitle="Join the platform to share your thoughts"
+      footer={
+        <p className="text-muted-foreground">
+          Already have an account?{" "}
+          <Link to="/login" className="font-semibold text-primary hover:opacity-80">
+            Log in
+          </Link>
+        </p>
+      }
+    >
       <form onSubmit={handleSubmit} className="flex flex-col gap-1">
         {error && (
-          <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+          <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-center text-sm text-destructive">
             {error}
           </div>
         )}
@@ -85,19 +94,13 @@ export default function Register() {
         <button
           type="submit"
           disabled={isLoading}
-          className="mt-6 w-full flex justify-center items-center h-12 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none"
+          className="mt-3 flex h-10 w-full items-center justify-center rounded-md bg-primary font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-70"
         >
           {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign up"}
         </button>
       </form>
-      <div className="text-center mt-6">
-        <p className="text-sm text-slate-400">
-          Already have an account?{" "}
-          <Link to="/login" className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
-            Log in
-          </Link>
-        </p>
-      </div>
+      <Divider />
+      <GoogleButton isLoading={isLoading} />
     </AuthLayout>
   );
 }
