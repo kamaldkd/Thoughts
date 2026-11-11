@@ -2,12 +2,12 @@ import Conversation from "../models/Conversation.js";
 
 /**
  * Find an existing conversation between exactly two users.
- * Participants array is always sorted before querying to ensure
- * key determinism regardless of caller order.
+ * Match both participants regardless of the order stored in the array.
  */
 export const findConversationByParticipants = async (userA, userB) => {
-  const sorted = [userA, userB].map(String).sort();
-  return Conversation.findOne({ participants: sorted })
+  return Conversation.findOne({
+    participants: { $all: [userA, userB], $size: 2 },
+  })
     .populate({
       path: "lastMessage",
       select: "content messageType status createdAt senderId",
