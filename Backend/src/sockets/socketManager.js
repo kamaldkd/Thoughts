@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import cookie from "cookie";
 import { registerMessageHandlers } from "./handlers/messageHandlers.js";
+import { isParticipant } from "../repositories/ConversationRepository.js";
 
 /* ──────────────────────────────────────────
    IN-MEMORY USER → SOCKET MAP
@@ -118,9 +119,14 @@ export const initSocketServer = (httpServer) => {
        Client emits this after
        opening a chat window.
     ────────────────────── */
-    socket.on("join_conversation", (conversationId) => {
-      if (typeof conversationId === "string" && conversationId.length > 0) {
-        socket.join(`conv:${conversationId}`);
+    socket.on("join_conversation", async (conversationId) => {
+      if (typeof conversationId !== "string" || conversationId.length === 0) return;
+      try {
+        if (await isParticipant(conversationId, userId)) {
+          await socket.join(`conv:${conversationId}`);
+        }
+      } catch (err) {
+        console.error("[Socket] Failed to join conversation:", err.message);
       }
     });
 

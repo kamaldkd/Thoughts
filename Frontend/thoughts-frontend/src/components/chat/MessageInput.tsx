@@ -85,10 +85,8 @@ export const MessageInput = ({ conversationId, onSend, disabled }: MessageInputP
     <div
       className={cn(
         "flex items-end gap-2.5 px-3 py-2.5",
-        "bg-slate-900/60 backdrop-blur-md",
-        "border border-slate-700/40 rounded-2xl",
-        "transition-all duration-200",
-        "focus-within:border-blue-500/30 focus-within:bg-slate-900/80"
+        "rounded-2xl border border-border bg-card shadow-sm dark:border-neutral-800 dark:bg-neutral-900",
+        "transition-colors focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10"
       )}
     >
       {/* Input */}
@@ -102,10 +100,10 @@ export const MessageInput = ({ conversationId, onSend, disabled }: MessageInputP
           rows={1}
           disabled={disabled}
           className={cn(
-            "w-full resize-none bg-transparent text-slate-100 placeholder-slate-500",
+            "w-full resize-none bg-transparent text-foreground placeholder:text-muted-foreground",
             "px-1 py-1 text-[13.5px] outline-none",
             "max-h-[140px] leading-relaxed",
-            "scrollbar-thin scrollbar-thumb-slate-600",
+            "scrollbar-thin",
             disabled && "opacity-50 cursor-not-allowed"
           )}
         />
@@ -115,7 +113,7 @@ export const MessageInput = ({ conversationId, onSend, disabled }: MessageInputP
           <div
             className={cn(
               "absolute -top-5 right-0 text-[10px] font-medium tabular-nums transition-colors",
-              isOverLimit ? "text-red-400" : "text-slate-500"
+              isOverLimit ? "text-destructive" : "text-muted-foreground"
             )}
           >
             {charCount}/{MAX_CHARS}
@@ -132,18 +130,16 @@ export const MessageInput = ({ conversationId, onSend, disabled }: MessageInputP
           "transition-all duration-200",
           canSend
             ? cn(
-                "bg-gradient-to-br from-blue-500 to-indigo-600 text-white",
-                "shadow-lg shadow-blue-600/20",
-                "hover:brightness-110 hover:shadow-blue-600/30",
-                "hover:scale-105 active:scale-95"
+                "bg-primary text-primary-foreground shadow-sm",
+                "hover:opacity-90 active:scale-95"
               )
-            : "bg-slate-800 text-slate-600 cursor-not-allowed"
+            : "cursor-not-allowed bg-muted text-muted-foreground"
         )}
       >
         {disabled && value.trim() ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
-          <Send className="w-3.5 h-3.5 ml-0.5" />
+          <Send className="ml-0.5 h-3.5 w-3.5" />
         )}
       </button>
     </div>

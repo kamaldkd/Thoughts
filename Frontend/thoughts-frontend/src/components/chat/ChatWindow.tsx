@@ -26,7 +26,7 @@ const DateSeparator = ({ date }: { date: string }) => {
   const label = isToday(d) ? "Today" : isYesterday(d) ? "Yesterday" : format(d, "MMMM d, yyyy");
   return (
     <div className="flex items-center justify-center my-4">
-      <span className="px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/40 text-[11px] text-slate-400 font-medium shadow-sm">
+      <span className="rounded-full border border-border/70 bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         {label}
       </span>
     </div>
@@ -66,7 +66,7 @@ const MessageSkeleton = () => {
         <div key={i} className={cn("flex", i % 3 === 0 ? "justify-start" : "justify-end")}>
           <div
             className={cn(
-              "rounded-2xl bg-slate-800/50 animate-pulse",
+              "animate-pulse rounded-2xl bg-muted",
               widths[i % widths.length],
               heights[i % heights.length],
               i % 3 === 0 ? "rounded-bl-md" : "rounded-br-md"
@@ -96,18 +96,15 @@ const ScrollToBottomFAB = ({
       onClick={onClick}
       className={cn(
         "absolute bottom-20 right-6 z-20",
-        "w-10 h-10 rounded-full",
-        "bg-slate-800/90 border border-slate-700/60 backdrop-blur-md",
-        "flex items-center justify-center",
-        "shadow-lg shadow-black/20",
-        "hover:bg-slate-700/90 hover:scale-105 active:scale-95",
-        "transition-all duration-200",
+        "flex h-10 w-10 items-center justify-center rounded-full",
+        "border border-border bg-card/95 shadow-md backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900",
+        "transition-all duration-200 hover:bg-secondary hover:scale-105 active:scale-95",
         "animate-bounce-in-fab"
       )}
     >
-      <ChevronDown className="w-5 h-5 text-slate-300" />
+      <ChevronDown className="h-5 w-5 text-foreground" />
       {unreadBelow > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-sm">
+        <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-sm">
           {unreadBelow > 99 ? "99+" : unreadBelow}
         </span>
       )}
@@ -335,19 +332,19 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   ───────────────────────────────────────────── */
   if (errorStatus) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-slate-950/50 gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-          <AlertTriangle className="w-8 h-8 text-red-400/80" />
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-background px-6">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/10">
+          <AlertTriangle className="h-8 w-8 text-destructive/80" />
         </div>
-        <h3 className="text-lg font-semibold text-slate-200">
+        <h3 className="text-lg font-semibold text-foreground">
           {errorStatus === 403 || errorStatus === 401 ? "Access Denied" : "Conversation Not Found"}
         </h3>
-        <p className="text-slate-500 text-sm max-w-sm text-center">
+        <p className="max-w-sm text-center text-sm text-muted-foreground">
           You don't have permission to view this conversation or it doesn't exist.
         </p>
         <button
           onClick={onBack}
-          className="mt-2 px-6 py-2.5 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors text-sm font-medium"
+          className="mt-2 rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
         >
           Go Back
         </button>
@@ -357,8 +354,8 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
 
   if (!conversation && !errorStatus) {
     return (
-      <div className="flex flex-col h-full bg-slate-950/50 items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      <div className="flex h-full flex-col items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -366,13 +363,13 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   if (!conversation) return null;
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900/90">
+    <div className="flex h-full w-full min-w-0 flex-col bg-white dark:bg-black">
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800/60 backdrop-blur-md z-10 w-full">
+      <div className="z-10 flex w-full items-center gap-3 border-b border-border/60 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-neutral-800 dark:bg-black/95">
         {onBack && (
           <button
             onClick={onBack}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all duration-200 md:hidden"
+            className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -381,54 +378,54 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
           <img
             src={participant.avatar}
             alt={participant.name}
-            className="w-9 h-9 rounded-full object-cover ring-1 ring-slate-700/60"
+            className="h-10 w-10 rounded-full object-cover ring-1 ring-border"
           />
         ) : (
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white text-sm font-semibold ring-1 ring-slate-700/60">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground ring-1 ring-border">
             {participant?.name?.[0]?.toUpperCase() ?? "?"}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-[13.5px] text-slate-100 truncate">{participant?.name}</p>
+          <p className="truncate text-sm font-semibold text-foreground">{participant?.name}</p>
           {typingUsers.length > 0 ? (
-            <p className="text-xs text-blue-400 font-medium animate-fade-in truncate">typing…</p>
+            <p className="animate-fade-in truncate text-xs font-medium text-primary">typing…</p>
           ) : (
-            <p className="text-xs text-slate-500 truncate">@{participant?.username}</p>
+            <p className="truncate text-xs text-muted-foreground">@{participant?.username}</p>
           )}
         </div>
       </div>
 
       {/* ── Chat Content ── */}
-      <div className="flex-1 flex justify-center overflow-hidden relative">
-        <div className="w-full max-w-3xl px-4 flex flex-col h-full relative">
+      <div className="relative flex flex-1 justify-center overflow-hidden">
+        <div className="relative flex h-full w-full max-w-3xl flex-col px-3 sm:px-5">
 
           {/* ── Messages area ── */}
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto pt-4 pb-2 chat-scrollbar"
+            className="chat-scrollbar flex-1 overflow-y-auto px-1 pb-2 pt-4"
           >
             {/* Load more spinner */}
             {loadingMore && (
               <div className="flex justify-center py-3">
-                <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
             )}
 
             {initialLoading ? (
               <MessageSkeleton />
             ) : messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-16">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600/10 to-indigo-600/10 flex items-center justify-center border border-blue-500/10">
-                  <span className="text-2xl">💬</span>
+              <div className="flex h-full flex-col items-center justify-center gap-3 py-16 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/10 bg-primary/5">
+                  <span className="text-2xl text-primary">✦</span>
                 </div>
                 <div>
-                  <p className="text-slate-300 text-sm font-medium">
+                  <p className="text-sm font-medium text-foreground">
                     No messages yet
                   </p>
-                  <p className="text-slate-500 text-xs mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Say hi to{" "}
-                    <span className="text-blue-400 font-medium">{participant?.name}</span>!
+                    <span className="font-medium text-primary">{participant?.name}</span>!
                   </p>
                 </div>
               </div>
@@ -472,7 +469,7 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
           />
 
           {/* ── Input ── */}
-          <div className="pb-4 pt-2">
+          <div className="border-t border-border/50 bg-white pb-3 pt-3 dark:border-neutral-800 dark:bg-black">
             <MessageInput
               conversationId={conversationId}
               onSend={handleSend}

@@ -5,12 +5,13 @@ import { BottomNav } from "./BottomNav";
 export function Layout() {
   const location = useLocation();
   const isChatPage = location.pathname.startsWith("/messages");
+  const isConversationPage = location.pathname.startsWith("/messages/");
 
   return (
     <>
-      <Navbar />
-      <Outlet />
-      {!isChatPage && <BottomNav />}
+      {!isChatPage && <Navbar />}
+      {<Outlet />}
+      {!isConversationPage && <BottomNav />}
     </>
   );
 }

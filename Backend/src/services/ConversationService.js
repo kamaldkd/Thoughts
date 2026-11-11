@@ -22,9 +22,15 @@ export const getOrCreateConversation = async (requesterId, participantId) => {
 
   // Idempotent — return existing or create new
   const existing = await findConversationByParticipants(requesterId, participantId);
-  if (existing) return existing;
+  const conversation = existing || await createConversation(requesterId, participantId);
 
-  return createConversation(requesterId, participantId);
+  return {
+    _id: conversation._id,
+    participant: targetUser,
+    lastMessage: conversation.lastMessage ?? null,
+    lastMessageAt: conversation.lastMessageAt ?? null,
+    createdAt: conversation.createdAt,
+  };
 };
 
 /**

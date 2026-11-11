@@ -13,13 +13,13 @@ interface MessageBubbleProps {
 
 const StatusTick = ({ status }: { status: Message["status"] }) => {
   if (status === "sent") {
-    return <Check className="w-3 h-3 text-blue-200/50" />;
+    return <Check className="h-3 w-3 text-primary-foreground/60" />;
   }
   if (status === "delivered") {
-    return <CheckCheck className="w-3 h-3 text-blue-200/60" />;
+    return <CheckCheck className="h-3 w-3 text-primary-foreground/70" />;
   }
   // seen
-  return <CheckCheck className="w-3 h-3 text-sky-300" />;
+  return <CheckCheck className="h-3 w-3 text-primary-foreground" />;
 };
 
 const formatTime = (dateStr: string) => {
@@ -39,26 +39,23 @@ export const MessageBubble = ({
   return (
     <div
       className={cn(
-        "flex items-end gap-2 mb-1.5 group animate-fade-msg",
-        isOwn ? "flex-row-reverse" : "flex-row"
+        "group mb-1.5 flex animate-fade-msg items-end gap-2",
+        isOwn ? "justify-end" : "justify-start"
       )}
     >
       <div
         className={cn(
-          "relative max-w-[70%] md:max-w-[55%] px-3.5 py-2 rounded-2xl",
-          "text-[13.5px] leading-relaxed break-words",
+          "relative max-w-[82%] rounded-2xl px-3.5 py-2 sm:max-w-[70%] md:max-w-[60%]",
+          "break-words text-[13.5px] leading-relaxed",
           "transition-all duration-150",
           isOwn
             ? cn(
-                "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-br-md",
-                "shadow-lg shadow-blue-900/20"
+                "rounded-br-md bg-primary text-primary-foreground shadow-sm"
               )
             : cn(
-                "bg-slate-800/90 text-slate-100 rounded-bl-md",
-                "shadow-md shadow-black/10 backdrop-blur-sm",
-                "border border-slate-700/40"
+                "rounded-bl-md border border-border/70 bg-card text-card-foreground shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
               ),
-          isFailed && "animate-pulse-glow ring-1 ring-red-500/50",
+          isFailed && "animate-pulse-glow ring-1 ring-destructive/50",
           isSending && "opacity-70"
         )}
       >
@@ -73,7 +70,7 @@ export const MessageBubble = ({
           <span
             className={cn(
               "text-[10px] transition-opacity",
-              isOwn ? "text-blue-200/60" : "text-slate-500"
+              isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
             )}
           >
             {formatTime(message.createdAt)}
@@ -86,7 +83,7 @@ export const MessageBubble = ({
           )}
 
           {isFailed && (
-            <AlertCircle className="w-3 h-3 text-red-400" />
+            <AlertCircle className="h-3 w-3 text-destructive" />
           )}
         </div>
 
@@ -95,11 +92,11 @@ export const MessageBubble = ({
           <button
             onClick={onRetry}
             className={cn(
-              "flex items-center gap-1.5 mt-1 -mb-0.5 text-[11px] font-medium",
-              "text-red-300 hover:text-red-200 transition-colors cursor-pointer"
+              "mb-0.5 mt-1 flex cursor-pointer items-center gap-1.5 text-[11px] font-medium",
+              "text-destructive transition-colors hover:text-destructive/80"
             )}
           >
-            <RotateCcw className="w-3 h-3" />
+            <RotateCcw className="h-3 w-3" />
             Tap to retry
           </button>
         )}

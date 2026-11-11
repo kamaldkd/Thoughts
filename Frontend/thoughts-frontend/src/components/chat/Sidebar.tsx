@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "@/store/useChatStore";
 import { ConversationItem } from "./ConversationItem";
 import { getConversations, createOrGetConversation } from "@/services/chatApi";
@@ -16,10 +16,10 @@ interface SidebarProps {
 
 const SkeletonItem = () => (
   <div className="flex items-center gap-3 px-3 py-3 animate-pulse">
-    <div className="w-11 h-11 rounded-full bg-slate-800" />
+    <div className="w-11 h-11 rounded-full bg-muted" />
     <div className="flex-1 space-y-2">
-      <div className="h-3 bg-slate-800 rounded-md w-1/2" />
-      <div className="h-3 bg-slate-800/60 rounded-md w-3/4" />
+      <div className="h-3 w-1/2 rounded-md bg-muted" />
+      <div className="h-3 w-3/4 rounded-md bg-muted/60" />
     </div>
   </div>
 );
@@ -29,6 +29,8 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
   const conversationsLoading = useChatStore((s) => s.conversationsLoading);
   const setConversations = useChatStore((s) => s.setConversations);
   const setConversationsLoading = useChatStore((s) => s.setConversationsLoading);
+  const upsertConversation = useChatStore((s) => s.upsertConversation);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Array<{ _id: string; name: string; username: string; avatar?: string }>>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -38,7 +40,10 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
     setConversationsLoading(true);
     getConversations()
       .then(setConversations)
-      .catch(console.error)
+      .catch((err) => {
+        console.error("Failed to load conversations", err);
+        toast.error("Failed to load conversations");
+      })
       .finally(() => setConversationsLoading(false));
   }, [setConversations, setConversationsLoading]);
 
@@ -85,6 +90,7 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
       setStartingChat(realId);
       try {
         const conv = await createOrGetConversation(realId);
+        upsertConversation(conv);
         setSearch("");
         onSelectConversation(conv._id);
       } catch (err) {
@@ -106,37 +112,43 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
   return (
     <aside
       className={cn(
-        "flex flex-col h-full bg-slate-950/50 border-r border-slate-800/60",
+        "flex h-full flex-col border-r border-border/60 bg-white dark:border-neutral-800 dark:bg-black",
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60">
-        <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+      <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
           Messages
-        </h1>
+          </h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">Your conversations</p>
+        </div>
         <button
-          className="p-2 rounded-xl text-slate-400 hover:text-blue-400 hover:bg-slate-800/60 transition-all duration-200"
+          className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           title="New conversation"
+          aria-label="Start a new conversation"
+          onClick={() => searchInputRef.current?.focus()}
         >
-          <MessageSquarePlus className="w-5 h-5" />
+          <MessageSquarePlus className="h-5 w-5" />
         </button>
       </div>
 
       {/* Search */}
       <div className="px-4 py-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            ref={searchInputRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search conversations…"
-            className="w-full pl-9 pr-8 py-2.5 bg-slate-800/60 text-slate-200 placeholder-slate-500 rounded-xl text-sm outline-none border border-transparent focus:border-blue-500/30 transition-all duration-200"
+            className="w-full rounded-xl border border-border/70 bg-white py-2.5 pl-9 pr-8 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 dark:border-neutral-800 dark:bg-black"
           />
           {search && (
             <button
               onClick={clearSearch}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-700 transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -145,23 +157,23 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
       </div>
 
       {/* Conversation list */}
-      <div className="flex-1 overflow-y-auto px-2 space-y-0.5 chat-scrollbar">
+      <div className="chat-scrollbar flex-1 space-y-0.5 overflow-y-auto px-2 pb-24 md:pb-4">
         {conversationsLoading ? (
           Array.from({ length: 5 }).map((_, i) => <SkeletonItem key={i} />)
         ) : filtered.length === 0 && suggestedConvs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 text-slate-500 text-sm gap-2">
+          <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
             {isSearching ? (
               <Loader2 className="w-8 h-8 opacity-50 animate-spin" />
             ) : (
-              <div className="w-16 h-16 rounded-2xl bg-slate-800/60 flex items-center justify-center">
-                <MessageSquarePlus className="w-8 h-8 opacity-30" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted dark:bg-neutral-900">
+                <MessageSquarePlus className="h-8 w-8 opacity-40" />
               </div>
             )}
-            <p className="mt-2 text-center text-slate-500">
+            <p className="mt-2 text-center text-muted-foreground">
               {isSearching ? "Searching…" : search ? "No users found" : "No conversations yet"}
             </p>
             {!search && (
-              <p className="text-xs text-slate-600 text-center max-w-[180px]">
+              <p className="max-w-[180px] text-center text-xs text-muted-foreground/80">
                 Search for someone to start chatting
               </p>
             )}
@@ -172,7 +184,7 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
             {filtered.length > 0 && (
               <>
                 {search && suggestedConvs.length > 0 && (
-                  <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+                  <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Conversations
                   </p>
                 )}
@@ -190,7 +202,7 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
             {/* New user suggestions */}
             {suggestedConvs.length > 0 && (
               <>
-                <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+                <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Start New Chat
                 </p>
                 {suggestedConvs.map((item) => {
@@ -203,8 +215,8 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
                         onClick={() => handleSelect(item._id, true)}
                       />
                       {loading && (
-                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px] rounded-xl flex items-center justify-center z-10 transition-all">
-                          <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/70 backdrop-blur-[1px] transition-all">
+                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
                         </div>
                       )}
                     </div>

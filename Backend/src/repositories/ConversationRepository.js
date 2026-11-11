@@ -7,7 +7,12 @@ import Conversation from "../models/Conversation.js";
  */
 export const findConversationByParticipants = async (userA, userB) => {
   const sorted = [userA, userB].map(String).sort();
-  return Conversation.findOne({ participants: sorted }).lean();
+  return Conversation.findOne({ participants: sorted })
+    .populate({
+      path: "lastMessage",
+      select: "content messageType status createdAt senderId",
+    })
+    .lean();
 };
 
 /**
@@ -56,4 +61,11 @@ export const isParticipant = async (conversationId, userId) => {
     participants: userId,
   });
   return Boolean(conv);
+};
+
+export const findOtherParticipantId = async (conversationId, userId) => {
+  const conversation = await Conversation.findById(conversationId)
+    .select("participants")
+    .lean();
+  return conversation?.participants.find((participantId) => participantId.toString() !== userId.toString()) ?? null;
 };

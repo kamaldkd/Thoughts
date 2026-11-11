@@ -1,5 +1,7 @@
 import { sendMessageService, markSeenService } from "../../services/MessageService.js";
+import { assertParticipant } from "../../services/ConversationService.js";
 import { markMessageDelivered } from "../../repositories/MessageRepository.js";
+import { findOtherParticipantId } from "../../repositories/ConversationRepository.js";
 import { z } from "zod";
 
 /* ──────────────────────────────────────────
@@ -74,14 +76,17 @@ export const registerMessageHandlers = (socket, io, userSocketMap) => {
         ack({ success: true, message: { ...message, tempId } });
       }
 
-      // Emit to all OTHER sockets in the conversation room (excludes sender)
-      socket.to(`conv:${conversationId}`).emit("receive_message", {
+      const receiverId = await findOtherParticipantId(conversationId, userId);
+      if (!receiverId) throw new Error("Conversation recipient not found");
+
+      // Deliver to every active device for the recipient, even when the chat is closed.
+      io.to(receiverId.toString()).emit("receive_message", {
         ...message,
         tempId,
       });
 
       // Check if receiver is online — if so, mark as delivered immediately
-      const receiverSockets = getOtherSockets(userSocketMap, userId, message.conversationId);
+      const receiverSockets = userSocketMap.get(receiverId.toString()) ?? new Set();
       if (receiverSockets.size > 0) {
         await markMessageDelivered(message._id);
         // Tell sender their message was delivered
@@ -89,8 +94,7 @@ export const registerMessageHandlers = (socket, io, userSocketMap) => {
           messageId: message._id,
           conversationId,
         });
-        // Tell receiver the delivery status updated
-        io.to(`conv:${conversationId}`).emit("message_delivered", {
+        io.to(receiverId.toString()).emit("message_delivered", {
           messageId: message._id,
           conversationId,
         });
@@ -106,17 +110,21 @@ export const registerMessageHandlers = (socket, io, userSocketMap) => {
      EVENT: typing
      Relays typing status to the other participant only.
   ──────────────────────────────────────── */
-  socket.on("typing", (payload) => {
+  socket.on("typing", async (payload) => {
     const parsed = typingSchema.safeParse(payload);
     if (!parsed.success) return;
 
     const { conversationId, isTyping } = parsed.data;
-    // Broadcast to the conversation room EXCEPT the sender
-    socket.to(`conv:${conversationId}`).emit("typing_indicator", {
-      conversationId,
-      userId,
-      isTyping,
-    });
+    try {
+      await assertParticipant(conversationId, userId);
+      socket.to(`conv:${conversationId}`).emit("typing_indicator", {
+        conversationId,
+        userId,
+        isTyping,
+      });
+    } catch (err) {
+      console.error("[Socket] typing event rejected:", err.message);
+    }
   });
 
   /* ────────────────────────────────────────
@@ -147,19 +155,4 @@ export const registerMessageHandlers = (socket, io, userSocketMap) => {
       if (typeof ack === "function") ack({ success: false, error: err.message });
     }
   });
-};
-
-/* ──────────────────────────────────────────
-   HELPER: get socket IDs for OTHER users in a conversation
-   (simplified: checks if anyone except sender is connected)
-────────────────────────────────────────── */
-const getOtherSockets = (userSocketMap, senderId) => {
-  // Return a combined set of ALL other connected socket IDs
-  const result = new Set();
-  for (const [uid, sids] of userSocketMap.entries()) {
-    if (uid !== senderId.toString()) {
-      for (const sid of sids) result.add(sid);
-    }
-  }
-  return result;
 };

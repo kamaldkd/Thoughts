@@ -81,6 +81,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/thought/:id"
           element={
             <ProtectedRoute>
@@ -113,7 +121,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/messages"
+          path="/messages/:conversationId?"
           element={
             <ProtectedRoute>
               <ChatPage />

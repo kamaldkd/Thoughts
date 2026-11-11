@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Send, Heart } from "lucide-react";
+import { Home, Search, MessageCircle, Heart } from "lucide-react";
 import { useState } from "react";
 import { CreateThoughtModal } from "./CreateThoughtModal";
 import { useActivityBadge } from "@/hooks/useActivityBadge";
@@ -7,6 +7,7 @@ import { useActivityBadge } from "@/hooks/useActivityBadge";
 const navItems = [
   { icon: Home, to: "/feed", label: "Home" },
   { icon: Search, to: "/explore", label: "Search" },
+  { icon: MessageCircle, to: "/messages", label: "Messages" },
   { icon: Heart, to: "/activity", label: "Activity", showBadge: true },
 ];
 
@@ -34,7 +35,9 @@ export function BottomNav() {
           }}
         >
           {navItems.map(({ icon: Icon, to, label, showBadge }) => {
-            const active = location.pathname === to;
+            const active = to === "/messages"
+              ? location.pathname.startsWith("/messages")
+              : location.pathname === to;
             return (
               <Link
                 key={to}

@@ -585,6 +585,19 @@ export default function UserProfile() {
                     onUnfollow={handleUnfollow}
                     className="flex-1"
                   />
+                  <button
+                    type="button"
+                    onClick={handleMessageClick}
+                    disabled={isMessaging}
+                    className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isMessaging ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <MessageCircle className="h-4 w-4" />
+                    )}
+                    Message
+                  </button>
                 </div>
               )}
             </div>

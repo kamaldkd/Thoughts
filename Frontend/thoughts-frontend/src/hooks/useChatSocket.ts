@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { getSocket } from "@/services/socket";
+import { emitMarkAsSeen, getSocket } from "@/services/socket";
 import { useChatStore } from "@/store/useChatStore";
 import type { Message } from "@/services/chatApi";
 
@@ -38,8 +38,11 @@ export const useChatSocket = (currentUserId: string) => {
       appendMessage(convId, msg);
       updateLastMessage(convId, msg);
 
-      // If chat is NOT currently open, count as unread
-      if (selectedConversationId !== convId) {
+      if (selectedConversationId === convId) {
+        emitMarkAsSeen(convId).catch((err) =>
+          console.error("Failed to mark incoming message as seen", err)
+        );
+      } else {
         incrementUnread(convId);
       }
     };

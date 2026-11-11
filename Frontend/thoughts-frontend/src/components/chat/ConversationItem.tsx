@@ -12,9 +12,9 @@ interface ConversationItemProps {
 }
 
 const StatusIcon = ({ status }: { status: string }) => {
-  if (status === "seen") return <CheckCheck className="w-3 h-3 text-sky-400" />;
-  if (status === "delivered") return <CheckCheck className="w-3 h-3 text-slate-400" />;
-  return <Check className="w-3 h-3 text-slate-400" />;
+  if (status === "seen") return <CheckCheck className="h-3 w-3 text-primary" />;
+  if (status === "delivered") return <CheckCheck className="h-3 w-3 text-muted-foreground" />;
+  return <Check className="h-3 w-3 text-muted-foreground" />;
 };
 
 const Avatar = ({ src, name }: { src?: string; name: string }) => {
@@ -31,10 +31,10 @@ const Avatar = ({ src, name }: { src?: string; name: string }) => {
         <img
           src={src}
           alt={name}
-          className="w-11 h-11 rounded-full object-cover ring-1 ring-slate-700/60"
+          className="h-11 w-11 rounded-full object-cover ring-1 ring-border"
         />
       ) : (
-        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm ring-1 ring-slate-700/60">
+        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground ring-1 ring-border">
           {initials}
         </div>
       )}
@@ -77,17 +77,16 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left group",
-        "transition-all duration-200 relative",
-        "hover:bg-slate-800/60 active:scale-[0.99]",
+        "group relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left",
+        "transition-colors duration-200 hover:bg-secondary/70 dark:hover:bg-neutral-900",
         isSelected
-          ? "bg-slate-800/70"
+          ? "bg-secondary dark:bg-neutral-900"
           : "bg-transparent"
       )}
     >
       {/* Selection accent bar */}
       {isSelected && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-full bg-gradient-to-b from-blue-400 to-indigo-500" />
+        <div className="absolute left-0 top-1/2 h-8 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
       )}
 
       <Avatar src={participant?.avatar} name={participant?.name ?? "?"} />
@@ -96,16 +95,16 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
         <div className="flex items-center justify-between mb-0.5">
           <span
             className={cn(
-              "font-semibold text-[13px] truncate",
-              isSelected ? "text-white" : "text-slate-200"
+              "truncate text-[13px] font-semibold",
+              isSelected ? "text-foreground" : "text-foreground/90"
             )}
           >
             {participant?.name}
           </span>
           <span
             className={cn(
-              "text-[10px] flex-shrink-0 ml-2 tabular-nums",
-              unreadCount > 0 ? "text-blue-400 font-medium" : "text-slate-500"
+              "ml-2 flex-shrink-0 text-[10px] tabular-nums",
+              unreadCount > 0 ? "font-medium text-primary" : "text-muted-foreground"
             )}
           >
             {timeStr}
@@ -117,12 +116,12 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
             {isOwnMsg && lastMessage && !isTyping && <StatusIcon status={lastMessage.status} />}
             <span
               className={cn(
-                "text-xs truncate",
+                "truncate text-xs",
                 isTyping
-                  ? "text-blue-400 italic font-medium"
+                  ? "font-medium italic text-primary"
                   : unreadCount > 0
-                    ? "text-slate-300 font-medium"
-                    : "text-slate-500"
+                    ? "font-medium text-foreground"
+                    : "text-muted-foreground"
               )}
             >
               {isTyping ? (
@@ -137,7 +136,7 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
           </div>
 
           {unreadCount > 0 && (
-            <span className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-sm shadow-blue-500/20">
+            <span className="flex h-[18px] min-w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}

@@ -7,15 +7,15 @@ interface TypingIndicatorProps {
 
 export const TypingIndicator = ({ className, username }: TypingIndicatorProps) => {
   return (
-    <div className={cn("flex items-end gap-2 mb-2 animate-fade-msg", className)}>
-      <div className="bg-slate-800/90 border border-slate-700/40 rounded-2xl rounded-bl-md px-4 py-2.5 flex items-center gap-2 shadow-md shadow-black/10">
+    <div className={cn("mb-2 flex animate-fade-msg items-end gap-2", className)}>
+      <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-border/70 bg-card px-4 py-2.5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-typing-1" />
-          <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-typing-2" />
-          <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-typing-3" />
+          <span className="h-1.5 w-1.5 animate-typing-1 rounded-full bg-primary" />
+          <span className="h-1.5 w-1.5 animate-typing-2 rounded-full bg-primary" />
+          <span className="h-1.5 w-1.5 animate-typing-3 rounded-full bg-primary" />
         </div>
         {username && (
-          <span className="text-[11px] text-slate-500 font-medium ml-0.5">
+          <span className="ml-0.5 text-[11px] font-medium text-muted-foreground">
             {username} is typing
           </span>
         )}

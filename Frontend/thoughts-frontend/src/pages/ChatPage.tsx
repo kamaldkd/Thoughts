@@ -15,6 +15,7 @@ export default function ChatPage() {
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
 
   const clearUnread = useChatStore((s) => s.clearUnread);
+  const setSelectedConversationId = useChatStore((s) => s.setSelectedConversationId);
 
   useEffect(() => {
     if (user) getSocket();
@@ -23,13 +24,15 @@ export default function ChatPage() {
   useChatSocket(user?._id ?? "");
 
   useEffect(() => {
+    setSelectedConversationId(conversationId ?? null);
     if (conversationId) {
       clearUnread(conversationId);
       setMobileChatOpen(true);
     } else {
       setMobileChatOpen(false);
     }
-  }, [conversationId, clearUnread]);
+    return () => setSelectedConversationId(null);
+  }, [conversationId, clearUnread, setSelectedConversationId]);
 
   const handleSelectConversation = (id: string) => {
     navigate(`/messages/${id}`);
@@ -40,20 +43,24 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-background">
-      <div className="flex flex-1 overflow-hidden">
+    <div className="flex h-dvh w-full min-w-0 flex-col overflow-hidden bg-white dark:bg-black">
+      <div className="flex h-full w-full min-w-0 flex-1 overflow-hidden bg-white dark:bg-black">
 
         {/* Sidebar */}
         <Sidebar
           selectedId={conversationId || null}
           onSelectConversation={handleSelectConversation}
-          className={`w-full md:w-[320px] lg:w-[340px] flex-shrink-0 ${
+          className={`w-full min-w-0 flex-shrink-0 md:w-[320px] lg:w-[340px] ${
             mobileChatOpen ? "hidden md:flex" : "flex"
           }`}
         />
 
         {/* Chat Window */}
-        <main className={`flex-1 ${mobileChatOpen ? "flex" : "hidden md:flex"}`}>
+        <main
+          className={`min-w-0 w-0 flex-1 ${
+            mobileChatOpen ? "flex" : "hidden md:flex"
+          }`}
+        >
           {conversationId ? (
             <ChatWindow
               key={conversationId}
@@ -61,17 +68,17 @@ export default function ChatPage() {
               onBack={handleBack}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-5 bg-slate-950/30">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-5 bg-white px-6 dark:bg-black">
               <div className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600/10 to-indigo-600/10 flex items-center justify-center border border-blue-500/10 shadow-lg shadow-blue-500/5">
-                  <MessageCircle className="w-9 h-9 text-blue-400/70" />
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+                  <MessageCircle className="h-9 w-9 text-primary" />
                 </div>
               </div>
               <div className="text-center space-y-1.5">
-                <h2 className="text-lg font-semibold text-slate-200">
+                <h2 className="text-lg font-semibold text-foreground">
                   Your Messages
                 </h2>
-                <p className="text-sm text-slate-500 max-w-[280px] leading-relaxed">
+                <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
                   Select a conversation or search for someone to start chatting.
                 </p>
               </div>
