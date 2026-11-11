@@ -359,7 +359,22 @@ export default function UserProfile() {
       navigate(`/messages/${conv._id}`);
     } catch (err) {
       console.error("Failed to start conversation:", err);
-      toast.error("Failed to start conversation");
+      const message =
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        typeof err.response === "object" &&
+        err.response !== null &&
+        "data" in err.response &&
+        typeof err.response.data === "object" &&
+        err.response.data !== null &&
+        "message" in err.response.data &&
+        typeof err.response.data.message === "string"
+          ? err.response.data.message
+          : err instanceof Error && err.message
+            ? err.message
+            : "Failed to start conversation";
+      toast.error(message);
     } finally {
       setIsMessaging(false);
     }

@@ -26,7 +26,7 @@ const formatTime = (dateStr: string) => {
   const d = new Date(dateStr);
   if (isToday(d)) return format(d, "h:mm a");
   if (isYesterday(d)) return `Yesterday ${format(d, "h:mm a")}`;
-  return format(d, "MMM d, h:mm a");
+  return format(d, "h:mm a");
 };
 
 export const MessageBubble = ({

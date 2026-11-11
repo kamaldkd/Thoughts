@@ -6,6 +6,8 @@ import { TypingIndicator } from "./TypingIndicator";
 import { joinConversation, leaveConversation, emitSendMessage, emitMarkAsSeen } from "@/services/socket";
 import { getMessages } from "@/services/chatApi";
 import { useAuth } from "@/hooks/useAuth";
+import { ParticipantAvatar } from "./ParticipantAvatar";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, Loader2, AlertTriangle, ChevronDown } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
@@ -374,19 +376,36 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        {participant?.avatar ? (
-          <img
-            src={participant.avatar}
-            alt={participant.name}
-            className="h-10 w-10 rounded-full object-cover ring-1 ring-border"
-          />
+        {participant?.username ? (
+          <Link
+            to={`/profile/${encodeURIComponent(participant.username)}`}
+            aria-label={`View ${participant.name}'s profile`}
+            className="flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <ParticipantAvatar
+              src={participant.avatar}
+              name={participant.name}
+              className="h-10 w-10"
+            />
+          </Link>
         ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground ring-1 ring-border">
-            {participant?.name?.[0]?.toUpperCase() ?? "?"}
-          </div>
+          <ParticipantAvatar
+            src={participant?.avatar}
+            name={participant?.name ?? "?"}
+            className="h-10 w-10"
+          />
         )}
         <div className="flex-1 min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">{participant?.name}</p>
+          {participant?.username ? (
+            <Link
+              to={`/profile/${encodeURIComponent(participant.username)}`}
+              className="block w-fit max-w-full truncate text-sm font-semibold text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {participant.name}
+            </Link>
+          ) : (
+            <p className="truncate text-sm font-semibold text-foreground">{participant?.name}</p>
+          )}
           {typingUsers.length > 0 ? (
             <p className="animate-fade-in truncate text-xs font-medium text-primary">typing…</p>
           ) : (

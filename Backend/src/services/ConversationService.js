@@ -12,7 +12,7 @@ import ExpressError from "../utils/ExpressError.js";
  * Validates that the target user exists and is not the caller.
  */
 export const getOrCreateConversation = async (requesterId, participantId) => {
-  if (requesterId === participantId) {
+  if (requesterId.toString() === participantId.toString()) {
     throw new ExpressError(400, "You cannot open a conversation with yourself");
   }
 
@@ -21,8 +21,16 @@ export const getOrCreateConversation = async (requesterId, participantId) => {
   if (!targetUser) throw new ExpressError(404, "User not found");
 
   // Idempotent — return existing or create new
-  const existing = await findConversationByParticipants(requesterId, participantId);
-  const conversation = existing || await createConversation(requesterId, participantId);
+  let conversation = await findConversationByParticipants(requesterId, participantId);
+  if (!conversation) {
+    try {
+      conversation = await createConversation(requesterId, participantId);
+    } catch (error) {
+      if (error.code !== 11000) throw error;
+      conversation = await findConversationByParticipants(requesterId, participantId);
+      if (!conversation) throw error;
+    }
+  }
 
   return {
     _id: conversation._id,

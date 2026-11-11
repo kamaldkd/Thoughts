@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import api, { csrfTokenInMemory, fetchCsrfToken } from "@/lib/api";
 
 export interface Participant {
   _id: string;
@@ -52,8 +52,23 @@ export interface PaginationMeta {
 export const getConversations = (): Promise<Conversation[]> =>
   api.get("/conversations").then((r) => r.data.data);
 
-export const createOrGetConversation = (participantId: string): Promise<Conversation> =>
-  api.post("/conversations/create", { participantId }).then((r) => r.data.data);
+export const createOrGetConversation = async (
+  participantId: string
+): Promise<Conversation> => {
+  if (!csrfTokenInMemory) await fetchCsrfToken();
+  if (!csrfTokenInMemory) {
+    throw new Error("Could not initialize a secure connection. Please reload and try again.");
+  }
+  const response = await api.post("/conversations/create", { participantId });
+  return response.data.data;
+};
+
+export const searchChatUsers = (
+  query: string
+): Promise<Participant[]> =>
+  api
+    .get("/users/search", { params: { q: query } })
+    .then((r) => r.data.data);
 
 /* ─────────────────────────────────────────────
    MESSAGE APIS

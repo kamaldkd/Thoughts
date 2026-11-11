@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "@/store/useChatStore";
 import { ConversationItem } from "./ConversationItem";
-import { getConversations, createOrGetConversation } from "@/services/chatApi";
+import {
+  getConversations,
+  createOrGetConversation,
+  searchChatUsers,
+} from "@/services/chatApi";
 import { Search, MessageSquarePlus, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import api from "@/lib/api";
 import { toast } from "sonner";
 import type { Conversation } from "@/services/chatApi";
 
@@ -48,22 +51,34 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
   }, [setConversations, setConversationsLoading]);
 
   useEffect(() => {
-    if (!search.trim()) {
+    const query = search.trim();
+    if (query.length < 2) {
       setSearchResults([]);
+      setIsSearching(false);
       return;
     }
+    let active = true;
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await api.get(`/users/search?q=${encodeURIComponent(search)}`);
-        setSearchResults(res.data.data || []);
+        const users = await searchChatUsers(query);
+        if (active) setSearchResults(users);
       } catch (err) {
         console.error("Failed to search users", err);
+        if (active) {
+          setSearchResults([]);
+          toast.error(
+            getRequestErrorMessage(err, "Could not search users. Please try again.")
+          );
+        }
       } finally {
-        setIsSearching(false);
+        if (active) setIsSearching(false);
       }
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [search]);
 
   const existingParticipantIds = new Set(conversations.map((c) => c.participant?._id));
@@ -95,7 +110,9 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
         onSelectConversation(conv._id);
       } catch (err) {
         console.error("Start chat error", err);
-        toast.error("Failed to start conversation");
+        toast.error(
+          getRequestErrorMessage(err, "Failed to start conversation")
+        );
       } finally {
         setStartingChat(null);
       }
@@ -170,9 +187,15 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
               </div>
             )}
             <p className="mt-2 text-center text-muted-foreground">
-              {isSearching ? "Searching…" : search ? "No users found" : "No conversations yet"}
+              {isSearching
+                ? "Searching…"
+                : search.trim().length === 1
+                  ? "Type at least 2 characters to search"
+                  : search
+                    ? "No users found"
+                    : "No conversations yet"}
             </p>
-            {!search && (
+            {!search.trim() && (
               <p className="max-w-[180px] text-center text-xs text-muted-foreground/80">
                 Search for someone to start chatting
               </p>
@@ -229,4 +252,22 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
       </div>
     </aside>
   );
+};
+
+const getRequestErrorMessage = (error: unknown, fallback: string) => {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
+  ) {
+    return error.response.data.message;
+  }
+  return error instanceof Error && error.message ? error.message : fallback;
 };

@@ -4,6 +4,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { useChatStore } from "@/store/useChatStore";
 import { Check, CheckCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { ParticipantAvatar } from "./ParticipantAvatar";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -15,31 +16,6 @@ const StatusIcon = ({ status }: { status: string }) => {
   if (status === "seen") return <CheckCheck className="h-3 w-3 text-primary" />;
   if (status === "delivered") return <CheckCheck className="h-3 w-3 text-muted-foreground" />;
   return <Check className="h-3 w-3 text-muted-foreground" />;
-};
-
-const Avatar = ({ src, name }: { src?: string; name: string }) => {
-  const initials = name
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
-  return (
-    <div className="relative flex-shrink-0">
-      {src ? (
-        <img
-          src={src}
-          alt={name}
-          className="h-11 w-11 rounded-full object-cover ring-1 ring-border"
-        />
-      ) : (
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground ring-1 ring-border">
-          {initials}
-        </div>
-      )}
-    </div>
-  );
 };
 
 const formatTimeAgo = (dateStr: string): string => {
@@ -89,7 +65,10 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
         <div className="absolute left-0 top-1/2 h-8 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
       )}
 
-      <Avatar src={participant?.avatar} name={participant?.name ?? "?"} />
+      <ParticipantAvatar
+        src={participant?.avatar}
+        name={participant?.name ?? "?"}
+      />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-0.5">

@@ -50,8 +50,8 @@ export const searchUsersQuery = async (query, currentUserId, limit = 10) => {
     ...(currentUserId ? { _id: { $ne: currentUserId } } : {}),
 
     $or: [
-      { username: { $regex: `^${escapedQuery}` } },
-      { name: { $regex: `^${escapedQuery}`, $options: "i" } },
+      { username: { $regex: escapedQuery, $options: "i" } },
+      { name: { $regex: escapedQuery, $options: "i" } },
     ],
   })
     .select("username name avatar isPrivate _id")
