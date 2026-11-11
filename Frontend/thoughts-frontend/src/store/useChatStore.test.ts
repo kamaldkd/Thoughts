@@ -5,6 +5,7 @@ afterEach(() => {
   useChatStore.getState().setConversations([]);
   useChatStore.getState().setUnreadCounts({});
   useChatStore.getState().setUnreadMessageCount(0);
+  useChatStore.getState().setOnlineUsers([]);
 });
 
 describe("chat unread counts", () => {
@@ -34,5 +35,18 @@ describe("chat unread counts", () => {
     useChatStore.getState().setUnreadMessageCount(5);
 
     expect(useChatStore.getState().unreadMessageCount).toBe(5);
+  });
+
+  it("adds and removes users from live presence", () => {
+    const { setOnlineUsers, setUserOnline } = useChatStore.getState();
+    setOnlineUsers(["user-a"]);
+    setUserOnline("user-b", true);
+    expect(useChatStore.getState().onlineUsers).toEqual({
+      "user-a": true,
+      "user-b": true,
+    });
+
+    setUserOnline("user-a", false);
+    expect(useChatStore.getState().onlineUsers).toEqual({ "user-b": true });
   });
 });

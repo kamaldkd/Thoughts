@@ -34,6 +34,9 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
   const unreadCount = useChatStore((s) => s.unreadCounts[conversation._id] ?? 0);
   const typingUsers = useChatStore((s) => s.typing[conversation._id]) ?? [];
   const { participant, lastMessage, lastMessageAt } = conversation;
+  const isOnline = useChatStore((s) =>
+    participant?._id ? Boolean(s.onlineUsers[participant._id]) : false
+  );
 
   const senderId = getMessageSenderId(lastMessage?.senderId);
   const ownId = getMessageSenderId(user?._id);
@@ -66,10 +69,20 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
         <div className="absolute left-0 top-1/2 h-8 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
       )}
 
-      <ParticipantAvatar
-        src={participant?.avatar}
-        name={participant?.name || participant?.username || "?"}
-      />
+      <span className="relative h-11 w-11 flex-shrink-0">
+        <ParticipantAvatar
+          src={participant?.avatar}
+          name={participant?.name || participant?.username || "?"}
+          className="h-full w-full"
+        />
+        {isOnline && (
+          <span
+            className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-green-500 ring-2 ring-background"
+            aria-label="Online"
+            title="Online"
+          />
+        )}
+      </span>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-0.5">

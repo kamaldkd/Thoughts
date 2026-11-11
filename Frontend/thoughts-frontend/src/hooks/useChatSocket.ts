@@ -16,12 +16,22 @@ export const useChatSocket = (currentUserId: string) => {
   const updateConversationMessageStatus = useChatStore((s) => s.updateConversationMessageStatus);
   const replaceTempMessage = useChatStore((s) => s.replaceTempMessage);
   const setTyping = useChatStore((s) => s.setTyping);
+  const setOnlineUsers = useChatStore((s) => s.setOnlineUsers);
+  const setUserOnline = useChatStore((s) => s.setUserOnline);
   const incrementUnread = useChatStore((s) => s.incrementUnread);
   const clearUnread = useChatStore((s) => s.clearUnread);
   const updateLastMessage = useChatStore((s) => s.updateLastMessage);
 
   useEffect(() => {
     const socket = getSocket();
+    const requestPresence = () => {
+      socket.emit("get_presence", (userIds: string[]) => {
+        setOnlineUsers(userIds);
+      });
+    };
+
+    const onUserOnline = (userId: string) => setUserOnline(userId, true);
+    const onUserOffline = (userId: string) => setUserOnline(userId, false);
 
     /* ────────────────────────────────────
        receive_message
@@ -90,12 +100,19 @@ export const useChatSocket = (currentUserId: string) => {
     socket.on("message_delivered", onDelivered);
     socket.on("message_seen", onSeen);
     socket.on("typing_indicator", onTyping);
+    socket.on("user_online", onUserOnline);
+    socket.on("user_offline", onUserOffline);
+    socket.on("connect", requestPresence);
+    if (socket.connected) requestPresence();
 
     return () => {
       socket.off("receive_message", onReceiveMessage);
       socket.off("message_delivered", onDelivered);
       socket.off("message_seen", onSeen);
       socket.off("typing_indicator", onTyping);
+      socket.off("user_online", onUserOnline);
+      socket.off("user_offline", onUserOffline);
+      socket.off("connect", requestPresence);
     };
   }, [
     currentUserId,
@@ -105,6 +122,8 @@ export const useChatSocket = (currentUserId: string) => {
     updateConversationMessageStatus,
     replaceTempMessage,
     setTyping,
+    setOnlineUsers,
+    setUserOnline,
     incrementUnread,
     clearUnread,
     updateLastMessage,

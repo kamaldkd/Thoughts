@@ -24,6 +24,7 @@ interface ChatState {
 
   /* ── Typing ── */
   typing: TypingState;
+  onlineUsers: Record<string, boolean>;
 
   /* ── Unread counts ── */
   unreadCounts: Record<string, number>;
@@ -53,6 +54,8 @@ interface ChatState {
   replaceTempMessage: (conversationId: string, tempId: string, realMsg: Message) => void;
 
   setTyping: (conversationId: string, userId: string, isTyping: boolean) => void;
+  setOnlineUsers: (userIds: string[]) => void;
+  setUserOnline: (userId: string, online: boolean) => void;
 
   incrementUnread: (conversationId: string) => void;
   clearUnread: (conversationId: string) => void;
@@ -70,6 +73,7 @@ export const useChatStore = create<ChatState>()(
     conversationsLoading: false,
     messageStore: {},
     typing: {},
+    onlineUsers: {},
     unreadCounts: {},
     unreadMessageCount: 0,
     failedMessageIds: {},
@@ -204,6 +208,17 @@ export const useChatStore = create<ChatState>()(
         const arr = s.typing[conversationId];
         if (isTyping && !arr.includes(userId)) arr.push(userId);
         else if (!isTyping) s.typing[conversationId] = arr.filter((id) => id !== userId);
+      }),
+
+    setOnlineUsers: (userIds) =>
+      set((s) => {
+        s.onlineUsers = Object.fromEntries(userIds.map((userId) => [userId, true]));
+      }),
+
+    setUserOnline: (userId, online) =>
+      set((s) => {
+        if (online) s.onlineUsers[userId] = true;
+        else delete s.onlineUsers[userId];
       }),
 
     incrementUnread: (conversationId) =>

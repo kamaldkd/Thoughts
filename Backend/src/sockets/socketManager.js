@@ -105,6 +105,7 @@ export const initSocketServer = (httpServer) => {
   ────────────────────────────────────────── */
   io.on("connection", (socket) => {
     const userId = socket.userId.toString();
+    const wasOnline = isUserOnline(userId);
 
     // 1. Track socket in the user→socket map
     addSocket(userId, socket.id);
@@ -113,6 +114,13 @@ export const initSocketServer = (httpServer) => {
     socket.join(userId);
 
     console.info(`[Socket] User ${userId} connected (socket: ${socket.id})`);
+    if (!wasOnline) io.emit("user_online", userId);
+
+    socket.on("get_presence", (ack) => {
+      if (typeof ack === "function") {
+        ack(Array.from(userSocketMap.keys()));
+      }
+    });
 
     /* ──────────────────────
        JOIN CONVERSATION ROOMS
@@ -144,6 +152,7 @@ export const initSocketServer = (httpServer) => {
     ────────────────────── */
     socket.on("disconnect", (reason) => {
       removeSocket(userId, socket.id);
+      if (!isUserOnline(userId)) io.emit("user_offline", userId);
       console.info(
         `[Socket] User ${userId} disconnected (socket: ${socket.id}, reason: ${reason})`
       );
