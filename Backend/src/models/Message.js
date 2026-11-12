@@ -40,6 +40,20 @@ const messageSchema = new mongoose.Schema(
       default: null,
     },
 
+    deletedFor: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    }],
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    deletedAt: {
+      type: Date,
+    },
+
     messageType: {
       type: String,
       enum: ["text", "image"],

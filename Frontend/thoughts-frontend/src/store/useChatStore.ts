@@ -50,6 +50,8 @@ interface ChatState {
   setLoadingMore: (conversationId: string, v: boolean) => void;
   appendMessage: (conversationId: string, msg: Message) => void;
   updateMessageStatus: (conversationId: string, messageId: string, status: Message["status"]) => void;
+  deleteMessageForMe: (conversationId: string, messageId: string, userId: string) => void;
+  deleteMessageForEveryone: (conversationId: string, messageId: string, userId: string) => void;
   updateConversationMessageStatus: (conversationId: string, status: Message["status"]) => void;
   replaceTempMessage: (conversationId: string, tempId: string, realMsg: Message) => void;
 
@@ -173,6 +175,84 @@ export const useChatStore = create<ChatState>()(
         if (!store) return;
         const msg = store.messages.find((m) => m._id === messageId);
         if (msg) msg.status = status;
+      }),
+
+    deleteMessageForMe: (conversationId, messageId, userId) =>
+      set((s) => {
+        const store = s.messageStore[conversationId];
+        const message = store?.messages.find((m) => m._id === messageId);
+        if (store && message) {
+          const senderId =
+            typeof message.senderId === "string" ? message.senderId : message.senderId._id;
+          if (senderId.toLowerCase() !== userId.toLowerCase() && message.status !== "seen") {
+            s.unreadCounts[conversationId] = Math.max(
+              0,
+              (s.unreadCounts[conversationId] ?? 0) - 1
+            );
+            s.unreadMessageCount = Math.max(0, s.unreadMessageCount - 1);
+          }
+          store.messages = store.messages.filter((m) => m._id !== messageId);
+          if (store.pagination) {
+            store.pagination.total = Math.max(0, store.pagination.total - 1);
+            store.pagination.totalPages = Math.ceil(
+              store.pagination.total / store.pagination.limit
+            );
+            store.pagination.hasNextPage = store.pagination.page < store.pagination.totalPages;
+            store.pagination.hasPrevPage = store.pagination.page > 1;
+          }
+          store.messages.forEach((item) => {
+            if (
+              item.replyTo &&
+              typeof item.replyTo === "object" &&
+              item.replyTo._id === messageId
+            ) {
+              item.replyTo = null;
+            }
+          });
+        }
+
+        const conversation = s.conversations.find((c) => c._id === conversationId);
+        if (conversation?.lastMessage?._id === messageId) {
+          conversation.lastMessage = undefined;
+        }
+      }),
+
+    deleteMessageForEveryone: (conversationId, messageId, userId) =>
+      set((s) => {
+        const store = s.messageStore[conversationId];
+        store?.messages.forEach((message) => {
+          if (message._id === messageId) {
+            const senderId =
+              typeof message.senderId === "string" ? message.senderId : message.senderId._id;
+            if (
+              !message.isDeleted &&
+              senderId.toLowerCase() !== userId.toLowerCase() &&
+              message.status !== "seen"
+            ) {
+              s.unreadCounts[conversationId] = Math.max(
+                0,
+                (s.unreadCounts[conversationId] ?? 0) - 1
+              );
+              s.unreadMessageCount = Math.max(0, s.unreadMessageCount - 1);
+            }
+            message.content = "";
+            message.isDeleted = true;
+          }
+          if (
+            message.replyTo &&
+            typeof message.replyTo === "object" &&
+            message.replyTo._id === messageId
+          ) {
+            message.replyTo.content = "";
+            message.replyTo.isDeleted = true;
+          }
+        });
+
+        const conversation = s.conversations.find((c) => c._id === conversationId);
+        if (conversation?.lastMessage?._id === messageId) {
+          conversation.lastMessage.content = "";
+          conversation.lastMessage.isDeleted = true;
+        }
       }),
 
     updateConversationMessageStatus: (conversationId, status) =>

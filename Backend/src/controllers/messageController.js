@@ -2,6 +2,7 @@ import {
   sendMessageService,
   getMessagesService,
   markSeenService,
+  deleteMessageService,
 } from "../services/MessageService.js";
 import { findOtherParticipantId } from "../repositories/ConversationRepository.js";
 
@@ -44,4 +45,25 @@ export const markSeen = async (req, res) => {
   const { conversationId } = req.params;
   await markSeenService(conversationId, req.userId);
   res.status(200).json({ success: true, message: "Messages marked as seen" });
+};
+
+export const deleteMessage = async (req, res) => {
+  const { conversationId, messageId } = req.params;
+  const result = await deleteMessageService(
+    conversationId,
+    messageId,
+    req.userId,
+    req.body?.scope
+  );
+  const io = req.app.get("io");
+
+  if (result.scope === "me") {
+    io?.to(req.userId.toString()).emit("message_deleted_for_me", result);
+  } else {
+    const receiverId = await findOtherParticipantId(conversationId, req.userId);
+    io?.to(req.userId.toString()).emit("message_deleted", result);
+    if (receiverId) io?.to(receiverId.toString()).emit("message_deleted", result);
+  }
+
+  res.status(200).json({ success: true, data: result });
 };

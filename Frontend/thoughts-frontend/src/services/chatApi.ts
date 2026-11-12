@@ -15,6 +15,7 @@ export interface LastMessage {
   status: "sent" | "delivered" | "seen";
   createdAt: string;
   senderId: string;
+  isDeleted?: boolean;
 }
 
 export interface Conversation {
@@ -37,12 +38,15 @@ export interface Message {
   updatedAt: string;
   tempId?: string; // client-side dedup
   replyTo?: MessageReply | string | null;
+  isDeleted?: boolean;
+  deletedAt?: string;
 }
 
 export interface MessageReply {
   _id: string;
   content: string;
   senderId: Participant | string;
+  isDeleted?: boolean;
 }
 
 export const getMessageSenderId = (senderId: unknown): string => {
@@ -137,3 +141,12 @@ export const getMessages = (
 
 export const markSeenRest = (conversationId: string): Promise<void> =>
   api.post(`/messages/${conversationId}/seen`).then(() => undefined);
+
+export const deleteChatMessage = (
+  conversationId: string,
+  messageId: string,
+  scope: "me" | "everyone"
+): Promise<void> =>
+  api
+    .delete(`/messages/${conversationId}/${messageId}`, { data: { scope } })
+    .then(() => undefined);

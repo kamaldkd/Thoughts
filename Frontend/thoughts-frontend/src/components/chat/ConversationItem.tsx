@@ -41,17 +41,28 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
   const senderId = getMessageSenderId(lastMessage?.senderId);
   const ownId = getMessageSenderId(user?._id);
   const isOwnMsg =
-    Boolean(lastMessage && user && senderId && ownId && senderId === ownId);
+    Boolean(
+      lastMessage &&
+        !lastMessage.isDeleted &&
+        user &&
+        senderId &&
+        ownId &&
+        senderId === ownId
+    );
 
   const isTyping = typingUsers.length > 0;
 
   const timeStr = lastMessageAt ? formatTimeAgo(lastMessageAt) : "";
 
-  const previewText = lastMessage
+  const previewText = lastMessage?.isDeleted
+    ? "Message deleted"
+    : lastMessage
     ? lastMessage.content.length > 40
       ? lastMessage.content.slice(0, 37) + "…"
       : lastMessage.content
-    : "No messages yet";
+    : lastMessageAt
+      ? "Message deleted"
+      : "No messages yet";
 
   return (
     <button

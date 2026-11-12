@@ -1,6 +1,11 @@
 import express from "express";
 import { isLoggedIn } from "../middleware/isLoggedIn.js";
-import { sendMessage, getMessages, markSeen } from "../controllers/messageController.js";
+import {
+  sendMessage,
+  getMessages,
+  markSeen,
+  deleteMessage,
+} from "../controllers/messageController.js";
 import { messageBurstLimiter, messageUserLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
@@ -16,5 +21,8 @@ router.post("/:conversationId", sendMessage);
 
 // POST /api/messages/:conversationId/seen             → mark as seen (REST fallback)
 router.post("/:conversationId/seen", markSeen);
+
+// DELETE /api/messages/:conversationId/:messageId → hide or delete a message
+router.delete("/:conversationId/:messageId", deleteMessage);
 
 export default router;

@@ -4,6 +4,8 @@ import {
   findMessageInConversation,
   markConversationSeen,
   countMessages,
+  hideMessageForUser,
+  deleteMessageForEveryone,
 } from "../repositories/MessageRepository.js";
 import { updateConversationLastMessage } from "../repositories/ConversationRepository.js";
 import { assertParticipant } from "./ConversationService.js";
@@ -41,7 +43,7 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
 
   const { content, messageType, clientMessageId, replyTo } = parsed.data;
   const replyTarget = replyTo
-    ? await findMessageInConversation(replyTo, conversationId)
+    ? await findMessageInConversation(replyTo, conversationId, senderId)
     : null;
 
   if (replyTo && !replyTarget) {
@@ -62,7 +64,9 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
     console.error("[MessageService] lastMessage update failed", err)
   );
 
-  return replyTarget ? { ...message, replyTo: replyTarget } : message;
+  const responseMessage = { ...message };
+  delete responseMessage.deletedFor;
+  return replyTarget ? { ...responseMessage, replyTo: replyTarget } : responseMessage;
 };
 
 /**
@@ -76,8 +80,11 @@ export const getMessagesService = async (conversationId, userId, { page = 1, lim
   const parsedLimit = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
 
   const [messages, total] = await Promise.all([
-    findMessagesByConversation(conversationId, { page: parsedPage, limit: parsedLimit }),
-    countMessages(conversationId),
+    findMessagesByConversation(conversationId, userId, {
+      page: parsedPage,
+      limit: parsedLimit,
+    }),
+    countMessages(conversationId, userId),
   ]);
 
   const totalPages = Math.ceil(total / parsedLimit);
@@ -102,4 +109,52 @@ export const getMessagesService = async (conversationId, userId, { page = 1, lim
 export const markSeenService = async (conversationId, readerId) => {
   await assertParticipant(conversationId, readerId);
   await markConversationSeen(conversationId, readerId);
+};
+
+export const deleteMessageService = async (
+  conversationId,
+  messageId,
+  userId,
+  scope
+) => {
+  if (!/^[a-f\d]{24}$/i.test(conversationId) || !/^[a-f\d]{24}$/i.test(messageId)) {
+    throw new ExpressError(400, "Invalid conversation or message ID");
+  }
+  if (scope !== "me" && scope !== "everyone") {
+    throw new ExpressError(400, "Invalid delete scope");
+  }
+
+  await assertParticipant(conversationId, userId);
+
+  const message = await findMessageInConversation(messageId, conversationId);
+  if (!message) throw new ExpressError(404, "Message not found");
+
+  if (scope === "everyone") {
+    const messageSenderId =
+      message.senderId && typeof message.senderId === "object" && "_id" in message.senderId
+        ? message.senderId._id
+        : message.senderId;
+    if (!messageSenderId || messageSenderId.toString() !== userId.toString()) {
+      throw new ExpressError(403, "You can only delete your own message for everyone");
+    }
+
+    if (message.isDeleted) {
+      return { conversationId, messageId, scope, isDeleted: true };
+    }
+
+    const deletedMessage = await deleteMessageForEveryone(
+      conversationId,
+      messageId,
+      userId
+    );
+    if (!deletedMessage) {
+      const currentMessage = await findMessageInConversation(messageId, conversationId);
+      if (!currentMessage?.isDeleted) throw new ExpressError(404, "Message not found");
+    }
+    return { conversationId, messageId, scope, isDeleted: true };
+  }
+
+  const hiddenMessage = await hideMessageForUser(conversationId, messageId, userId);
+  if (!hiddenMessage) throw new ExpressError(404, "Message not found");
+  return { conversationId, messageId, scope };
 };

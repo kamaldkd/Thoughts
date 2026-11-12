@@ -13,6 +13,8 @@ export const useChatSocket = (currentUserId: string) => {
   const selectedConversationId = useChatStore((s) => s.selectedConversationId);
   const appendMessage = useChatStore((s) => s.appendMessage);
   const updateMessageStatus = useChatStore((s) => s.updateMessageStatus);
+  const deleteMessageForMe = useChatStore((s) => s.deleteMessageForMe);
+  const deleteMessageForEveryone = useChatStore((s) => s.deleteMessageForEveryone);
   const updateConversationMessageStatus = useChatStore((s) => s.updateConversationMessageStatus);
   const replaceTempMessage = useChatStore((s) => s.replaceTempMessage);
   const setTyping = useChatStore((s) => s.setTyping);
@@ -75,6 +77,22 @@ export const useChatSocket = (currentUserId: string) => {
       if (seenBy === currentUserId) clearUnread(conversationId);
     };
 
+    const onMessageDeletedForMe = ({
+      conversationId,
+      messageId,
+    }: {
+      conversationId: string;
+      messageId: string;
+    }) => deleteMessageForMe(conversationId, messageId, currentUserId);
+
+    const onMessageDeleted = ({
+      conversationId,
+      messageId,
+    }: {
+      conversationId: string;
+      messageId: string;
+    }) => deleteMessageForEveryone(conversationId, messageId, currentUserId);
+
     /* ────────────────────────────────────
        typing_indicator
     ──────────────────────────────────── */
@@ -99,6 +117,8 @@ export const useChatSocket = (currentUserId: string) => {
     socket.on("receive_message", onReceiveMessage);
     socket.on("message_delivered", onDelivered);
     socket.on("message_seen", onSeen);
+    socket.on("message_deleted_for_me", onMessageDeletedForMe);
+    socket.on("message_deleted", onMessageDeleted);
     socket.on("typing_indicator", onTyping);
     socket.on("user_online", onUserOnline);
     socket.on("user_offline", onUserOffline);
@@ -109,6 +129,8 @@ export const useChatSocket = (currentUserId: string) => {
       socket.off("receive_message", onReceiveMessage);
       socket.off("message_delivered", onDelivered);
       socket.off("message_seen", onSeen);
+      socket.off("message_deleted_for_me", onMessageDeletedForMe);
+      socket.off("message_deleted", onMessageDeleted);
       socket.off("typing_indicator", onTyping);
       socket.off("user_online", onUserOnline);
       socket.off("user_offline", onUserOffline);
@@ -119,6 +141,8 @@ export const useChatSocket = (currentUserId: string) => {
     selectedConversationId,
     appendMessage,
     updateMessageStatus,
+    deleteMessageForMe,
+    deleteMessageForEveryone,
     updateConversationMessageStatus,
     replaceTempMessage,
     setTyping,

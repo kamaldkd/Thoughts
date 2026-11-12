@@ -1,8 +1,15 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { getMessageSenderId, type Message } from "@/services/chatApi";
 import { format, isToday, isYesterday } from "date-fns";
-import { Check, CheckCheck, AlertCircle, RotateCcw, Reply } from "lucide-react";
+import {
+  Check,
+  CheckCheck,
+  AlertCircle,
+  RotateCcw,
+  Reply,
+  MoreHorizontal,
+} from "lucide-react";
 
 interface MessageBubbleProps {
   id?: string;
@@ -12,6 +19,7 @@ interface MessageBubbleProps {
   isSending?: boolean;
   onRetry?: () => void;
   onReply?: () => void;
+  onLongPress?: () => void;
   onQuoteClick?: (messageId: string) => void;
 }
 
@@ -41,9 +49,12 @@ export const MessageBubble = ({
   isSending = false,
   onRetry,
   onReply,
+  onLongPress,
   onQuoteClick,
 }: MessageBubbleProps) => {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggered = useRef(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const replyTarget =
     message.replyTo && typeof message.replyTo === "object" ? message.replyTo : null;
@@ -54,59 +65,110 @@ export const MessageBubble = ({
         : replyTarget.senderId.name || replyTarget.senderId.username
       : "Message";
 
+  useEffect(
+    () => () => {
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    },
+    []
+  );
+
   const handleTouchStart = (event: React.TouchEvent) => {
-    if (!onReply) return;
+    if (!onReply && !onLongPress) return;
     const touch = event.touches[0];
     touchStart.current = { x: touch.clientX, y: touch.clientY };
+    longPressTriggered.current = false;
+    if (onLongPress) {
+      longPressTimer.current = setTimeout(() => {
+        longPressTriggered.current = true;
+        setSwipeOffset(0);
+        onLongPress();
+      }, 550);
+    }
   };
 
   const handleTouchMove = (event: React.TouchEvent) => {
-    if (!touchStart.current || !onReply) return;
+    if (!touchStart.current) return;
     const touch = event.touches[0];
     const offset = touch.clientX - touchStart.current.x;
-    if (offset > 0 && Math.abs(offset) > Math.abs(touch.clientY - touchStart.current.y)) {
+    const verticalOffset = touch.clientY - touchStart.current.y;
+    if (Math.abs(offset) > 8 || Math.abs(verticalOffset) > 8) {
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    }
+    if (
+      onReply &&
+      offset > 0 &&
+      Math.abs(offset) > Math.abs(verticalOffset)
+    ) {
       setSwipeOffset(Math.min(offset, 76));
     }
   };
 
   const handleTouchEnd = (event: React.TouchEvent) => {
-    if (!touchStart.current || !onReply) return;
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    if (!touchStart.current) return;
     const touch = event.changedTouches[0];
     const deltaX = touch.clientX - touchStart.current.x;
     const deltaY = touch.clientY - touchStart.current.y;
-    if (deltaX >= 56 && deltaX > Math.abs(deltaY) * 1.3) onReply();
+    if (!longPressTriggered.current && onReply && deltaX >= 56 && deltaX > Math.abs(deltaY) * 1.3) {
+      onReply();
+    }
     touchStart.current = null;
+    setSwipeOffset(0);
+  };
+
+  const handleTouchCancel = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    touchStart.current = null;
+    longPressTriggered.current = false;
     setSwipeOffset(0);
   };
 
   return (
     <div
       id={id}
+      aria-description="Press and hold for message actions"
       className={cn(
-        "group mb-1.5 flex animate-fade-msg items-end gap-2",
+        "group mb-1.5 flex select-none animate-fade-msg items-end gap-2",
         isOwn ? "justify-end" : "justify-start"
       )}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onTouchCancel={() => {
-        touchStart.current = null;
-        setSwipeOffset(0);
+      onTouchCancel={handleTouchCancel}
+      onContextMenu={(event) => {
+        if (!onLongPress) return;
+        event.preventDefault();
+        onLongPress();
       }}
     >
-      {onReply && (
-        <button
-          type="button"
-          onClick={onReply}
-          aria-label="Reply to message"
+      {(onReply || onLongPress) && (
+        <div
           className={cn(
-            "h-8 w-8 flex-shrink-0 rounded-full text-muted-foreground transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            isOwn ? "order-first" : "order-last",
-            "opacity-0 group-hover:opacity-100"
+            "flex flex-shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100",
+            isOwn ? "order-first" : "order-last"
           )}
         >
-          <Reply className="mx-auto h-4 w-4" />
-        </button>
+          {onReply && (
+            <button
+              type="button"
+              onClick={onReply}
+              aria-label="Reply to message"
+              className="h-8 w-8 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Reply className="mx-auto h-4 w-4" />
+            </button>
+          )}
+          {onLongPress && (
+            <button
+              type="button"
+              onClick={onLongPress}
+              aria-label="Message actions"
+              className="h-8 w-8 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <MoreHorizontal className="mx-auto h-4 w-4" />
+            </button>
+          )}
+        </div>
       )}
       <div
         className={cn(
@@ -125,7 +187,7 @@ export const MessageBubble = ({
         )}
         style={{ transform: `translateX(${swipeOffset}px)` }}
       >
-        {replyTarget && (
+        {replyTarget && !message.isDeleted && (
           <button
             type="button"
             onClick={() => onQuoteClick?.(replyTarget._id)}
@@ -152,11 +214,17 @@ export const MessageBubble = ({
                 isOwn ? "text-primary-foreground/80" : "text-muted-foreground"
               )}
             >
-              {replyTarget.content}
+              {replyTarget.isDeleted ? "Message deleted" : replyTarget.content}
             </span>
           </button>
         )}
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p className={cn("whitespace-pre-wrap", message.isDeleted && "italic opacity-75")}>
+          {message.isDeleted
+            ? isOwn
+              ? "You deleted this message"
+              : "This message was deleted"
+            : message.content}
+        </p>
 
         <div
           className={cn(
@@ -173,7 +241,7 @@ export const MessageBubble = ({
             {formatTime(message.createdAt)}
           </span>
 
-          {isOwn && !isFailed && (
+          {isOwn && !isFailed && !message.isDeleted && (
             <span className={cn("transition-opacity", isSending ? "opacity-40" : "opacity-100")}>
               <StatusTick status={isSending ? "sent" : message.status} />
             </span>

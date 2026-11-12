@@ -33,6 +33,8 @@ test("counts only unread messages from the other participant per conversation", 
     "conversation-b",
   ]);
   assert.equal(pipeline[0].$match.senderId.$ne.toString(), "507f1f77bcf86cd799439011");
+  assert.equal(pipeline[0].$match.deletedFor.$ne.toString(), "507f1f77bcf86cd799439011");
+  assert.deepEqual(pipeline[0].$match.isDeleted, { $ne: true });
   assert.deepEqual(pipeline[0].$match.status, { $ne: "seen" });
 });
 

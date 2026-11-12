@@ -44,16 +44,22 @@ export const createMessage = async ({
  * Paginated message history for a conversation.
  * Returns messages newest-first (client should reverse for display).
  */
-export const findMessagesByConversation = async (conversationId, { page = 1, limit = 20 } = {}) => {
+export const findMessagesByConversation = async (
+  conversationId,
+  userId,
+  { page = 1, limit = 20 } = {}
+) => {
   const skip = (page - 1) * limit;
-  return Message.find({ conversationId })
+  return Message.find({ conversationId, deletedFor: { $ne: userId } })
+    .select("-deletedFor")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
     .populate("senderId", "username name avatar")
     .populate({
       path: "replyTo",
-      select: "content senderId",
+      select: "content senderId isDeleted",
+      match: { deletedFor: { $ne: userId } },
       populate: { path: "senderId", select: "username name avatar" },
     })
     .lean();
@@ -88,8 +94,8 @@ export const markConversationSeen = async (conversationId, readerId) => {
 /**
  * Count total messages in a conversation (for pagination metadata).
  */
-export const countMessages = async (conversationId) => {
-  return Message.countDocuments({ conversationId });
+export const countMessages = async (conversationId, userId) => {
+  return Message.countDocuments({ conversationId, deletedFor: { $ne: userId } });
 };
 
 export const countUnreadMessagesByConversation = async (conversationIds, userId) => {
@@ -100,6 +106,8 @@ export const countUnreadMessagesByConversation = async (conversationIds, userId)
       $match: {
         conversationId: { $in: conversationIds },
         senderId: { $ne: new mongoose.Types.ObjectId(userId.toString()) },
+        deletedFor: { $ne: new mongoose.Types.ObjectId(userId.toString()) },
+        isDeleted: { $ne: true },
         status: { $ne: "seen" },
       },
     },
@@ -118,8 +126,34 @@ export const findMessageById = async (messageId) => {
   return Message.findById(messageId).lean();
 };
 
-export const findMessageInConversation = async (messageId, conversationId) => {
-  return Message.findOne({ _id: messageId, conversationId })
+export const findMessageInConversation = async (messageId, conversationId, userId) => {
+  return Message.findOne({
+    _id: messageId,
+    conversationId,
+    ...(userId ? { deletedFor: { $ne: userId } } : {}),
+  })
+    .select("-deletedFor")
     .populate("senderId", "username name avatar")
     .lean();
+};
+
+export const hideMessageForUser = async (conversationId, messageId, userId) => {
+  return Message.findOneAndUpdate(
+    { _id: messageId, conversationId },
+    { $addToSet: { deletedFor: userId } },
+    { new: true }
+  ).lean();
+};
+
+export const deleteMessageForEveryone = async (conversationId, messageId, senderId) => {
+  return Message.findOneAndUpdate(
+    {
+      _id: messageId,
+      conversationId,
+      senderId,
+      isDeleted: { $ne: true },
+    },
+    { $set: { content: "", isDeleted: true, deletedAt: new Date() } },
+    { new: true }
+  ).lean();
 };

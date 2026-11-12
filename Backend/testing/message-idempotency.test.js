@@ -3,11 +3,14 @@ import { afterEach, beforeEach, test } from "node:test";
 import Message from "../src/models/Message.js";
 import {
   createMessage,
+  deleteMessageForEveryone,
   findMessageInConversation,
+  hideMessageForUser,
 } from "../src/repositories/MessageRepository.js";
 
 const originalFindOne = Message.findOne;
 const originalCreate = Message.create;
+const originalFindOneAndUpdate = Message.findOneAndUpdate;
 
 beforeEach(() => {
   Message.findOne = () => ({ lean: async () => null });
@@ -17,6 +20,7 @@ beforeEach(() => {
 afterEach(() => {
   Message.findOne = originalFindOne;
   Message.create = originalCreate;
+  Message.findOneAndUpdate = originalFindOneAndUpdate;
 });
 
 test("reuses a persisted message when a transport retry has the same ID", async () => {
@@ -94,6 +98,9 @@ test("looks up reply targets only inside the current conversation", async () => 
   Message.findOne = (query) => {
     filter = query;
     return {
+      select() {
+        return this;
+      },
       populate() {
         return this;
       },
@@ -109,6 +116,43 @@ test("looks up reply targets only inside the current conversation", async () => 
     _id: "message-id",
     conversationId: "conversation-id",
   });
+});
+
+test("hides a message only for the requesting participant", async () => {
+  let filter;
+  let update;
+  Message.findOneAndUpdate = (query, changes) => {
+    filter = query;
+    update = changes;
+    return { lean: async () => ({}) };
+  };
+
+  await hideMessageForUser("conversation", "message", "user");
+
+  assert.deepEqual(filter, { _id: "message", conversationId: "conversation" });
+  assert.deepEqual(update, { $addToSet: { deletedFor: "user" } });
+});
+
+test("deletes a message for everyone only when the sender owns it", async () => {
+  let filter;
+  let update;
+  Message.findOneAndUpdate = (query, changes) => {
+    filter = query;
+    update = changes;
+    return { lean: async () => ({}) };
+  };
+
+  await deleteMessageForEveryone("conversation", "message", "sender");
+
+  assert.deepEqual(filter, {
+    _id: "message",
+    conversationId: "conversation",
+    senderId: "sender",
+    isDeleted: { $ne: true },
+  });
+  assert.equal(update.$set.content, "");
+  assert.equal(update.$set.isDeleted, true);
+  assert.ok(update.$set.deletedAt instanceof Date);
 });
 
 test("recovers from concurrent duplicate inserts by returning the saved message", async () => {

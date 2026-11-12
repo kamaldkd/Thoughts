@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { useChatStore } from "./useChatStore";
 
 afterEach(() => {
+  useChatStore.setState({ messageStore: {} });
   useChatStore.getState().setConversations([]);
   useChatStore.getState().setUnreadCounts({});
   useChatStore.getState().setUnreadMessageCount(0);
@@ -48,5 +49,74 @@ describe("chat unread counts", () => {
 
     setUserOnline("user-a", false);
     expect(useChatStore.getState().onlineUsers).toEqual({ "user-b": true });
+  });
+
+  it("removes a message only from this user's view and adjusts unread totals", () => {
+    const conversationId = "conversation-delete-me";
+    useChatStore.getState().setMessages(
+      conversationId,
+      [
+        {
+          _id: "message-a",
+          conversationId,
+          senderId: "user-b",
+          content: "private on this device",
+          messageType: "text",
+          status: "delivered",
+          createdAt: "",
+          updatedAt: "",
+        },
+      ],
+      {
+        page: 1,
+        limit: 20,
+        total: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      }
+    );
+    useChatStore.getState().setUnreadCounts({ [conversationId]: 1 });
+    useChatStore.getState().setUnreadMessageCount(1);
+
+    useChatStore.getState().deleteMessageForMe(conversationId, "message-a", "user-a");
+
+    expect(useChatStore.getState().messageStore[conversationId].messages).toEqual([]);
+    expect(useChatStore.getState().unreadCounts[conversationId]).toBe(0);
+    expect(useChatStore.getState().unreadMessageCount).toBe(0);
+  });
+
+  it("replaces a globally deleted message with a tombstone", () => {
+    const conversationId = "conversation-delete-everyone";
+    useChatStore.getState().setMessages(
+      conversationId,
+      [
+        {
+          _id: "message-b",
+          conversationId,
+          senderId: "user-a",
+          content: "remove for everyone",
+          messageType: "text",
+          status: "sent",
+          createdAt: "",
+          updatedAt: "",
+        },
+      ],
+      {
+        page: 1,
+        limit: 20,
+        total: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      }
+    );
+
+    useChatStore.getState().deleteMessageForEveryone(conversationId, "message-b", "user-a");
+
+    expect(useChatStore.getState().messageStore[conversationId].messages[0]).toMatchObject({
+      content: "",
+      isDeleted: true,
+    });
   });
 });

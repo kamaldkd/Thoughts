@@ -10,7 +10,8 @@ export const findConversationByParticipants = async (userA, userB) => {
   })
     .populate({
       path: "lastMessage",
-      select: "content messageType status createdAt senderId",
+      select: "content messageType status createdAt senderId isDeleted",
+      match: { deletedFor: { $ne: userA } },
     })
     .lean();
 };
@@ -36,7 +37,8 @@ export const findConversationsByUser = async (userId) => {
     .populate("participants", "username name avatar")
     .populate({
       path: "lastMessage",
-      select: "content messageType status createdAt senderId",
+      select: "content messageType status createdAt senderId isDeleted",
+      match: { deletedFor: { $ne: userId } },
     })
     .lean();
 };

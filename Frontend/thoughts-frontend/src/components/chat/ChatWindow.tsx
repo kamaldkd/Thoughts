@@ -4,7 +4,12 @@ import { MessageBubble } from "./MessageBubble";
 import { MessageInput } from "./MessageInput";
 import { TypingIndicator } from "./TypingIndicator";
 import { joinConversation, leaveConversation, emitMarkAsSeen } from "@/services/socket";
-import { getMessageSenderId, getMessages, sendChatMessage } from "@/services/chatApi";
+import {
+  deleteChatMessage,
+  getMessageSenderId,
+  getMessages,
+  sendChatMessage,
+} from "@/services/chatApi";
 import { useAuth } from "@/hooks/useAuth";
 import { ParticipantAvatar } from "./ParticipantAvatar";
 import { Link } from "react-router-dom";
@@ -14,6 +19,13 @@ import { format, isToday, isYesterday } from "date-fns";
 import type { Message } from "@/services/chatApi";
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ChatWindowProps {
   conversationId: string;
@@ -131,6 +143,8 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   const markMessageFailed = useChatStore((s) => s.markMessageFailed);
   const clearFailedMessage = useChatStore((s) => s.clearFailedMessage);
   const removeFailedMessage = useChatStore((s) => s.removeFailedMessage);
+  const deleteMessageForMe = useChatStore((s) => s.deleteMessageForMe);
+  const deleteMessageForEveryone = useChatStore((s) => s.deleteMessageForEveryone);
 
   // Store state
   const conversation = useChatStore((s) => s.conversations.find((c) => c._id === conversationId));
@@ -145,6 +159,8 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   const [showScrollFAB, setShowScrollFAB] = useState(false);
   const [unreadBelow, setUnreadBelow] = useState(0);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
+  const [deletingMessage, setDeletingMessage] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevScrollHeight = useRef(0);
   const markedSeen = useRef(false);
@@ -166,6 +182,7 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   useEffect(() => {
     markedSeen.current = false;
     setReplyTo(null);
+    setMessageToDelete(null);
     setInitialLoading(true);
     setShowScrollFAB(false);
     setUnreadBelow(0);
@@ -340,6 +357,44 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
     [conversationId, clearFailedMessage, removeFailedMessage, handleSend]
   );
 
+  const handleDeleteMessage = useCallback(
+    async (scope: "me" | "everyone") => {
+      if (!messageToDelete || !user || deletingMessage) return;
+      setDeletingMessage(true);
+      try {
+        await deleteChatMessage(conversationId, messageToDelete._id, scope);
+        if (scope === "me") {
+          deleteMessageForMe(conversationId, messageToDelete._id, user._id);
+          toast.success("Message deleted for you.");
+        } else {
+          deleteMessageForEveryone(conversationId, messageToDelete._id, user._id);
+          toast.success("Message deleted for everyone.");
+        }
+        setMessageToDelete(null);
+      } catch (error) {
+        console.error("Failed to delete message", error);
+        toast.error("Could not delete the message. Please try again.");
+      } finally {
+        setDeletingMessage(false);
+      }
+    },
+    [
+      messageToDelete,
+      user,
+      deletingMessage,
+      conversationId,
+      deleteMessageForMe,
+      deleteMessageForEveryone,
+    ]
+  );
+
+  const canDeleteForEveryone = Boolean(
+    messageToDelete &&
+      user &&
+      !messageToDelete.isDeleted &&
+      getMessageSenderId(messageToDelete.senderId) === getMessageSenderId(user?._id)
+  );
+
   /* ─────────────────────────────────────────────
      RENDER
   ───────────────────────────────────────────── */
@@ -478,7 +533,12 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
                         isOwn={isOwn}
                         isFailed={isFailed}
                         isSending={isSending && isOwn}
-                        onReply={msg.tempId ? undefined : () => setReplyTo(msg)}
+                        onReply={
+                          msg.tempId || msg.isDeleted ? undefined : () => setReplyTo(msg)
+                        }
+                        onLongPress={
+                          msg.tempId ? undefined : () => setMessageToDelete(msg)
+                        }
                         onQuoteClick={(messageId) => {
                           const quotedMessage = document.getElementById(`message-${messageId}`);
                           if (!quotedMessage) {
@@ -525,6 +585,52 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
           </div>
         </div>
       </div>
+
+      <Dialog
+        open={Boolean(messageToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !deletingMessage) setMessageToDelete(null);
+        }}
+      >
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Delete message?</DialogTitle>
+            <DialogDescription className="max-h-24 overflow-y-auto break-words">
+              {messageToDelete?.isDeleted
+                ? "This message has already been deleted for everyone."
+                : messageToDelete?.content}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => void handleDeleteMessage("me")}
+              disabled={deletingMessage}
+              className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+            >
+              Delete for me
+            </button>
+            {canDeleteForEveryone && (
+              <button
+                type="button"
+                onClick={() => void handleDeleteMessage("everyone")}
+                disabled={deletingMessage}
+                className="rounded-xl bg-destructive px-4 py-2.5 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                Delete for everyone
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setMessageToDelete(null)}
+              disabled={deletingMessage}
+              className="rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

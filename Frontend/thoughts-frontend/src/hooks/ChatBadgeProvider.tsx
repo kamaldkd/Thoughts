@@ -48,12 +48,16 @@ export function ChatBadgeProvider({
 
     socket.on("receive_message", refreshAfterIncomingMessage);
     socket.on("message_seen", refreshAfterIncomingMessage);
+    socket.on("message_deleted_for_me", refreshAfterIncomingMessage);
+    socket.on("message_deleted", refreshAfterIncomingMessage);
 
     return () => {
       window.clearInterval(interval);
       if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
       socket.off("receive_message", refreshAfterIncomingMessage);
       socket.off("message_seen", refreshAfterIncomingMessage);
+      socket.off("message_deleted_for_me", refreshAfterIncomingMessage);
+      socket.off("message_deleted", refreshAfterIncomingMessage);
     };
   }, [isLoggedIn, loading, refreshUnreadCount, setUnreadMessageCount]);
 
