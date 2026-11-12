@@ -219,7 +219,7 @@ export function getThought(id: string) {
   return api.get(`/thoughts/${id}`);
 }
 
-export function updateThought(id: string, data: any) {
+export function updateThought(id: string, data: { text: string }) {
   return api.put(`/thoughts/${id}`, data);
 }
 

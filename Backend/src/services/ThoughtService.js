@@ -86,7 +86,21 @@ export const fetchThoughtsByParamsUserId = async (userId) => {
 };
 
 export const editThought = async (id, text) => {
-  const thought = await updateThoughtDoc(id, text);
+  const currentThought = await findThoughtById(id);
+  if (!currentThought) throw new ExpressError(404, "Thought not found");
+  if (typeof text !== "string") {
+    throw new ExpressError(400, "Thought text must be a string");
+  }
+
+  const normalizedText = text.trim();
+  if (normalizedText.length > 1000) {
+    throw new ExpressError(400, "Thought text cannot exceed 1000 characters");
+  }
+  if (!normalizedText && currentThought.media.length === 0) {
+    throw new ExpressError(400, "Thought must have text or at least one media");
+  }
+
+  const thought = await updateThoughtDoc(id, normalizedText);
   if (!thought) throw new ExpressError(404, "Thought not found");
   return thought;
 };

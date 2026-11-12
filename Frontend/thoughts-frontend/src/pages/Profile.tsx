@@ -220,6 +220,15 @@ const Profile = () => {
               comments={t.comments || 0}
               authorId={t.author?._id}
               currentUserId={user?._id}
+              onEdit={(id, text) => {
+                setThoughts((current) =>
+                  current.map((thought) =>
+                    (thought._id || thought.id) === id
+                      ? { ...thought, text }
+                      : thought
+                  )
+                );
+              }}
               onDelete={async (id) => {
                 if (!confirm("Delete this thought?")) return;
                 try {

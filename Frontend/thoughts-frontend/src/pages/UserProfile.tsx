@@ -657,6 +657,20 @@ export default function UserProfile() {
               comments={postModal.commentsCount ?? postModal.comments ?? 0}
               authorId={postModal.author?._id}
               currentUserId={me?._id}
+              onEdit={(id, text) => {
+                setThoughts((current) =>
+                  current.map((thought) =>
+                    (thought._id || thought.id) === id
+                      ? { ...thought, text }
+                      : thought
+                  )
+                );
+                setPostModal((current) =>
+                  current && (current._id || current.id) === id
+                    ? { ...current, text }
+                    : current
+                );
+              }}
             />
           </DialogContent>
         </Dialog>

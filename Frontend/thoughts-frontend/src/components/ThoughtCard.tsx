@@ -9,16 +9,26 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  Pencil,
 } from "lucide-react";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useMinuteTick } from "@/hooks/useMinuteTick";
 import { useFadeOnChange } from "@/hooks/useFadeOnChange";
 import { format, parseISO } from "date-fns";
-import api from "@/lib/api";
-import { checkIsFollowing, followUser } from "@/lib/api";
+import api, { checkIsFollowing, followUser, updateThought } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { VideoPlayer } from "@/components/VideoPlayer";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface MediaItem {
   url: string;
@@ -26,7 +36,7 @@ interface MediaItem {
 }
 
 interface ThoughtProps {
-  id: number;
+  id: string;
   username: string;
   avatar: string;
   time: string;
@@ -39,7 +49,8 @@ interface ThoughtProps {
   authorId?: string;
   currentUserId?: string;
   showFollowButton?: boolean;
-  onDelete?: (id: any) => void;
+  onDelete?: (id: string) => void;
+  onEdit?: (id: string, text: string) => void;
 }
 
 /* ─── Avatar with fallback ───────────────────────────────────────────────── */
@@ -230,7 +241,7 @@ export function ThoughtCard({
   username,
   avatar,
   time,
-  content,
+  content = "",
   media,
   mediaUrl,
   mediaType,
@@ -241,6 +252,7 @@ export function ThoughtCard({
   currentUserId,
   showFollowButton = false,
   onDelete,
+  onEdit,
 }: ThoughtProps) {
   const mediaItems: MediaItem[] =
     media && media.length > 0
@@ -251,6 +263,10 @@ export function ThoughtCard({
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
+  const [thoughtText, setThoughtText] = useState(content);
+  const [editText, setEditText] = useState(content);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const queryClient = useQueryClient();
   const canFollow =
     showFollowButton &&
@@ -319,13 +335,32 @@ export function ThoughtCard({
   };
 
   const isOwner = !!(
-    onDelete &&
     currentUserId &&
     authorId &&
     currentUserId === authorId
   );
-  const truncated = content.length > 200;
-  const displayContent = truncated ? content.substring(0, 200) : content;
+  const truncated = thoughtText.length > 200;
+  const displayContent = truncated ? thoughtText.substring(0, 200) : thoughtText;
+
+  const handleEdit = async () => {
+    const text = editText.trim();
+    if (!text && mediaItems.length === 0) return;
+
+    setIsSavingEdit(true);
+    try {
+      await updateThought(id, { text });
+      setThoughtText(text);
+      setIsEditing(false);
+      onEdit?.(id, text);
+      await queryClient.invalidateQueries({ queryKey: ["thoughts"] });
+      toast.success("Thought updated");
+    } catch (error) {
+      console.error("Failed to update thought:", error);
+      toast.error("Failed to update thought");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   return (
     <article className="px-4 py-4 border-b border-border/50 animate-fade-in">
@@ -367,12 +402,26 @@ export function ThoughtCard({
                   />
                 )}
               {isOwner && (
-                <button
-                  onClick={() => onDelete!(id)}
-                  className="text-[11px] text-destructive hover:text-destructive/80 transition-colors px-1"
-                >
-                  Delete
-                </button>
+                <>
+                  <button
+                    onClick={() => {
+                      setEditText(thoughtText);
+                      setIsEditing(true);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Edit
+                  </button>
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(id)}
+                      className="text-[11px] text-destructive hover:text-destructive/80 transition-colors px-1"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </>
               )}
               {/* <button className="p-1 rounded-full hover:bg-muted transition-colors">
                 <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
@@ -436,6 +485,39 @@ export function ThoughtCard({
           </div>
         </div>
       </div>
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit thought</DialogTitle>
+            <DialogDescription>Update the text of your thought.</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={editText}
+            onChange={(event) => setEditText(event.target.value)}
+            maxLength={1000}
+            rows={6}
+            aria-label="Thought text"
+          />
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              disabled={isSavingEdit}
+              className="h-9 px-4 rounded-md border border-border text-sm hover:bg-secondary disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleEdit}
+              disabled={isSavingEdit || (!editText.trim() && mediaItems.length === 0)}
+              className="h-9 px-4 rounded-md bg-primary text-sm text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {isSavingEdit ? "Saving..." : "Save"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </article>
   );
 }

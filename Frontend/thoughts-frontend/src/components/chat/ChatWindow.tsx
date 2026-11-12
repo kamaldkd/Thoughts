@@ -620,14 +620,6 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
                 Delete for everyone
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setMessageToDelete(null)}
-              disabled={deletingMessage}
-              className="rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-50"
-            >
-              Cancel
-            </button>
           </div>
         </DialogContent>
       </Dialog>

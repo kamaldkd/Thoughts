@@ -26,7 +26,11 @@ export const countThoughtsByAuthorId = async (authorId) => {
 };
 
 export const updateThoughtDoc = async (id, text) => {
-  return await Thought.findByIdAndUpdate(id, { text }, { new: true })
+  return await Thought.findByIdAndUpdate(
+    id,
+    { text },
+    { new: true, runValidators: true }
+  )
     .populate("author", "username name email");
 };
 
