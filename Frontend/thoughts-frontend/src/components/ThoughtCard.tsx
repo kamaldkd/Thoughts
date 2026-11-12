@@ -5,11 +5,12 @@ import {
   MessageCircle,
   Repeat2,
   Send,
-  MoreHorizontal,
+  MoreVertical,
   User,
   ChevronLeft,
   ChevronRight,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useMinuteTick } from "@/hooks/useMinuteTick";
@@ -29,6 +30,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MediaItem {
   url: string;
@@ -402,30 +409,38 @@ export function ThoughtCard({
                   />
                 )}
               {isOwner && (
-                <>
-                  <button
-                    onClick={() => {
-                      setEditText(thoughtText);
-                      setIsEditing(true);
-                    }}
-                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1"
-                  >
-                    <Pencil className="h-3 w-3" />
-                    Edit
-                  </button>
-                  {onDelete && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                     <button
-                      onClick={() => onDelete(id)}
-                      className="text-[11px] text-destructive hover:text-destructive/80 transition-colors px-1"
+                      type="button"
+                      aria-label="Thought options"
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                     >
-                      Delete
+                      <MoreVertical className="h-4 w-4" />
                     </button>
-                  )}
-                </>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        setEditText(thoughtText);
+                        setIsEditing(true);
+                      }}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    {onDelete && (
+                      <DropdownMenuItem
+                        onSelect={() => onDelete(id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
-              {/* <button className="p-1 rounded-full hover:bg-muted transition-colors">
-                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-              </button> */}
             </div>
           </div>
 

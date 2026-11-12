@@ -671,6 +671,22 @@ export default function UserProfile() {
                     : current
                 );
               }}
+              onDelete={async (id) => {
+                if (!window.confirm("Delete this thought?")) return;
+                try {
+                  await api.delete(`/thoughts/${id}`);
+                  setThoughts((current) =>
+                    current.filter(
+                      (thought) => (thought._id || thought.id) !== id
+                    )
+                  );
+                  setPostModal(null);
+                  toast.success("Thought deleted");
+                } catch (error) {
+                  console.error("Failed to delete thought:", error);
+                  toast.error("Failed to delete thought");
+                }
+              }}
             />
           </DialogContent>
         </Dialog>
