@@ -12,7 +12,7 @@ export const getThoughtsList = async (query = {}, options = {}) => {
 };
 
 export const findThoughtById = async (id) => {
-  return await Thought.findById(id).populate("author", "username name email");
+  return await Thought.findById(id).populate("author", "username name email avatar");
 };
 
 export const findThoughtsByAuthorId = async (authorId) => {

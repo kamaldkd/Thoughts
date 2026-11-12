@@ -37,7 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface MediaItem {
+export interface MediaItem {
   url: string;
   type: "image" | "video";
 }
@@ -83,7 +83,7 @@ function AvatarFallback({ src, username }: { src: string; username: string }) {
 }
 
 /* ─── Media Gallery ──────────────────────────────────────────────────────── */
-function MediaGallery({ items }: { items: MediaItem[] }) {
+export function MediaGallery({ items }: { items: MediaItem[] }) {
   const [current, setCurrent] = useState(0);
   const [dragStartX, setDragStartX] = useState<number | null>(null);
 

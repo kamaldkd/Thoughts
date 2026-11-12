@@ -12,9 +12,8 @@ import {
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import ThoughtSkeleton from "@/components/ThoughtSkeleton";
 import CommentSection from "@/components/CommentSection";
-import { VideoPlayer } from "@/components/VideoPlayer";
 import defaultAvatar from "../assets/hero-bg.jpg";
-import { ActionBtn } from "@/components/ThoughtCard";
+import { ActionBtn, MediaGallery } from "@/components/ThoughtCard";
 
 /* ─── Types ─────────────────────────────────────────── */
 interface MediaItem { url: string; type: "image" | "video" }
@@ -98,8 +97,6 @@ export default function ThoughtDetail() {
   if (loading) return <div className="min-h-screen pt-14"><ThoughtSkeleton /></div>;
   if (!thought) return <div className="pt-20 text-center text-muted-foreground">Thought not found</div>;
 
-  const mediaUrl = thought.media?.[0]?.url;
-  const mediaType = thought.media?.[0]?.type;
   const timeText = formatRelativeTime(thought.createdAt);
 
   return (
@@ -143,17 +140,7 @@ export default function ThoughtDetail() {
             <p className="mt-4 text-[16px] leading-relaxed whitespace-pre-line">{thought.text}</p>
           )}
 
-          {mediaUrl && mediaType === "image" && (
-            <div className="mt-3 rounded-xl overflow-hidden border border-border/40">
-              <img src={mediaUrl} alt="Post" className="w-full object-cover max-h-80" />
-            </div>
-          )}
-
-          {mediaUrl && mediaType === "video" && (
-            <div className="mt-3 rounded-xl overflow-hidden border border-border/40">
-              <VideoPlayer src={mediaUrl} />
-            </div>
-          )}
+          {thought.media?.length ? <MediaGallery items={thought.media} /> : null}
 
           {/* Stats */}
           <div className="flex items-center gap-6 mt-4 py-3 border-t border-border/40 text-lg text-muted-foreground">
