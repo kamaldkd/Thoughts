@@ -10,6 +10,7 @@ export const createMessage = async ({
   content,
   messageType = "text",
   clientMessageId,
+  replyTo,
 }) => {
   const identity = clientMessageId
     ? { conversationId, senderId, clientMessageId }
@@ -26,6 +27,7 @@ export const createMessage = async ({
       senderId,
       content,
       messageType,
+      ...(replyTo ? { replyTo } : {}),
       ...(clientMessageId ? { clientMessageId } : {}),
     });
     return message.toObject();
@@ -49,6 +51,11 @@ export const findMessagesByConversation = async (conversationId, { page = 1, lim
     .skip(skip)
     .limit(limit)
     .populate("senderId", "username name avatar")
+    .populate({
+      path: "replyTo",
+      select: "content senderId",
+      populate: { path: "senderId", select: "username name avatar" },
+    })
     .lean();
 };
 
@@ -109,4 +116,10 @@ export const countUnreadMessagesByConversation = async (conversationIds, userId)
  */
 export const findMessageById = async (messageId) => {
   return Message.findById(messageId).lean();
+};
+
+export const findMessageInConversation = async (messageId, conversationId) => {
+  return Message.findOne({ _id: messageId, conversationId })
+    .populate("senderId", "username name avatar")
+    .lean();
 };

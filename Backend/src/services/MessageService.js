@@ -1,6 +1,7 @@
 import {
   createMessage,
   findMessagesByConversation,
+  findMessageInConversation,
   markConversationSeen,
   countMessages,
 } from "../repositories/MessageRepository.js";
@@ -16,6 +17,7 @@ const sendMessageSchema = z.object({
   content: z.string().trim().min(1, "Message cannot be empty").max(2000, "Message too long"),
   messageType: z.enum(["text", "image"]).default("text"),
   clientMessageId: z.string().min(1).max(100).optional(),
+  replyTo: z.string().regex(/^[a-f\d]{24}$/i, "Invalid reply target").optional(),
 });
 
 /* ──────────────────────────────────────────
@@ -37,7 +39,14 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
   // Security: caller must be a participant
   await assertParticipant(conversationId, senderId);
 
-  const { content, messageType, clientMessageId } = parsed.data;
+  const { content, messageType, clientMessageId, replyTo } = parsed.data;
+  const replyTarget = replyTo
+    ? await findMessageInConversation(replyTo, conversationId)
+    : null;
+
+  if (replyTo && !replyTarget) {
+    throw new ExpressError(400, "Reply target not found in this conversation");
+  }
 
   const message = await createMessage({
     conversationId,
@@ -45,6 +54,7 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
     content,
     messageType,
     clientMessageId,
+    replyTo,
   });
 
   // Update conversation snapshot (non-blocking update — no wait needed for response)
@@ -52,7 +62,7 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
     console.error("[MessageService] lastMessage update failed", err)
   );
 
-  return message;
+  return replyTarget ? { ...message, replyTo: replyTarget } : message;
 };
 
 /**

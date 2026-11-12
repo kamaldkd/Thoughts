@@ -12,6 +12,7 @@ const sendMessageSchema = z.object({
   content: z.string().trim().min(1, "Message cannot be empty").max(2000, "Message too long"),
   messageType: z.enum(["text", "image"]).default("text"),
   tempId: z.string().optional(), // client-side deduplication ID
+  replyTo: z.string().regex(/^[a-f\d]{24}$/i, "Invalid reply target").optional(),
 });
 
 const typingSchema = z.object({
@@ -65,7 +66,7 @@ export const registerMessageHandlers = (socket, io, userSocketMap) => {
       return;
     }
 
-    const { conversationId, content, messageType, tempId } = parsed.data;
+    const { conversationId, content, messageType, tempId, replyTo } = parsed.data;
 
     try {
       // Persist via service (validates participant, saves, updates lastMessage)
@@ -73,6 +74,7 @@ export const registerMessageHandlers = (socket, io, userSocketMap) => {
         content,
         messageType,
         clientMessageId: tempId,
+        replyTo,
       });
 
       // Acknowledge sender with the saved message + their tempId for dedup

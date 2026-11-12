@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import Message from "../src/models/Message.js";
-import { createMessage } from "../src/repositories/MessageRepository.js";
+import {
+  createMessage,
+  findMessageInConversation,
+} from "../src/repositories/MessageRepository.js";
 
 const originalFindOne = Message.findOne;
 const originalCreate = Message.create;
@@ -67,6 +70,45 @@ test("keeps messages from both participants distinct", async () => {
   assert.equal(created.length, 2);
   assert.equal(created[0].senderId, "sender-a");
   assert.equal(created[1].senderId, "sender-b");
+});
+
+test("persists the selected reply target with the message", async () => {
+  let createdMessage;
+  Message.create = async (message) => {
+    createdMessage = message;
+    return { toObject: () => ({ ...message, _id: "saved" }) };
+  };
+
+  await createMessage({
+    conversationId: "conversation",
+    senderId: "sender-a",
+    content: "a reply",
+    replyTo: "507f1f77bcf86cd799439011",
+  });
+
+  assert.equal(createdMessage.replyTo, "507f1f77bcf86cd799439011");
+});
+
+test("looks up reply targets only inside the current conversation", async () => {
+  let filter;
+  Message.findOne = (query) => {
+    filter = query;
+    return {
+      populate() {
+        return this;
+      },
+      lean: async () => null,
+    };
+  };
+
+  assert.equal(
+    await findMessageInConversation("message-id", "conversation-id"),
+    null
+  );
+  assert.deepEqual(filter, {
+    _id: "message-id",
+    conversationId: "conversation-id",
+  });
 });
 
 test("recovers from concurrent duplicate inserts by returning the saved message", async () => {

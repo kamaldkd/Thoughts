@@ -57,12 +57,13 @@ export const leaveConversation = (conversationId: string) => {
 export const emitSendMessage = (
   conversationId: string,
   content: string,
-  tempId: string
+  tempId: string,
+  replyTo?: string
 ): Promise<{ success: boolean; message?: Message; error?: string }> => {
   return new Promise((resolve, reject) => {
     getSocket().timeout(10000).emit(
       "send_message",
-      { conversationId, content, tempId },
+      { conversationId, content, tempId, ...(replyTo ? { replyTo } : {}) },
       (error, ack: { success: boolean; message?: Message; error?: string }) => {
         if (error) reject(error);
         else resolve(ack);

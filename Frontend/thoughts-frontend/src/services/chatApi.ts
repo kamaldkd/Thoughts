@@ -36,6 +36,13 @@ export interface Message {
   createdAt: string;
   updatedAt: string;
   tempId?: string; // client-side dedup
+  replyTo?: MessageReply | string | null;
+}
+
+export interface MessageReply {
+  _id: string;
+  content: string;
+  senderId: Participant | string;
 }
 
 export const getMessageSenderId = (senderId: unknown): string => {
@@ -90,10 +97,11 @@ export const createOrGetConversation = async (
 export const sendChatMessage = async (
   conversationId: string,
   content: string,
-  clientMessageId: string
+  clientMessageId: string,
+  replyTo?: string
 ): Promise<Message> => {
   try {
-    const ack = await emitSendMessage(conversationId, content, clientMessageId);
+    const ack = await emitSendMessage(conversationId, content, clientMessageId, replyTo);
     if (ack.success && ack.message) return ack.message;
   } catch (error) {
     console.warn("Socket message send failed; retrying over HTTP", error);
@@ -102,6 +110,7 @@ export const sendChatMessage = async (
   const response = await api.post(`/messages/${conversationId}`, {
     content,
     clientMessageId,
+    ...(replyTo ? { replyTo } : {}),
   });
   return response.data.data;
 };

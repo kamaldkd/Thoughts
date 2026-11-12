@@ -144,6 +144,7 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [showScrollFAB, setShowScrollFAB] = useState(false);
   const [unreadBelow, setUnreadBelow] = useState(0);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevScrollHeight = useRef(0);
   const markedSeen = useRef(false);
@@ -164,6 +165,7 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   ───────────────────────────────────────────── */
   useEffect(() => {
     markedSeen.current = false;
+    setReplyTo(null);
     setInitialLoading(true);
     setShowScrollFAB(false);
     setUnreadBelow(0);
@@ -274,9 +276,11 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
      SEND MESSAGE
   ───────────────────────────────────────────── */
   const handleSend = useCallback(
-    async (content: string) => {
+    async (content: string, replyTarget: Message["replyTo"] = replyTo) => {
       if (!user) return;
       const tempId = uuidv4();
+      const replyToId =
+        typeof replyTarget === "string" ? replyTarget : replyTarget?._id;
 
       // Optimistic message
       const optimistic: Message = {
@@ -289,10 +293,12 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         tempId,
+        ...(replyTarget ? { replyTo: replyTarget } : {}),
       };
 
       appendMessage(conversationId, optimistic);
       updateLastMessage(conversationId, optimistic);
+      setReplyTo(null);
 
       // Scroll to bottom immediately
       requestAnimationFrame(() => {
@@ -300,7 +306,7 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
       });
 
       try {
-        const message = await sendChatMessage(conversationId, content, tempId);
+        const message = await sendChatMessage(conversationId, content, tempId, replyToId);
         replaceTempMessage(conversationId, tempId, { ...message, tempId: undefined });
         updateLastMessage(conversationId, message);
       } catch (err) {
@@ -309,7 +315,15 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
         toast.error("Message failed to send. Check your connection and try again.");
       }
     },
-    [user, conversationId, appendMessage, updateLastMessage, replaceTempMessage, markMessageFailed]
+    [
+      user,
+      conversationId,
+      replyTo,
+      appendMessage,
+      updateLastMessage,
+      replaceTempMessage,
+      markMessageFailed,
+    ]
   );
 
   /* ─────────────────────────────────────────────
@@ -321,7 +335,7 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
       clearFailedMessage(conversationId, msg.tempId);
       removeFailedMessage(conversationId, msg.tempId);
       // Re-send
-      handleSend(msg.content);
+      handleSend(msg.content, msg.replyTo);
     },
     [conversationId, clearFailedMessage, removeFailedMessage, handleSend]
   );
@@ -458,11 +472,26 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
 
                     return (
                       <MessageBubble
+                        id={`message-${msg._id}`}
                         key={msg._id}
                         message={msg}
                         isOwn={isOwn}
                         isFailed={isFailed}
                         isSending={isSending && isOwn}
+                        onReply={msg.tempId ? undefined : () => setReplyTo(msg)}
+                        onQuoteClick={(messageId) => {
+                          const quotedMessage = document.getElementById(`message-${messageId}`);
+                          if (!quotedMessage) {
+                            toast.info("That message is not loaded in this conversation yet.");
+                            return;
+                          }
+                          quotedMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+                          quotedMessage.classList.add("ring-2", "ring-primary");
+                          window.setTimeout(
+                            () => quotedMessage.classList.remove("ring-2", "ring-primary"),
+                            1200
+                          );
+                        }}
                         onRetry={() => handleRetry(msg)}
                       />
                     );
@@ -489,6 +518,8 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
             <MessageInput
               conversationId={conversationId}
               onSend={handleSend}
+              replyTo={replyTo}
+              onCancelReply={() => setReplyTo(null)}
               disabled={initialLoading}
             />
           </div>

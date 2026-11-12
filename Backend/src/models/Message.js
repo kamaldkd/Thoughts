@@ -34,6 +34,12 @@ const messageSchema = new mongoose.Schema(
       maxlength: [2000, "Message cannot exceed 2000 characters"],
     },
 
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+      default: null,
+    },
+
     messageType: {
       type: String,
       enum: ["text", "image"],
