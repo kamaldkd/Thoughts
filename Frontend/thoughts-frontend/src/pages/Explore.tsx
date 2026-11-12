@@ -20,6 +20,8 @@ import {
 import { Link } from "react-router-dom";
 
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ThoughtCard } from "@/components/ThoughtCard";
 import { mockThoughts } from "@/data/mockThoughts";
 import { FollowButton } from "@/components/profile/FollowButton";
 
@@ -31,6 +33,7 @@ import {
 } from "@/lib/api";
 
 import { useDebounce } from "@/hooks/useDebounce";
+import { useAuth } from "@/hooks/useAuth";
 
 type TabKey = "trending" | "people" | "thoughts";
 
@@ -49,10 +52,14 @@ interface ExploreMedia {
 
 interface ExploreThought {
   _id: string;
-  text: string;
+  text?: string;
+  createdAt: string;
   media: ExploreMedia[];
   author?: {
+    _id?: string;
     username?: string;
+    name?: string;
+    avatar?: string;
   };
   likesCount?: number;
   commentsCount?: number;
@@ -116,9 +123,13 @@ const suggestedUsers = [
 
 export default function Explore() {
   const [query, setQuery] = useState("");
+  const [selectedThought, setSelectedThought] = useState<ExploreThought | null>(
+    null
+  );
 
   const [activeTab, setActiveTab] = useState<TabKey>("people");
 
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -298,11 +309,12 @@ export default function Explore() {
                   if (!media) return null;
 
                   return (
-                    <Link
+                    <button
+                      type="button"
                       key={thought._id}
-                      to={`/thought/${thought._id}`}
                       aria-label={`View thought by ${thought.author?.username || "user"}`}
-                      className="group relative aspect-square overflow-hidden bg-secondary"
+                      onClick={() => setSelectedThought(thought)}
+                      className="group relative block aspect-square w-full overflow-hidden bg-secondary p-0 text-left"
                     >
                       {media.type === "video" ? (
                         <video
@@ -345,7 +357,7 @@ export default function Explore() {
                           {thought.commentsCount ?? 0}
                         </span>
                       </div>
-                    </Link>
+                    </button>
                   );
                 })}
               </div>
@@ -620,6 +632,34 @@ export default function Explore() {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={selectedThought !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedThought(null);
+        }}
+      >
+        <DialogContent className="p-0 max-w-lg w-full overflow-hidden rounded-2xl">
+          {selectedThought && (
+            <ThoughtCard
+              id={selectedThought._id}
+              username={
+                selectedThought.author?.username ||
+                selectedThought.author?.name ||
+                "User"
+              }
+              avatar={selectedThought.author?.avatar || ""}
+              time={selectedThought.createdAt}
+              content={selectedThought.text || ""}
+              media={selectedThought.media}
+              likes={selectedThought.likesCount ?? 0}
+              comments={selectedThought.commentsCount ?? 0}
+              authorId={selectedThought.author?._id}
+              currentUserId={user?._id}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

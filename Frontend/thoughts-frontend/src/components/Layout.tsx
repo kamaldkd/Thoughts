@@ -7,12 +7,13 @@ export function Layout() {
   const isChatPage = location.pathname.startsWith("/messages");
   const isConversationPage = location.pathname.startsWith("/messages/");
   const isEditPage = location.pathname.startsWith("/edit-profile");
+  const isThoughtDetailPage = location.pathname.startsWith("/thought/");
 
   return (
     <>
-      {!isChatPage && !isEditPage && <Navbar />}
+      {!isChatPage && !isEditPage && !isThoughtDetailPage && <Navbar />}
       {<Outlet />}
-      {!isConversationPage && !isEditPage && <BottomNav />}
+      {!isConversationPage && !isEditPage && !isThoughtDetailPage && <BottomNav />}
     </>
   );
 }
