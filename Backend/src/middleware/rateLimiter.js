@@ -139,3 +139,10 @@ export const messageUserLimiter = createLimiter({
 });
 
 export const messageLimiters = [messageBurstLimiter, messageUserLimiter];
+
+export const lotusLimiter = createLimiter({
+  windowMs: 60 * 1000,
+  max: 5,
+  keyGenerator: (req) => `lotus_user:${req.userId}`,
+  message: { message: "Lotus is receiving too many requests. Please wait a minute." },
+});

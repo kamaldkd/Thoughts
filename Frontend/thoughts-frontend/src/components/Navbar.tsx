@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { CreateThoughtModal } from "./CreateThoughtModal";
 import { ThemeToggle } from "./ThemeToggle";
+import { LotusMark } from "@/components/lotus/LotusBloom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +79,8 @@ export function Navbar() {
     ? "Messages"
     : location.pathname === "/explore"
       ? "Explore"
+      : location.pathname === "/lotus"
+        ? "Lotus"
       : location.pathname === "/profile"
         ? "Your Profile"
         : location.pathname === "/edit-profile"
@@ -197,6 +200,14 @@ export function Navbar() {
 
           {/* Right — Create + Avatar */}
           <div className="flex items-center gap-2">
+            <Link
+              to="/lotus"
+              aria-label="Chat with Lotus"
+              title="Chat with Lotus"
+              className="flex h-[34px] w-[34px] items-center justify-center rounded-full text-fuchsia-500 transition-opacity active:opacity-60"
+            >
+              <LotusMark className="h-5 w-5" />
+            </Link>
             {/* Create "+" button */}
             <button
               onClick={() => setCreateOpen(true)}

@@ -38,6 +38,22 @@ The project focuses on real-world features like authentication, CRUD operations,
 - **JWT Authentication**
 - **Cloudinary (for images)**
 
+## Lotus AI Setup
+
+Lotus uses Gemini's OpenAI-compatible chat endpoint by default. Add your Google
+AI Studio key to the backend environment (locally in `Backend/.env`; in
+production, in the backend host's environment settings):
+
+```env
+GEMINI_API_KEY=your-google-ai-studio-key
+```
+
+The default model is `gemini-4-hydrogen`; set `LOTUS_MODEL` to override it.
+`LOTUS_API_URL` and `LOTUS_API_KEY` can also override the Gemini defaults for a
+different OpenAI-compatible provider. Keep all keys on the backend, never in
+frontend `VITE_` variables. Free-tier model availability and quotas can change;
+Lotus also limits each signed-in user to five requests per minute.
+
 ### Deployment
 - **Frontend:** Vercel  
 - **Backend:** Render  

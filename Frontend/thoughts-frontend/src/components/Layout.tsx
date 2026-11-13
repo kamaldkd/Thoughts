@@ -9,15 +9,20 @@ export function Layout() {
   const isEditPage = location.pathname.startsWith("/edit-profile");
   const isThoughtDetailPage = location.pathname.startsWith("/thought/");
   const isUserProfilePage = location.pathname.startsWith("/profile/");
+  const isLotusPage = location.pathname === "/lotus";
 
   return (
     <>
       {!isChatPage &&
+        !isLotusPage &&
         !isEditPage &&
         !isThoughtDetailPage &&
         !isUserProfilePage && <Navbar />}
       {<Outlet />}
-      {!isConversationPage && !isEditPage && !isThoughtDetailPage && <BottomNav />}
+      {!isConversationPage &&
+        !isLotusPage &&
+        !isEditPage &&
+        !isThoughtDetailPage && <BottomNav />}
     </>
   );
 }

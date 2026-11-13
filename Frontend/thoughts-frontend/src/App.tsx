@@ -20,6 +20,7 @@ import Activity from "./pages/Activity";
 import UserProfile from "./pages/UserProfile";
 import ChatPage from "./pages/ChatPage";
 import OAuthCallback from "./pages/OAuthCallback";
+import Lotus from "./pages/Lotus";
 import { useEffect, useState } from "react";
 import AppLoader from "@/components/AppLoader";
 import { fetchCsrfToken } from "@/lib/api";
@@ -86,6 +87,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/lotus"
+          element={
+            <ProtectedRoute>
+              <Lotus />
             </ProtectedRoute>
           }
         />

@@ -358,6 +358,15 @@ export function deleteNotification(id: string) {
   return api.delete(`/notifications/${id}`);
 }
 
+export type LotusMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export function sendLotusMessage(messages: LotusMessage[]) {
+  return api.post<{ reply: string }>("/lotus/chat", { messages });
+}
+
 export default api;
 
 // ─────────────────────────────────
