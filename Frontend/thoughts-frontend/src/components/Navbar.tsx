@@ -4,10 +4,9 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { ChevronDown, Plus, User } from "lucide-react";
+import { ChevronDown, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
-import { CreateThoughtModal } from "./CreateThoughtModal";
 import { ThemeToggle } from "./ThemeToggle";
 import { LotusMark } from "@/components/lotus/LotusBloom";
 import {
@@ -70,7 +69,6 @@ export function Navbar() {
   const isFeedPage =
     location.pathname === "/feed" || location.pathname === "/create";
   const { user, isLoggedIn, loading } = useAuth();
-  const [createOpen, setCreateOpen] = useState(false);
   const selectedFeed =
     isFeedPage && searchParams.get("feed") === "following"
       ? "following"
@@ -183,77 +181,40 @@ export function Navbar() {
             </DropdownMenu>
           ) : (
             <span
-              className="text-foreground"
-              style={{
-                fontSize: 18,
-                fontWeight: 650,
-                letterSpacing: "-0.3px",
-                lineHeight: 1,
-              }}
+              className="text-[17px] font-semibold tracking-tight text-foreground"
             >
               {pageTitle}
             </span>
           )}
-          
-          {/* Center — intentionally empty */}
-          <div />
 
-          {/* Right — Create + Avatar */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Link
               to="/lotus"
               aria-label="Chat with Lotus"
               title="Chat with Lotus"
-              className="flex h-[34px] w-[34px] items-center justify-center rounded-full text-fuchsia-500 transition-opacity active:opacity-60"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-fuchsia-500/15 bg-fuchsia-500/[0.06] text-fuchsia-500 transition-colors hover:bg-fuchsia-500/10 active:scale-95"
             >
               <LotusMark className="h-5 w-5" />
             </Link>
-            {/* Create "+" button */}
-            <button
-              onClick={() => setCreateOpen(true)}
-              aria-label="Create thought"
-              className="flex items-center justify-center rounded-full transition-all duration-150 active:scale-90 active:opacity-70"
-              style={{
-                width: 34,
-                height: 34,
-                background: "hsl(var(--primary))",
-              }}
-            >
-              <Plus
-                style={{
-                  width: 18,
-                  height: 18,
-                  stroke: "hsl(var(--primary-foreground))",
-                  strokeWidth: 2.4,
-                }}
-              />
-            </button>
             <ThemeToggle />
-            {/* Avatar / profile button */}
             {!loading && isLoggedIn && user && (
               <Link
                 to={`/profile`}
                 aria-label="Profile"
-                className="flex items-center justify-center rounded-full transition-all duration-150 active:scale-90 active:opacity-70 overflow-hidden"
-                style={{
-                  width: 34,
-                  height: 34,
-                  border: "1.5px solid hsl(var(--border) / 0.5)",
-                }}
+                className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted transition-colors hover:bg-muted/80 active:scale-95"
               >
                 <UserAvatar
                   avatarUrl={user.avatar ?? null}
                   username={user.username}
-                  size={34}
+                  size={36}
                 />
               </Link>
             )}
 
-            {/* Not logged in */}
             {!loading && !isLoggedIn && (
               <Link
                 to="/login"
-                className="text-sm font-medium text-primary transition-opacity active:opacity-60"
+                className="rounded-full px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5 active:opacity-60"
               >
                 Login
               </Link>
@@ -261,11 +222,6 @@ export function Navbar() {
           </div>
         </nav>
       </header>
-
-      <CreateThoughtModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-      />
     </>
   );
 }
