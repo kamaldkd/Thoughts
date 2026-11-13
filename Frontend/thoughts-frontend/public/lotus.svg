@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
     <linearGradient id="background" x1="8" y1="5" x2="57" y2="60" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#214b43" />
-      <stop offset="1" stop-color="#0b2427" />
+      <stop stop-color="#1b4c78" />
+      <stop offset="1" stop-color="#0b1c35" />
     </linearGradient>
     <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="matrix(0 40 -40 0 32 19)" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#5a8872" stop-opacity=".48" />
-      <stop offset="1" stop-color="#24493f" stop-opacity="0" />
+      <stop stop-color="#65b7f5" stop-opacity=".48" />
+      <stop offset="1" stop-color="#28639a" stop-opacity="0" />
     </radialGradient>
     <linearGradient id="petal" x1="23" y1="13" x2="39" y2="43" gradientUnits="userSpaceOnUse">
       <stop stop-color="#fff0d0" />

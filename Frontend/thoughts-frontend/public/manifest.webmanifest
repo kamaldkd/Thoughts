@@ -3,8 +3,8 @@
   "short_name": "Thoughts",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#102a28",
-  "theme_color": "#102a28",
+  "background_color": "#0b1c35",
+  "theme_color": "#0b1c35",
   "icons": [
     {
       "src": "/icon-192.png",
