@@ -100,7 +100,7 @@ export default function ThoughtDetail() {
   const timeText = formatRelativeTime(thought.createdAt);
 
   return (
-    <div className="min-h-screen pt-14 pb-20 md:pb-8">
+    <div className="min-h-screen pb-20 md:pb-8">
       <div className="max-w-xl mx-auto px-4">
         {/* Back */}
         <div className="py-4">

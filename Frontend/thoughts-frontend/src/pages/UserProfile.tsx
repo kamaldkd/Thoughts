@@ -527,13 +527,16 @@ export default function UserProfile() {
               <div className="mt-3.5 space-y-1">
                 <div className="flex items-center gap-1.5">
                   <h1 className="font-bold text-sm leading-tight">
-                    {profile?.fullName || profile?.username || username}
+                    {profile?.name ||
+                      profile?.fullName ||
+                      profile?.username ||
+                      username}
                   </h1>
                   {profile?.isVerified && (
                     <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
                   )}
                 </div>
-                {profile?.username && profile?.fullName && (
+                {profile?.username && (profile?.name || profile?.fullName) && (
                   <p className="text-[13px] text-muted-foreground">
                     @{profile.username}
                   </p>
@@ -559,7 +562,7 @@ export default function UserProfile() {
                   </a>
                 )}
                 {profile?.createdAt && (
-                  <p className="flex items-center gap-1 text-[11.5px] text-muted-foreground">
+                  <p className="flex items-center gap-1 text-[11.5px] text-muted">
                     <Calendar className="w-3 h-3" />
                     Joined {format(new Date(profile.createdAt), "MMMM yyyy")}
                   </p>

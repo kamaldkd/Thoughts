@@ -139,7 +139,7 @@ const Feed = () => {
     // adding some extra bottom padding to ensure last thought isn't hidden behind mobile FAB
     // adding loading skeletons to give better feedback while loading thoughts or fetching more or while server is slow
     <div className="min-h-screen pt-14 pb-20 md:pb-14 md:pt-14">
-      <div className="max-w-xl mx-auto px-4">
+      <div className="max-w-xl mx-auto">
         {/* Header (visible on all sizes)
         <div className="flex items-center justify-between py-6">
           <h1 className="text-2xl font-serif font-semibold">Your Feed</h1>

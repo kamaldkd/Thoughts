@@ -119,7 +119,14 @@ const Profile = () => {
             alt="Profile"
             className="h-20 w-20 rounded-full object-cover mx-auto mb-4 border-2 border-border"
           />
-          <h1 className="text-xl font-semibold">{user?.username || "User"}</h1>
+          <h1 className="text-xl font-semibold">
+            {user?.name || user?.username || "User"}
+          </h1>
+          {user?.name && user?.username && user.name !== user.username && (
+            <p className="text-sm text-muted-foreground mt-1">
+              @{user.username}
+            </p>
+          )}
           <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
             {user?.bio || "Just a person sharing their thoughts with the world."}
           </p>

@@ -1,6 +1,6 @@
 export default function ThoughtSkeleton() {
   return (
-    <div className="p-4 border-b border-gray-800 animate-pulse ">
+    <div className="border-b border-gray-800 animate-pulse ">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 bg-gray-700 rounded-full" />

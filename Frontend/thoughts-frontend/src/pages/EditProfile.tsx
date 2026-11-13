@@ -64,7 +64,7 @@ export default function EditProfile() {
   };
 
   return (
-    <div className="min-h-screen pt-14 pb-20 md:pb-8">
+    <div className="min-h-screen pb-20 md:pb-8">
       <div className="max-w-lg mx-auto px-4">
         {/* Header */}
         <div className="flex items-center gap-3 py-4 border-b border-border/60">
