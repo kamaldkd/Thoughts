@@ -474,18 +474,6 @@ export default function Explore() {
               </div>
             )} */}
 
-            {!query.trim() && (
-              <div className="rounded-xl border border-border bg-card px-4 py-10 text-center">
-                <Users className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-                <p className="text-sm font-medium text-foreground">
-                  Find people to follow
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Search by name or username to discover people.
-                </p>
-              </div>
-            )}
-
             {/* Query too short */}
             {query.trim().length === 1 && (
               <div className="text-center py-12">

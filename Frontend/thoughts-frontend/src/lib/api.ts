@@ -211,6 +211,7 @@ export function postMultipart(path: string, formData: FormData) {
 export function getThoughts(params?: {
   cursor?: string;
   feed?: "for-you" | "following";
+  limit?: number;
 }) {
   return api.get("/thoughts", { params });
 }
