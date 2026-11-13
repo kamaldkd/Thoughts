@@ -180,7 +180,7 @@ export const MessageBubble = ({
                 "rounded-br-md bg-primary text-primary-foreground shadow-sm"
               )
             : cn(
-                "rounded-bl-md border border-border/70 bg-card text-card-foreground shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
+                "rounded-bl-md border border-border/70 bg-card text-card-foreground shadow-sm"
               ),
           isFailed && "animate-pulse-glow ring-1 ring-destructive/50",
           isSending && "opacity-70"

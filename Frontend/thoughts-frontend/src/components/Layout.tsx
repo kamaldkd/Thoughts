@@ -8,10 +8,14 @@ export function Layout() {
   const isConversationPage = location.pathname.startsWith("/messages/");
   const isEditPage = location.pathname.startsWith("/edit-profile");
   const isThoughtDetailPage = location.pathname.startsWith("/thought/");
+  const isUserProfilePage = location.pathname.startsWith("/profile/");
 
   return (
     <>
-      {!isChatPage && !isEditPage && !isThoughtDetailPage && <Navbar />}
+      {!isChatPage &&
+        !isEditPage &&
+        !isThoughtDetailPage &&
+        !isUserProfilePage && <Navbar />}
       {<Outlet />}
       {!isConversationPage && !isEditPage && !isThoughtDetailPage && <BottomNav />}
     </>

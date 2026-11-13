@@ -562,7 +562,7 @@ export default function UserProfile() {
                   </a>
                 )}
                 {profile?.createdAt && (
-                  <p className="flex items-center gap-1 text-[11.5px] text-muted">
+                  <p className="flex items-center gap-1 text-[11.5px] text-muted-foreground">
                     <Calendar className="w-3 h-3" />
                     Joined {format(new Date(profile.createdAt), "MMMM yyyy")}
                   </p>

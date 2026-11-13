@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import ThoughtSkeleton from "@/components/ThoughtSkeleton";
+import defaultAvatar from "../assets/hero-bg.jpg";
 
 interface ProfileStats {
   followersCount?: number;
@@ -36,6 +38,8 @@ const Profile = () => {
     null
   );
   const [loading, setLoading] = useState(true);
+  const [thoughtsLoadError, setThoughtsLoadError] = useState(false);
+  const [thoughtsLoadAttempt, setThoughtsLoadAttempt] = useState(0);
   const { id: userId } = useParams();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -74,6 +78,7 @@ const Profile = () => {
     let mounted = true;
     async function load() {
       setLoading(true);
+      setThoughtsLoadError(false);
       try {
         const res = userId
           ? await getUserThoughts(userId)
@@ -81,6 +86,7 @@ const Profile = () => {
         if (mounted) setThoughts(res.data.thoughts || []);
       } catch (err) {
         console.error(err);
+        if (mounted) setThoughtsLoadError(true);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -89,7 +95,7 @@ const Profile = () => {
     return () => {
       mounted = false;
     };
-  }, [userId]);
+  }, [userId, thoughtsLoadAttempt]);
 
   const stats: {
     label: string;
@@ -115,7 +121,7 @@ const Profile = () => {
         {/* Profile header */}
         <div className="py-8 text-center">
           <img
-            src={user?.avatar || "@/assets/hero-bg.jpg"}  
+            src={user?.avatar || defaultAvatar}
             alt="Profile"
             className="h-20 w-20 rounded-full object-cover mx-auto mb-4 border-2 border-border"
           />
@@ -207,7 +213,33 @@ const Profile = () => {
         </div>
 
         {/* Thoughts */}
-        {view === "list" ? (
+        {loading ? (
+          <div className="space-y-4 py-4">
+            {[...Array(3)].map((_, index) => (
+              <ThoughtSkeleton key={index} />
+            ))}
+          </div>
+        ) : thoughtsLoadError ? (
+          <div
+            role="alert"
+            className="my-8 rounded-xl border border-border bg-card px-4 py-6 text-center"
+          >
+            <p className="text-sm text-muted-foreground">
+              Couldn't load your thoughts. Please try again.
+            </p>
+            <button
+              type="button"
+              onClick={() => setThoughtsLoadAttempt((attempt) => attempt + 1)}
+              className="mt-3 text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              Try again
+            </button>
+          </div>
+        ) : thoughts.length === 0 ? (
+          <div className="my-8 rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+            You haven't shared any thoughts yet.
+          </div>
+        ) : view === "list" ? (
           thoughts.map((t) => (
             <ThoughtCard
               key={t._id || t.id}

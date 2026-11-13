@@ -40,7 +40,7 @@ const DateSeparator = ({ date }: { date: string }) => {
   const label = isToday(d) ? "Today" : isYesterday(d) ? "Yesterday" : format(d, "MMMM d, yyyy");
   return (
     <div className="flex items-center justify-center my-4">
-      <span className="rounded-full border border-border/70 bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <span className="rounded-full border border-border/70 bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
         {label}
       </span>
     </div>
@@ -111,7 +111,7 @@ const ScrollToBottomFAB = ({
       className={cn(
         "absolute bottom-20 right-6 z-20",
         "flex h-10 w-10 items-center justify-center rounded-full",
-        "border border-border bg-card/95 shadow-md backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900",
+        "border border-border bg-card/95 shadow-md backdrop-blur-md",
         "transition-all duration-200 hover:bg-secondary hover:scale-105 active:scale-95",
         "animate-bounce-in-fab"
       )}
@@ -431,9 +431,9 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
   if (!conversation) return null;
 
   return (
-    <div className="flex h-full w-full min-w-0 flex-col bg-white dark:bg-black">
+    <div className="flex h-full w-full min-w-0 flex-col bg-background">
       {/* ── Header ── */}
-      <div className="z-10 flex w-full items-center gap-3 border-b border-border/60 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-neutral-800 dark:bg-black/95">
+      <div className="z-10 flex w-full items-center gap-3 border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-md">
         {onBack && (
           <button
             onClick={onBack}
@@ -574,7 +574,7 @@ export const ChatWindow = ({ conversationId, onBack }: ChatWindowProps) => {
           />
 
           {/* ── Input ── */}
-          <div className="border-t border-border/50 bg-white pb-3 pt-3 dark:border-neutral-800 dark:bg-black">
+          <div className="border-t border-border/50 bg-background pb-3 pt-3">
             <MessageInput
               conversationId={conversationId}
               onSend={handleSend}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { updateProfile } from "@/lib/api";
 
@@ -161,12 +162,14 @@ export default function EditProfile() {
           </div>
 
           {/* Privacy */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Private Account</span>
-            <input
-              type="checkbox"
+          <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
+            <Label htmlFor="private-account" className="cursor-pointer text-sm">
+              Private Account
+            </Label>
+            <Checkbox
+              id="private-account"
               checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.target.checked)}
+              onCheckedChange={(checked) => setIsPrivate(checked === true)}
             />
           </div>
 

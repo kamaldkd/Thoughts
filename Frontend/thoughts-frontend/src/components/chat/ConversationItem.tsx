@@ -69,9 +69,9 @@ export const ConversationItem = ({ conversation, isSelected, onClick }: Conversa
       onClick={onClick}
       className={cn(
         "group relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left",
-        "transition-colors duration-200 hover:bg-secondary/70 dark:hover:bg-neutral-900",
+        "transition-colors duration-200 hover:bg-secondary/70",
         isSelected
-          ? "bg-secondary dark:bg-neutral-900"
+          ? "bg-secondary"
           : "bg-transparent"
       )}
     >

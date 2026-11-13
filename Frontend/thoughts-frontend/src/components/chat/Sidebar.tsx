@@ -129,7 +129,7 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
   return (
     <aside
       className={cn(
-        "flex h-full flex-col border-r border-border/60 bg-white dark:border-neutral-800 dark:bg-black",
+        "flex h-full flex-col border-r border-border/60 bg-background",
         className
       )}
     >
@@ -160,7 +160,7 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search conversations…"
-            className="w-full rounded-xl border border-border/70 bg-white py-2.5 pl-9 pr-8 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 dark:border-neutral-800 dark:bg-black"
+            className="w-full rounded-xl border border-border/70 bg-background py-2.5 pl-9 pr-8 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
           />
           {search && (
             <button
@@ -182,7 +182,7 @@ export const Sidebar = ({ onSelectConversation, selectedId, className }: Sidebar
             {isSearching ? (
               <Loader2 className="w-8 h-8 opacity-50 animate-spin" />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted dark:bg-neutral-900">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                 <MessageSquarePlus className="h-8 w-8 opacity-40" />
               </div>
             )}

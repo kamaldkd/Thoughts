@@ -153,9 +153,7 @@ export default function ThoughtDetail() {
                 }`}
               />
               {(
-                <span
-                  className={`text-lg tabular-nums text-white`}
-                >
+                <span className="text-lg tabular-nums">
                   {likeCount}
                 </span>
               )}
@@ -166,9 +164,7 @@ export default function ThoughtDetail() {
                 className={`h-[18px] w-[18px] transition-all duration-200`}
               />
               {(
-                <span
-                  className={`text-lg tabular-nums text-white`}
-                >
+                <span className="text-lg tabular-nums">
                   {commentCount}
                 </span>
               )}

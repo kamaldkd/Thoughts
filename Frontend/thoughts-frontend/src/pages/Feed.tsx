@@ -116,7 +116,7 @@ const Feed = () => {
 
   if (status === 'error' && (error as any)?.response?.status === 401) {
     return (
-      <div className="text-center py-12">
+      <div className="mx-auto max-w-xl px-4 py-12 text-center">
         <h3 className="text-lg font-medium">
           You need to be logged in to see the feed
         </h3>
@@ -131,6 +131,21 @@ const Feed = () => {
           </Link>
           .
         </p>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="mx-auto max-w-xl px-4 pt-14">
+        <div
+          role="alert"
+          className="mt-4 rounded-xl border border-border bg-card px-4 py-8 text-center"
+        >
+          <p className="text-sm text-muted-foreground">
+            Unable to load your feed right now. Please try again later.
+          </p>
+        </div>
       </div>
     );
   }
@@ -154,7 +169,7 @@ const Feed = () => {
 
         {/* Feed */}
         {thoughts.length === 0 ? (
-          <p className="text-muted-foreground">
+          <p className="mx-4 mt-4 rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
             {feed === "following"
               ? "No thoughts from your followings yet."
               : "No thoughts yet — be the first to post!"}
@@ -186,12 +201,10 @@ const Feed = () => {
         {/* sentinel for infinite scroll */}
         <div ref={loadMoreRef} className="h-2" />
         {isFetchingNextPage && (
-          <div className="min-h-screen pt-14 pb-20 md:pb-14 md:pt-14">
-            <div className="max-w-xl mx-auto px-4">
-              {[...Array(3)].map((_, i) => (
-                <ThoughtSkeleton key={i} />
-              ))}
-            </div>
+          <div className="px-4 pt-4">
+            {[...Array(3)].map((_, i) => (
+              <ThoughtSkeleton key={i} />
+            ))}
           </div>
         )}
       </div>

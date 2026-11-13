@@ -47,16 +47,16 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/auth/callback" element={<OAuthCallback />} />
-      <Route
-        path="/profile/:username"
-        element={
-          <ProtectedRoute>
-            <UserProfile />
-          </ProtectedRoute>
-        }
-      />
       <Route element={<Layout />}>
         <Route path="/" element={<Index />} />
+        <Route
+          path="/profile/:username"
+          element={
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/feed"
           element={

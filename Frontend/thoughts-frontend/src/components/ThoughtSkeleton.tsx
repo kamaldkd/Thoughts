@@ -1,22 +1,22 @@
 export default function ThoughtSkeleton() {
   return (
-    <div className="border-b border-gray-800 animate-pulse ">
+    <div className="animate-pulse border-b border-border">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 bg-gray-700 rounded-full" />
+        <div className="h-10 w-10 rounded-full bg-muted" />
         <div className="space-y-2">
-          <div className="h-3 w-24 bg-gray-700 rounded" />
-          <div className="h-2 w-16 bg-gray-700 rounded" />
+          <div className="h-3 w-24 rounded bg-muted" />
+          <div className="h-2 w-16 rounded bg-muted" />
         </div>
       </div>
 
       {/* Content */}
-      <div className="h-32 bg-gray-700 rounded mb-3" />
+      <div className="mb-3 h-32 rounded bg-muted" />
 
       {/* Actions */}
       <div className="flex gap-4">
-        <div className="h-3 w-10 bg-gray-700 rounded" />
-        <div className="h-3 w-10 bg-gray-700 rounded" />
+        <div className="h-3 w-10 rounded bg-muted" />
+        <div className="h-3 w-10 rounded bg-muted" />
       </div>
     </div>
   );

@@ -43,8 +43,12 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-dvh w-full min-w-0 flex-col overflow-hidden bg-white dark:bg-black">
-      <div className="flex h-full w-full min-w-0 flex-1 overflow-hidden bg-white dark:bg-black">
+    <div
+      className={`flex ${
+        conversationId ? "h-dvh" : "h-[calc(100dvh-6rem)]"
+      } w-full min-w-0 flex-col overflow-hidden bg-background`}
+    >
+      <div className="flex h-full w-full min-w-0 flex-1 overflow-hidden bg-background">
 
         {/* Sidebar */}
         <Sidebar
@@ -68,7 +72,7 @@ export default function ChatPage() {
               onBack={handleBack}
             />
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-5 bg-white px-6 dark:bg-black">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-5 bg-background px-6">
               <div className="relative">
                 <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
                   <MessageCircle className="h-9 w-9 text-primary" />

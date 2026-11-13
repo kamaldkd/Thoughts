@@ -97,7 +97,7 @@ export const MessageInput = ({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-card px-3 py-2.5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900",
+        "rounded-2xl border border-border bg-card px-3 py-2.5 shadow-sm",
         "transition-colors focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10"
       )}
     >
