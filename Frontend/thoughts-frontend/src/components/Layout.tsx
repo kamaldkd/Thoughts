@@ -9,7 +9,7 @@ export function Layout() {
   const isEditPage = location.pathname.startsWith("/edit-profile");
   const isThoughtDetailPage = location.pathname.startsWith("/thought/");
   const isUserProfilePage = location.pathname.startsWith("/profile/");
-  const isLotusPage = location.pathname === "/lotus";
+  const isLotusPage = location.pathname.startsWith("/lotus");
 
   return (
     <>

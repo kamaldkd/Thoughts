@@ -40,7 +40,7 @@ The project focuses on real-world features like authentication, CRUD operations,
 
 ## Lotus AI Setup
 
-Lotus uses Gemini's OpenAI-compatible chat endpoint by default. Add your Google
+Lotus uses Gemini's OpenAI-compatible chat endpoint by default. Add the Google
 AI Studio key to the backend environment (locally in `Backend/.env`; in
 production, in the backend host's environment settings):
 
@@ -48,11 +48,42 @@ production, in the backend host's environment settings):
 GEMINI_API_KEY=your-google-ai-studio-key
 ```
 
-The default model is `gemini-4-hydrogen`; set `LOTUS_MODEL` to override it.
-`LOTUS_API_URL` and `LOTUS_API_KEY` can also override the Gemini defaults for a
-different OpenAI-compatible provider. Keep all keys on the backend, never in
-frontend `VITE_` variables. Free-tier model availability and quotas can change;
-Lotus also limits each signed-in user to five requests per minute.
+The default model is `gemini-3.5-flash-lite`. `LOTUS_MODEL` can override the
+model, while `LOTUS_API_URL` and `LOTUS_API_KEY` can override the compatible
+endpoint and key. These settings are backend-only; never put provider keys in
+frontend `VITE_` variables. Gemini availability and free-tier quotas can change.
+Lotus uses Gemini only by default and does not automatically send conversations
+to a secondary provider.
+
+### Lotus features and API
+
+Lotus stores conversations and messages in the `LotusConversation` and
+`LotusMessage` MongoDB collections. It also stores the selected response style
+(`friendly`, `professional`, or `creative`) in `User.lotusMode`. Mongoose creates
+the collections and indexes as the models are used. If production disables
+automatic index creation, create the declared model indexes as part of the
+deployment before serving traffic.
+
+All routes are authenticated under `/api/lotus` and use the app's CSRF
+protection:
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/conversations` | List the signed-in user's conversations |
+| `POST` | `/conversations` | Create a conversation |
+| `GET` | `/conversations/:id/messages` | Load a conversation |
+| `PATCH` | `/conversations/:id` | Rename a conversation |
+| `DELETE` | `/conversations/:id` | Delete a conversation and its messages |
+| `POST` | `/conversations/:id/messages` | Store a user message and stream the Lotus response using SSE |
+| `POST` | `/conversations/:id/regenerate` | Regenerate the latest reply using SSE |
+| `GET`, `PATCH` | `/preferences` | Read or update the user's Lotus response style |
+
+Generation is limited to 10 requests per signed-in user per minute, and user
+messages are limited to 2,000 characters. Per-post Lotus actions fetch post
+content on the backend and check private-profile access before using it as
+context; discussion summaries include at most 30 comments. The Creative Studio
+uses the same chat endpoint. Groq fallback, image understanding, voice, and web
+search are not enabled.
 
 ### Deployment
 - **Frontend:** Vercel  

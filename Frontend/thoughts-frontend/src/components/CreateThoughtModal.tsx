@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Image, Film, Feather } from "lucide-react";
 import { postMultipart } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
@@ -11,14 +11,22 @@ const MAX_CHARS = 500;
 interface Props {
   open: boolean;
   onClose: () => void;
+  initialText?: string;
 }
 
-export function CreateThoughtModal({ open, onClose }: Props) {
+export function CreateThoughtModal({ open, onClose, initialText = "" }: Props) {
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);  
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (open) {
+      setText(initialText);
+      setFiles([]);
+    }
+  }, [open, initialText]);
 
   if (!open) return null;
 

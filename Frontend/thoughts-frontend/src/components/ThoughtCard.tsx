@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Heart,
   MessageCircle,
@@ -11,6 +11,10 @@ import {
   ChevronRight,
   Pencil,
   Trash2,
+  Sparkles,
+  MessageSquareText,
+  MessagesSquare,
+  Lightbulb,
 } from "lucide-react";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useMinuteTick } from "@/hooks/useMinuteTick";
@@ -36,6 +40,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LotusMark } from "@/components/lotus/LotusBloom";
+import type { LotusThoughtAction } from "@/lib/api";
 
 export interface MediaItem {
   url: string;
@@ -275,6 +281,7 @@ export function ThoughtCard({
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const canFollow =
     showFollowButton &&
     !!currentUserId &&
@@ -367,6 +374,15 @@ export function ThoughtCard({
     } finally {
       setIsSavingEdit(false);
     }
+  };
+
+  const openLotus = (thoughtAction: LotusThoughtAction) => {
+    navigate("/lotus", {
+      state: {
+        thoughtId: id,
+        thoughtAction,
+      },
+    });
   };
 
   return (
@@ -489,6 +505,42 @@ export function ThoughtCard({
                 </span>
               )}
             </Link>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Ask Lotus about this post"
+                  title="Ask Lotus"
+                  className="flex h-8 items-center gap-1.5 rounded-full px-2 text-xs text-muted-foreground transition hover:bg-fuchsia-400/10 hover:text-fuchsia-200"
+                >
+                  <LotusMark className="h-4 w-4" />
+                  <span className="hidden sm:inline">Ask Lotus</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60">
+                <DropdownMenuItem onSelect={() => openLotus("ask")}>
+                  <Sparkles className="mr-2 h-4 w-4 text-fuchsia-400" />
+                  Ask Lotus about this post
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => openLotus("explain")}>
+                  <Lightbulb className="mr-2 h-4 w-4" />
+                  Explain this post
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => openLotus("comment")}>
+                  <MessageSquareText className="mr-2 h-4 w-4" />
+                  Suggest a comment
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => openLotus("reply")}>
+                  <MessagesSquare className="mr-2 h-4 w-4" />
+                  Generate a thoughtful reply
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => openLotus("summarize")}>
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Summarize discussion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* <ActionBtn>
               <Repeat2 className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />

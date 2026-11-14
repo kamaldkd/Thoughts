@@ -91,7 +91,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/lotus"
+          path="/lotus/:conversationId?"
           element={
             <ProtectedRoute>
               <Lotus />

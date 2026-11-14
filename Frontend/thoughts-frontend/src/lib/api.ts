@@ -358,19 +358,49 @@ export function deleteNotification(id: string) {
   return api.delete(`/notifications/${id}`);
 }
 
-export type LotusMessage = {
-  role: "user" | "assistant";
-  content: string;
+export type LotusMode = "friendly" | "professional" | "creative";
+
+export type LotusThoughtAction =
+  | "ask"
+  | "explain"
+  | "comment"
+  | "reply"
+  | "summarize";
+
+export type LotusConversation = {
+  _id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-export async function sendLotusMessage(
-  messages: LotusMessage[],
+export type LotusMessage = {
+  _id?: string;
+  role: "user" | "assistant";
+  content: string;
+  status?: "pending" | "complete" | "stopped" | "failed";
+  thoughtId?: string | null;
+  thoughtAction?: LotusThoughtAction | null;
+  createdAt?: string;
+};
+
+type LotusStreamResult = {
+  reply: string;
+  messageId?: string;
+  userMessageId?: string;
+  title?: string;
+  updatedAt?: string;
+  status?: string;
+};
+
+const readLotusEventStream = async (
+  stream: ReadableStream<Uint8Array>,
   onDelta?: (text: string) => void
-) {
+): Promise<LotusStreamResult> => {
   let reply = "";
   let pending = "";
-  let consumedLength = 0;
   let streamError: string | null = null;
+  let completion: Omit<LotusStreamResult, "reply"> = {};
 
   const processEvent = (frame: string) => {
     let eventName = "message";
@@ -382,9 +412,25 @@ export async function sendLotusMessage(
     }
 
     if (!dataLines.length) return;
-    let data: { text?: string; message?: string };
+    let data: {
+      text?: string;
+      message?: string;
+      messageId?: string;
+      userMessageId?: string;
+      title?: string;
+      updatedAt?: string;
+      status?: string;
+    };
     try {
-      data = JSON.parse(dataLines.join("\n")) as { text?: string; message?: string };
+      data = JSON.parse(dataLines.join("\n")) as {
+        text?: string;
+        message?: string;
+        messageId?: string;
+        userMessageId?: string;
+        title?: string;
+        updatedAt?: string;
+        status?: string;
+      };
     } catch {
       streamError = "Lotus returned an unreadable response. Please try again.";
       return;
@@ -395,6 +441,8 @@ export async function sendLotusMessage(
       onDelta?.(data.text);
     } else if (eventName === "error") {
       streamError = data.message || "Lotus's response was interrupted. Please try again.";
+    } else if (eventName === "done") {
+      completion = data;
     }
   };
 
@@ -408,46 +456,140 @@ export async function sendLotusMessage(
     }
   };
 
-  const response = await api.post<string>(
-    "/lotus/chat",
-    { messages },
-    {
-      responseType: "text",
-      onDownloadProgress: (progress) => {
-        const xhr = progress.event?.target;
-        if (!(xhr instanceof XMLHttpRequest)) return;
-
-        const responseText = xhr.responseText as string;
-        if (responseText.length < consumedLength) return;
-        processText(responseText.slice(consumedLength));
-        consumedLength = responseText.length;
-      },
-    }
-  );
-
-  const responseBody = typeof response.data === "string" ? response.data : "";
-  const contentType = String(response.headers["content-type"] || "");
-  if (contentType.includes("application/json")) {
-    let data: { reply?: unknown };
-    try {
-      data = JSON.parse(responseBody) as { reply?: unknown };
-    } catch {
-      throw new Error("Lotus returned an unreadable response. Please try again.");
-    }
-    if (typeof data.reply !== "string") {
-      throw new Error("Lotus couldn't generate a text reply. Please try again.");
-    }
-    reply = data.reply;
-    onDelta?.(reply);
-  } else if (responseBody.length > consumedLength) {
-    processText(responseBody.slice(consumedLength));
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let done = false;
+  while (!done) {
+    const chunk = await reader.read();
+    done = chunk.done;
+    processText(decoder.decode(chunk.value, { stream: !done }));
   }
   if (pending.trim()) processEvent(pending);
   if (streamError) throw new Error(streamError);
   if (!reply.trim()) throw new Error("Lotus couldn't generate a text reply. Please try again.");
 
-  return { ...response, data: { reply: reply.trim() } };
+  return { ...completion, reply: reply.trim() };
+};
+
+const postLotusStream = async (
+  path: string,
+  body: unknown,
+  signal?: AbortSignal
+) => {
+  try {
+    return await api.post<ReadableStream<Uint8Array>>(path, body, {
+      adapter: "fetch",
+      responseType: "stream",
+      signal,
+    });
+  } catch (error) {
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.data instanceof ReadableStream
+    ) {
+      const responseText = await new Response(error.response.data).text();
+      let responseBody: unknown;
+      try {
+        responseBody = JSON.parse(responseText);
+      } catch {
+        responseBody = null;
+      }
+      if (
+        responseBody &&
+        typeof responseBody === "object" &&
+        "message" in responseBody &&
+        typeof responseBody.message === "string"
+      ) {
+        throw new Error(responseBody.message);
+      }
+    }
+    throw error;
+  }
+};
+
+export async function sendLotusMessage(
+  conversationId: string,
+  content: string,
+  clientMessageId: string,
+  onDelta?: (text: string) => void,
+  signal?: AbortSignal,
+  thoughtContext?: { thoughtId: string; thoughtAction: LotusThoughtAction }
+) {
+  const response = await postLotusStream(
+    `/lotus/conversations/${conversationId}/messages`,
+    {
+      content,
+      clientMessageId,
+      ...thoughtContext,
+    },
+    signal
+  );
+  if (!response.data?.getReader) {
+    throw new Error("Lotus returned an unreadable response. Please try again.");
+  }
+  return readLotusEventStream(response.data, onDelta);
 }
+
+export const getLotusConversations = async () => {
+  const response = await api.get<{ conversations: LotusConversation[] }>(
+    "/lotus/conversations"
+  );
+  return response.data.conversations;
+};
+
+export const createLotusConversation = async () => {
+  const response = await api.post<{ conversation: LotusConversation }>(
+    "/lotus/conversations"
+  );
+  return response.data.conversation;
+};
+
+export const getLotusMessages = async (conversationId: string) => {
+  const response = await api.get<{ messages: LotusMessage[] }>(
+    `/lotus/conversations/${conversationId}/messages`
+  );
+  return response.data.messages;
+};
+
+export const renameLotusConversation = async (conversationId: string, title: string) => {
+  const response = await api.patch<{ conversation: LotusConversation }>(
+    `/lotus/conversations/${conversationId}`,
+    { title }
+  );
+  return response.data.conversation;
+};
+
+export const deleteLotusConversation = (conversationId: string) =>
+  api.delete(`/lotus/conversations/${conversationId}`);
+
+export const getLotusMode = async () => {
+  const response = await api.get<{ mode: LotusMode }>("/lotus/preferences");
+  return response.data.mode;
+};
+
+export const setLotusMode = async (mode: LotusMode) => {
+  const response = await api.patch<{ mode: LotusMode }>("/lotus/preferences", {
+    mode,
+  });
+  return response.data.mode;
+};
+
+export const regenerateLotusMessage = async (
+  conversationId: string,
+  messageId: string,
+  onDelta?: (text: string) => void,
+  signal?: AbortSignal
+) => {
+  const response = await postLotusStream(
+    `/lotus/conversations/${conversationId}/regenerate`,
+    { messageId },
+    signal
+  );
+  if (!response.data?.getReader) {
+    throw new Error("Lotus returned an unreadable response. Please try again.");
+  }
+  return readLotusEventStream(response.data, onDelta);
+};
 
 export default api;
 

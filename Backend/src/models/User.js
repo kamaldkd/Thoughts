@@ -109,6 +109,12 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    lotusMode: {
+      type: String,
+      enum: ["friendly", "professional", "creative"],
+      default: "friendly",
+    },
   },
   {
     timestamps: true,

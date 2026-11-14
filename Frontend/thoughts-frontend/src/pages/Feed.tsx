@@ -8,29 +8,36 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import defaultAvatar from "../assets/hero-bg.jpg";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import ThoughtSkeleton from "@/components/ThoughtSkeleton";
 
 type FeedLocationState = {
   openCreate?: boolean;
+  initialText?: string;
 };
 
 const Feed = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const feed = searchParams.get("feed") === "following" ? "following" : "for-you";
   const state = location.state as FeedLocationState | null;
   const { user } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
+  const [composerInitialText, setComposerInitialText] = useState("");
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (location.state?.openCreate) {
+      setComposerInitialText(state?.initialText || "");
       setCreateOpen(true);
-      window.history.replaceState({}, "");
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      });
     }
-  }, [location.state?.openCreate]);
+  }, [location.state?.openCreate, location.pathname, location.search, navigate, state?.initialText]);
 
   const {
     data,
@@ -220,7 +227,11 @@ const Feed = () => {
 
       <CreateThoughtModal
         open={createOpen}
-        onClose={() => setCreateOpen(false)}
+        initialText={composerInitialText}
+        onClose={() => {
+          setCreateOpen(false);
+          setComposerInitialText("");
+        }}
       />
     </div>
   );
