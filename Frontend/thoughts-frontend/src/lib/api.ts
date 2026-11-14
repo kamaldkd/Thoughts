@@ -363,8 +363,90 @@ export type LotusMessage = {
   content: string;
 };
 
-export function sendLotusMessage(messages: LotusMessage[]) {
-  return api.post<{ reply: string }>("/lotus/chat", { messages });
+export async function sendLotusMessage(
+  messages: LotusMessage[],
+  onDelta?: (text: string) => void
+) {
+  let reply = "";
+  let pending = "";
+  let consumedLength = 0;
+  let streamError: string | null = null;
+
+  const processEvent = (frame: string) => {
+    let eventName = "message";
+    const dataLines: string[] = [];
+
+    for (const line of frame.split("\n")) {
+      if (line.startsWith("event:")) eventName = line.slice(6).trim();
+      if (line.startsWith("data:")) dataLines.push(line.slice(5).trimStart());
+    }
+
+    if (!dataLines.length) return;
+    let data: { text?: string; message?: string };
+    try {
+      data = JSON.parse(dataLines.join("\n")) as { text?: string; message?: string };
+    } catch {
+      streamError = "Lotus returned an unreadable response. Please try again.";
+      return;
+    }
+
+    if (eventName === "delta" && typeof data.text === "string") {
+      reply += data.text;
+      onDelta?.(data.text);
+    } else if (eventName === "error") {
+      streamError = data.message || "Lotus's response was interrupted. Please try again.";
+    }
+  };
+
+  const processText = (text: string) => {
+    pending = (pending + text).replace(/\r\n/g, "\n");
+    let boundary = pending.indexOf("\n\n");
+    while (boundary !== -1) {
+      processEvent(pending.slice(0, boundary));
+      pending = pending.slice(boundary + 2);
+      boundary = pending.indexOf("\n\n");
+    }
+  };
+
+  const response = await api.post<string>(
+    "/lotus/chat",
+    { messages },
+    {
+      responseType: "text",
+      onDownloadProgress: (progress) => {
+        const xhr = progress.event?.target;
+        if (!(xhr instanceof XMLHttpRequest)) return;
+
+        const responseText = xhr.responseText as string;
+        if (responseText.length < consumedLength) return;
+        processText(responseText.slice(consumedLength));
+        consumedLength = responseText.length;
+      },
+    }
+  );
+
+  const responseBody = typeof response.data === "string" ? response.data : "";
+  const contentType = String(response.headers["content-type"] || "");
+  if (contentType.includes("application/json")) {
+    let data: { reply?: unknown };
+    try {
+      data = JSON.parse(responseBody) as { reply?: unknown };
+    } catch {
+      throw new Error("Lotus returned an unreadable response. Please try again.");
+    }
+    if (typeof data.reply !== "string") {
+      throw new Error("Lotus couldn't generate a text reply. Please try again.");
+    }
+    reply = data.reply;
+    onDelta?.(reply);
+  } else if (responseBody.length > consumedLength) {
+    processText(responseBody.slice(consumedLength));
+  }
+  if (pending.trim()) processEvent(pending);
+  if (streamError) throw new Error(streamError);
+  if (!reply.trim()) throw new Error("Lotus couldn't generate a text reply. Please try again.");
+
+  return { ...response, data: { reply: reply.trim() } };
 }
 
 export default api;

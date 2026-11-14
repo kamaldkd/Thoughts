@@ -105,22 +105,58 @@ export default function Lotus() {
     const content = input.trim();
     if (!content || sending) return;
 
-    const nextMessages = [...messages, { role: "user" as const, content }];
-    setMessages(nextMessages);
+    const conversation = [...messages, { role: "user" as const, content }];
+    setMessages([...conversation, { role: "assistant", content: "" }]);
     setInput("");
     setError("");
     setSending(true);
 
+    let streamedReply = "";
     try {
-      const response = await sendLotusMessage(nextMessages.slice(-12));
+      const response = await sendLotusMessage(
+        conversation.slice(-12),
+        (delta) => {
+          streamedReply += delta;
+          setMessages([
+            ...conversation,
+            { role: "assistant", content: streamedReply },
+          ]);
+        }
+      );
       setMessages([
-        ...nextMessages,
+        ...conversation,
         { role: "assistant", content: response.data.reply },
       ]);
     } catch (err: unknown) {
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.message
-        : undefined;
+      let message: string | undefined;
+      if (axios.isAxiosError(err)) {
+        const data: unknown = err.response?.data;
+        if (typeof data === "string") {
+          try {
+            const parsed: unknown = JSON.parse(data);
+            if (
+              parsed &&
+              typeof parsed === "object" &&
+              "message" in parsed &&
+              typeof parsed.message === "string"
+            ) {
+              message = parsed.message;
+            }
+          } catch {
+            message = undefined;
+          }
+        } else if (
+          data &&
+          typeof data === "object" &&
+          "message" in data &&
+          typeof data.message === "string"
+        ) {
+          message = data.message;
+        }
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      if (!streamedReply) setMessages(conversation);
       setError(message || "Lotus could not respond. Please try again.");
     } finally {
       setSending(false);
@@ -138,6 +174,11 @@ export default function Lotus() {
     setInput(suggestion);
     setError("");
   }
+
+  const lastMessage = messages[messages.length - 1];
+  const waitingForFirstToken =
+    sending &&
+    (!lastMessage || lastMessage.role !== "assistant" || !lastMessage.content);
 
   return (
     <main className="relative mx-auto flex h-[100dvh] w-full flex-col overflow-hidden bg-[#08070b] px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-[max(env(safe-area-inset-top),12px)] text-zinc-100 sm:px-6">
@@ -223,28 +264,30 @@ export default function Lotus() {
                   </p>
                 </div>
               ) : (
-                <article
-                  key={`lotus-${index}`}
-                  className="flex items-start gap-3 animate-fade-msg"
-                >
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-fuchsia-300/15 bg-gradient-to-br from-fuchsia-400/15 to-violet-400/15 text-fuchsia-200">
-                    <LotusMark className="h-[18px] w-[18px]" />
-                  </div>
-                  <div className="min-w-0 flex-1 pt-1 text-sm text-zinc-300">
-                    <p className="mb-1.5 text-xs font-semibold text-fuchsia-200">
-                      Lotus
-                    </p>
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={markdownComponents}
-                    >
-                      {message.content}
-                    </ReactMarkdown>
-                  </div>
-                </article>
+                message.content && (
+                  <article
+                    key={`lotus-${index}`}
+                    className="flex items-start gap-3 animate-fade-msg"
+                  >
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-fuchsia-300/15 bg-gradient-to-br from-fuchsia-400/15 to-violet-400/15 text-fuchsia-200">
+                      <LotusMark className="h-[18px] w-[18px]" />
+                    </div>
+                    <div className="min-w-0 flex-1 pt-1 text-sm text-zinc-300">
+                      <p className="mb-1.5 text-xs font-semibold text-fuchsia-200">
+                        Lotus
+                      </p>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={markdownComponents}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  </article>
+                )
               )
             )}
-            {sending && (
+            {waitingForFirstToken && (
               <div className="flex items-center gap-3 text-sm text-zinc-400">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-fuchsia-300/15 bg-fuchsia-400/10 text-fuchsia-200">
                   <LotusMark className="h-[18px] w-[18px]" />

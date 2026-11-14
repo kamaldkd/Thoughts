@@ -2,7 +2,7 @@ import ExpressError from "../utils/ExpressError.js";
 import logger from "../utils/logger.js";
 
 const SYSTEM_PROMPT =
-  "You are Lotus, a friendly and thoughtful assistant on the Thoughts social platform. Be helpful, concise, and respectful. Do not claim to access private account data or perform actions on the user's behalf.";
+  "You are Lotus, a friendly and thoughtful assistant on the Thoughts social platform. Answer naturally and directly, with enough context to fully answer the question. Use complete sentences and finish your thoughts. For straightforward factual questions, avoid source-attribution preambles and citations unless requested; never claim you consulted sources you did not access. Be concise and respectful. Do not claim to access private account data or perform actions on the user's behalf.";
 
 const MAX_PROVIDER_RETRIES = 2;
 
@@ -25,12 +25,60 @@ const readProviderError = async (response, apiKey) => {
   }
 };
 
+const extractText = (content) => {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+
+  return content
+    .map((part) => {
+      if (typeof part === "string") return part;
+      if (typeof part?.text === "string") return part.text;
+      if (typeof part?.content === "string") return part.content;
+      return "";
+    })
+    .join("");
+};
+
+const extractReply = (data) => {
+  const choice = data.choices?.[0];
+  const choiceText = extractText(choice?.message?.content) || extractText(choice?.text);
+  if (choiceText.trim()) return choiceText;
+
+  return (data.candidates?.[0]?.content?.parts || [])
+    .map((part) => (typeof part?.text === "string" ? part.text : ""))
+    .join("");
+};
+
+const extractStreamReply = (data) => {
+  const choice = data.choices?.[0];
+  const choiceText =
+    extractText(choice?.delta?.content) ||
+    extractText(choice?.message?.content) ||
+    extractText(choice?.text);
+  if (choiceText) return choiceText;
+
+  const candidateText = (data.candidates || [])
+    .flatMap((candidate) => candidate.content?.parts || [])
+    .map((part) => (typeof part?.text === "string" ? part.text : ""))
+    .join("");
+  return candidateText || extractText(data.delta?.content) || extractText(data.text);
+};
+
+const isIncompleteFinishReason = (reason) =>
+  ["length", "max_tokens", "max_tokens_exceeded", "max_tokens_reached"].includes(
+    String(reason).toLowerCase()
+  );
+
+const writeEvent = (res, event, data) => {
+  res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+};
+
 export const chatWithLotus = async (req, res) => {
   const apiUrl =
     process.env.LOTUS_API_URL ||
     "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
   const apiKey = process.env.LOTUS_API_KEY || process.env.GEMINI_API_KEY;
-  const model = process.env.LOTUS_MODEL || "gemini-4-hydrogen";
+  const model = process.env.LOTUS_MODEL || "gemini-3.5-flash-lite";
 
   if (!apiKey) {
     throw new ExpressError(503, "Lotus is not configured yet.");
@@ -61,6 +109,7 @@ export const chatWithLotus = async (req, res) => {
           model,
           messages: [{ role: "system", content: SYSTEM_PROMPT }, ...req.body.messages],
           max_tokens: 800,
+          stream: true,
         }),
         signal,
       });
@@ -88,27 +137,167 @@ export const chatWithLotus = async (req, res) => {
       `[Lotus] Provider returned HTTP ${response.status}${providerError ? `: ${providerError}` : "."}`
     );
     if (response.status === 429) {
-      throw new ExpressError(429, "Lotus has reached its current free-tier limit. Please try again later.");
+      throw new ExpressError(
+        429,
+        "Lotus can't respond right now. Please try again later."
+      );
     }
     if (response.status === 503) {
-      throw new ExpressError(503, "Gemini is temporarily busy. Please try again shortly.");
+      throw new ExpressError(503, "Lotus is temporarily busy. Please try again shortly.");
     }
     throw new ExpressError(502, "Lotus is temporarily unavailable. Please try again.");
   }
 
-  let data;
+  const contentType = response.headers?.get?.("content-type") || "";
+  let responseStarted = false;
+  let replyLength = 0;
+  let providerFrames = 0;
+  let providerShape = "no stream data";
+  let finishReason = "unknown";
+  let providerStreamError = "";
+  const sendDelta = (text) => {
+    if (!text) return;
+    if (!responseStarted) {
+      res.status(200);
+      res.set({
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      });
+      res.flushHeaders();
+      responseStarted = true;
+    }
+    replyLength += text.length;
+    writeEvent(res, "delta", { text });
+  };
+
   try {
-    data = await response.json();
+    if (contentType.includes("text/event-stream")) {
+      if (!response.body) {
+        throw new Error("Provider returned an empty stream.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let streamDone = false;
+
+      const processEvent = (eventText) => {
+        const data = eventText
+          .split(/\r?\n/)
+          .filter((line) => line.startsWith("data:"))
+          .map((line) => line.slice(5).trimStart())
+          .join("\n");
+        if (!data || data === "[DONE]") return;
+
+        const chunk = JSON.parse(data);
+        providerFrames += 1;
+        const choice = chunk.choices?.[0];
+        const candidate = chunk.candidates?.[0];
+        providerShape = `keys=${Object.keys(chunk).slice(0, 8).join(",") || "none"}, choices=${chunk.choices?.length || 0}, candidates=${chunk.candidates?.length || 0}`;
+        finishReason = String(
+          choice?.finish_reason ||
+            candidate?.finishReason ||
+            chunk.finishReason ||
+            finishReason
+        );
+        if (chunk.error) {
+          const errorMessage =
+            chunk.error.message || chunk.error.status || "provider stream error";
+          providerShape += `, error=${String(errorMessage).replaceAll(apiKey, "[redacted]").slice(0, 160)}`;
+          providerStreamError = String(errorMessage)
+            .replaceAll(apiKey, "[redacted]")
+            .slice(0, 300);
+          return;
+        }
+        sendDelta(extractStreamReply(chunk));
+      };
+
+      while (!streamDone) {
+        const { value, done } = await reader.read();
+        streamDone = done;
+        buffer = (buffer + decoder.decode(value, { stream: !done })).replace(/\r\n/g, "\n");
+
+        let boundary = buffer.indexOf("\n\n");
+        while (boundary !== -1) {
+          processEvent(buffer.slice(0, boundary));
+          buffer = buffer.slice(boundary + 2);
+          boundary = buffer.indexOf("\n\n");
+        }
+      }
+
+      if (buffer.trim()) processEvent(buffer);
+    } else {
+      const data = await response.json();
+      const reply = extractReply(data);
+      finishReason = String(
+        data.choices?.[0]?.finish_reason ||
+          data.candidates?.[0]?.finishReason ||
+          "unknown"
+      );
+      if (!reply.trim()) {
+        logger.warn(
+          `[Lotus] Provider response contained no text. finish_reason=${finishReason}`
+        );
+        throw new ExpressError(
+          502,
+          "Lotus couldn't generate a text reply. Please try again."
+        );
+      }
+      sendDelta(reply);
+    }
+
+    if (isIncompleteFinishReason(finishReason)) {
+      const message =
+        "Lotus's reply was cut short by the AI provider. Please ask it to continue.";
+      logger.warn(`[Lotus] Provider stopped at its output limit: ${finishReason}`);
+      if (responseStarted) {
+        writeEvent(res, "error", { message });
+        res.end();
+        return;
+      }
+      throw new ExpressError(502, message);
+    }
+
+    if (providerStreamError) {
+      logger.error(`[Lotus] Provider stream error: ${providerStreamError}`);
+      if (responseStarted) {
+        writeEvent(res, "error", {
+          message: "The AI provider couldn't complete this reply. Please try again.",
+        });
+        res.end();
+        return;
+      }
+      throw new ExpressError(
+        502,
+        "The AI provider couldn't complete this reply. Please try again."
+      );
+    }
+
+    if (!replyLength) {
+      logger.warn(
+        `[Lotus] Provider stream completed without text. frames=${providerFrames}, ${providerShape}, finish_reason=${finishReason}, content_type=${contentType || "unknown"}`
+      );
+      throw new ExpressError(
+        502,
+        "The AI provider didn't return any text. It may have blocked the prompt or reached a generation limit; please try again."
+      );
+    }
+
+    writeEvent(res, "done", {});
+    res.end();
   } catch (error) {
-    logger.error(`[Lotus] Provider returned invalid JSON: ${error.message}`);
-    throw new ExpressError(502, "Lotus returned an invalid response. Please try again.");
-  }
+    if (!responseStarted) {
+      if (error instanceof ExpressError) throw error;
+      logger.error(`[Lotus] Provider stream could not be read: ${error.message}`);
+      throw new ExpressError(502, "Lotus's response was interrupted. Please try again.");
+    }
 
-  const reply = data.choices?.[0]?.message?.content;
-  if (typeof reply !== "string" || !reply.trim()) {
-    logger.error("[Lotus] Provider response did not contain a reply.");
-    throw new ExpressError(502, "Lotus returned an invalid response. Please try again.");
+    logger.error(`[Lotus] Provider stream ended unexpectedly: ${error.message}`);
+    writeEvent(res, "error", {
+      message: "Lotus's response was interrupted. Please try again.",
+    });
+    res.end();
   }
-
-  res.json({ reply: reply.trim() });
 };

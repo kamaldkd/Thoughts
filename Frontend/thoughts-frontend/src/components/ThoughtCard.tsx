@@ -405,7 +405,7 @@ export function ThoughtCard({
                   <FollowButton
                     initialState="not_following"
                     onFollow={handleFollow}
-                    className="h-7 rounded-md border border-border bg-transparent px-3 text-xs font-medium text-muted-foreground shadow-none hover:border-primary/40 hover:bg-primary/5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="h-7 rounded-md border px-3 text-xs font-medium shadow-none border-primary/40 bg-primary/5 text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   />
                 )}
               {isOwner && (
