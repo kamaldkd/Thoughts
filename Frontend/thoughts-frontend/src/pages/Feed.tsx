@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import defaultAvatar from "../assets/hero-bg.jpg";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import ThoughtSkeleton from "@/components/ThoughtSkeleton";
+import StoryRail from "@/components/stories/StoryRail";
 
 type FeedLocationState = {
   openCreate?: boolean;
@@ -173,6 +174,8 @@ const Feed = () => {
             New Thought
           </button>
         </div> */}
+
+        <StoryRail />
 
         {/* Feed */}
         {thoughts.length === 0 ? (

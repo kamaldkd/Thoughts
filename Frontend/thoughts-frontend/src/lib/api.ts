@@ -233,6 +233,49 @@ export function getMyThoughts() {
 }
 
 /* ─────────────────────────────────────────────
+   STORIES
+───────────────────────────────────────────── */
+
+export interface StoryItem {
+  _id: string;
+  media: {
+    url: string;
+    type: "image" | "video";
+  };
+  createdAt: string;
+  expiresAt: string;
+  viewed: boolean;
+}
+
+export interface StoryGroup {
+  author: {
+    _id: string;
+    username: string;
+    name: string;
+    avatar?: string;
+  };
+  isOwn: boolean;
+  stories: StoryItem[];
+}
+
+export async function getStories(): Promise<StoryGroup[]> {
+  const response = await api.get("/stories");
+  return response.data.stories;
+}
+
+export function createStory(formData: FormData) {
+  return postMultipart("/stories", formData);
+}
+
+export function viewStory(storyId: string) {
+  return api.post(`/stories/${storyId}/view`);
+}
+
+export function deleteStory(storyId: string) {
+  return api.delete(`/stories/${storyId}`);
+}
+
+/* ─────────────────────────────────────────────
    USER (BY USERNAME — preferred)
 ───────────────────────────────────────────── */
 

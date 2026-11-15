@@ -3,6 +3,7 @@ import { createServer } from "http";
 import app from './app.js';
 import connectDB from './config/db.js';
 import { initCronJobs } from './jobs/syncFollowCounts.js';
+import { initStoryCleanup } from './jobs/cleanupStories.js';
 import { initSocketServer } from './sockets/socketManager.js';
 
 process.on("unhandledRejection", (err) => {
@@ -33,6 +34,7 @@ const startServer = async () => {
       const isProd = isRender || process.env.NODE_ENV === "production" || !!process.env.FRONTEND_URL;
       console.log(`[COOKIE MODE] RENDER=${process.env.RENDER} | NODE_ENV=${process.env.NODE_ENV} | isProduction=${isProd} | SameSite=${isProd ? "none" : "lax"}`);
       initCronJobs();
+      initStoryCleanup();
     });
   } catch (err) {
     console.error("Server startup failed", err);

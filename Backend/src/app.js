@@ -9,6 +9,7 @@ import conversationRoutes from "./routes/conversationRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import lotusRoutes from "./routes/lotusRoutes.js";
+import storyRoutes from "./routes/storyRoutes.js";
 import cors from "cors";
 import passport from "passport";
 import setupPassport from "./config/passport.js";
@@ -94,6 +95,7 @@ app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/lotus", lotusRoutes);
+app.use("/api/stories", storyRoutes);
 
 
 app.get("/", (req, res) => {
