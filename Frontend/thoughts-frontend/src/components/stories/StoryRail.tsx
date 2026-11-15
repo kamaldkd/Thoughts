@@ -253,7 +253,7 @@ export default function StoryRail() {
     <>
       <section
         aria-label="Stories"
-        className="my-3 flex gap-2 overflow-x-auto border-y border-border/50 bg-card/60 px-3 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:my-4 sm:rounded-2xl sm:border"
+        className="my-3 flex gap-2 overflow-x-auto px-3 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:my-4 sm:rounded-2xl sm:border"
       >
         <input
           ref={fileInputRef}
