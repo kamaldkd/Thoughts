@@ -192,7 +192,7 @@ export function Navbar() {
               to="/lotus"
               aria-label="Chat with Lotus"
               title="Chat with Lotus"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-fuchsia-500/15 bg-fuchsia-500/[0.06] text-fuchsia-500 transition-colors hover:bg-fuchsia-500/10 active:scale-95"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-fuchsia-700/15 bg-fuchsia-500/[0.07] text-fuchsia-700 transition-colors hover:bg-fuchsia-500/[0.12] active:scale-95 dark:border-fuchsia-300/15 dark:bg-fuchsia-500/[0.06] dark:text-fuchsia-300 dark:hover:bg-fuchsia-500/10"
             >
               <LotusMark className="h-5 w-5" />
             </Link>

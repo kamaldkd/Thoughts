@@ -118,10 +118,9 @@ export function MediaGallery({ items }: { items: MediaItem[] }) {
 
   return (
     <div
-      className="mt-3 rounded-lg overflow-hidden relative select-none"
+      className="relative mt-3 overflow-hidden rounded-2xl border border-border/40 bg-black select-none"
       style={{
         background: "hsl(var(--muted))",
-        border: "1px solid hsl(var(--border) / 0.4)",
       }}
       onTouchStart={(e) => onDragStart(e.touches[0].clientX)}
       onTouchEnd={(e) => onDragEnd(e.changedTouches[0].clientX)}
@@ -144,6 +143,11 @@ export function MediaGallery({ items }: { items: MediaItem[] }) {
             />
           ))}
         </div>
+      )}
+      {!single && (
+        <span className="absolute right-2.5 top-5 z-20 rounded-full border border-white/15 bg-black/55 px-2 py-1 text-[10px] font-medium tabular-nums text-white shadow-sm backdrop-blur-md">
+          {current + 1}/{items.length}
+        </span>
       )}
 
       {/* Slides */}
@@ -388,34 +392,37 @@ export function ThoughtCard({
   };
 
   return (
-    <article className="px-4 py-4 border-b border-border/50 animate-fade-in">
+    <article className="group/card mx-3 my-3 overflow-hidden rounded-[24px] border border-border/60 bg-card/90 shadow-sm transition-all duration-200 hover:border-border hover:shadow-md sm:mx-0 sm:my-4 sm:rounded-[28px] animate-fade-in">
       {/* Header row */}
-      <div className="flex items-start gap-3">
-        <Link to={`/profile/${username}`} className="flex-shrink-0 mt-0.5">
+      <div className="flex items-center gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
+        <Link
+          to={`/profile/${username}`}
+          className="shrink-0 rounded-full bg-gradient-to-br from-fuchsia-400 via-violet-400 to-indigo-400 p-[2px] shadow-[0_0_16px_-8px_rgba(217,70,239,0.8)]"
+        >
           <AvatarFallback src={avatar} username={username} />
         </Link>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex min-w-0 flex-1 items-center">
           {/* Meta row */}
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-baseline gap-1.5 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-col">
               <Link
                 to={`/profile/${username}`}
-                className="text-sm font-semibold leading-tight truncate hover:underline"
+                className="truncate text-sm font-semibold leading-tight text-foreground hover:underline"
               >
                 {username}
               </Link>
               <span
-                className={`text-[11px] text-muted-foreground flex-shrink-0 transition-opacity duration-150 ${
+                className={`mt-1 truncate text-[11px] text-muted-foreground transition-opacity duration-150 ${
                   fade ? "opacity-0" : "opacity-100"
                 }`}
                 title={format(parseISO(time), "dd MMM yyyy, hh:mm a")}
               >
-                · {timeText}
+                {timeText}
               </span>
             </div>
 
-            <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+            <div className="ml-2 flex shrink-0 items-center gap-1">
               {canFollow &&
                 !isFollowStatusPending &&
                 !isFollowStatusError &&
@@ -461,22 +468,25 @@ export function ThoughtCard({
               )}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Content */}
-          <Link to={`/thought/${id}`} className="block">
-            <p className="text-[14.5px] leading-[1.55] text-foreground">
+      {thoughtText.trim() && (
+        <Link to={`/thought/${id}`} className="block px-4 pt-3 sm:px-5">
+          <p className="whitespace-pre-wrap text-[14px] leading-6 text-foreground/90">
               {displayContent}
               {truncated && (
-                <span className="text-muted-foreground ml-1">…more</span>
+                <span className="ml-1 font-medium text-primary">…more</span>
               )}
-            </p>
-          </Link>
+          </p>
+        </Link>
+      )}
 
-          {/* Media */}
-          <MediaGallery items={mediaItems} />
+      {/* Media */}
+      <MediaGallery items={mediaItems} />
 
-          {/* Action bar */}
-          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+      {/* Action bar */}
+      <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-border/50 px-3 py-2 sm:px-4">
             <ActionBtn onClick={handleLike}>
               <Heart
                 className={`h-[18px] w-[18px] transition-all duration-200 ${
@@ -515,9 +525,9 @@ export function ThoughtCard({
                   type="button"
                   aria-label="Ask Lotus about this post"
                   title="Ask Lotus"
-                  className="group/lotus flex h-9 items-center gap-2 rounded-full border border-fuchsia-300/15 bg-gradient-to-r from-violet-400/[0.07] to-fuchsia-400/[0.07] py-1 pl-1.5 pr-3 text-[11px] font-medium text-fuchsia-100/90 shadow-[0_2px_12px_-8px_rgba(217,70,239,0.65)] transition-all duration-200 hover:border-fuchsia-300/35 hover:from-violet-400/[0.13] hover:to-fuchsia-400/[0.13] hover:text-white hover:shadow-[0_4px_18px_-8px_rgba(217,70,239,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-300/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95"
+                  className="group/lotus flex h-9 items-center gap-2 rounded-full border border-fuchsia-700/15 bg-gradient-to-r from-violet-500/[0.06] to-fuchsia-500/[0.06] py-1 pl-1.5 pr-3 text-[11px] font-medium text-fuchsia-800 shadow-[0_2px_12px_-8px_rgba(217,70,239,0.45)] transition-all duration-200 hover:border-fuchsia-700/30 hover:from-violet-500/[0.1] hover:to-fuchsia-500/[0.1] hover:text-fuchsia-950 hover:shadow-[0_4px_18px_-8px_rgba(217,70,239,0.65)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95 dark:border-fuchsia-300/15 dark:from-violet-400/[0.07] dark:to-fuchsia-400/[0.07] dark:text-fuchsia-100/90 dark:hover:border-fuchsia-300/35 dark:hover:from-violet-400/[0.13] dark:hover:to-fuchsia-400/[0.13] dark:hover:text-white dark:focus-visible:ring-fuchsia-300/40"
                 >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-300/20 to-violet-400/20 text-fuchsia-100 ring-1 ring-inset ring-fuchsia-200/20 transition-transform duration-200 group-hover/lotus:scale-105">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500/15 to-violet-500/15 text-fuchsia-800 ring-1 ring-inset ring-fuchsia-700/15 transition-transform duration-200 group-hover/lotus:scale-105 dark:from-fuchsia-300/20 dark:to-violet-400/20 dark:text-fuchsia-100 dark:ring-fuchsia-200/20">
                     <LotusMark className="h-[17px] w-[17px] -translate-y-px" />
                   </span>
                   <span>Ask Lotus</span>
@@ -602,8 +612,6 @@ export function ThoughtCard({
             {/* <ActionBtn>
               <Send className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
             </ActionBtn> */}
-          </div>
-        </div>
       </div>
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent>

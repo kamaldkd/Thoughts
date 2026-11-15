@@ -11,7 +11,7 @@ export function LotusMark({ className = "h-5 w-5" }: { className?: string }) {
         d="M16 26C11 23 6.5 18.7 5 13.7C10.1 14.1 14.4 17.5 16 26Z"
         fill="currentColor"
         fillOpacity=".72"
-        stroke="#F5D0FE"
+        stroke="currentColor"
         strokeOpacity=".8"
         strokeWidth="1"
       />
@@ -19,14 +19,15 @@ export function LotusMark({ className = "h-5 w-5" }: { className?: string }) {
         d="M16 26C21 23 25.5 18.7 27 13.7C21.9 14.1 17.6 17.5 16 26Z"
         fill="currentColor"
         fillOpacity=".72"
-        stroke="#F5D0FE"
+        stroke="currentColor"
         strokeOpacity=".8"
         strokeWidth="1"
       />
       <path
         d="M16 25.5C12.2 20.5 12.1 13.7 16 6C19.9 13.7 19.8 20.5 16 25.5Z"
         fill="currentColor"
-        stroke="#FFF7FE"
+        stroke="currentColor"
+        strokeOpacity=".9"
         strokeWidth="1.2"
       />
       <path
@@ -37,7 +38,7 @@ export function LotusMark({ className = "h-5 w-5" }: { className?: string }) {
       <path
         d="M5.5 23C9.2 26.1 12.6 27.1 16 25.6C19.4 27.1 22.8 26.1 26.5 23C24.1 27.9 20.4 29.5 16 28.1C11.6 29.5 7.9 27.9 5.5 23Z"
         fill="currentColor"
-        stroke="#F5D0FE"
+        stroke="currentColor"
         strokeOpacity=".8"
         strokeWidth=".8"
       />
