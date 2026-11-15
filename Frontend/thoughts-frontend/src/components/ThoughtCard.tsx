@@ -38,6 +38,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LotusMark } from "@/components/lotus/LotusBloom";
@@ -242,7 +244,7 @@ export function ActionBtn({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 group transition-all duration-150 active:scale-90"
+      className="group flex h-9 items-center justify-center gap-1.5 rounded-full px-2.5 text-muted-foreground transition-all duration-150 hover:bg-secondary/70 hover:text-foreground active:scale-95"
     >
       {children}
     </button>
@@ -474,7 +476,7 @@ export function ThoughtCard({
           <MediaGallery items={mediaItems} />
 
           {/* Action bar */}
-          <div className="flex items-center gap-5 mt-3.5">
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
             <ActionBtn onClick={handleLike}>
               <Heart
                 className={`h-[18px] w-[18px] transition-all duration-200 ${
@@ -496,7 +498,8 @@ export function ThoughtCard({
 
             <Link
               to={`/thought/${id}`}
-              className="flex items-center gap-1.5 group transition-all duration-150 active:scale-90"
+              aria-label={comments > 0 ? `${comments} comments` : "Open comments"}
+              className="group flex h-9 items-center gap-1.5 rounded-full px-2.5 text-muted-foreground transition-all duration-150 hover:bg-secondary/70 hover:text-foreground active:scale-95"
             >
               <MessageCircle className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
               {comments > 0 && (
@@ -512,32 +515,82 @@ export function ThoughtCard({
                   type="button"
                   aria-label="Ask Lotus about this post"
                   title="Ask Lotus"
-                  className="flex h-8 items-center gap-1.5 rounded-full px-2 text-xs text-muted-foreground transition hover:bg-fuchsia-400/10 hover:text-fuchsia-200"
+                  className="group/lotus flex h-9 items-center gap-2 rounded-full border border-fuchsia-300/15 bg-gradient-to-r from-violet-400/[0.07] to-fuchsia-400/[0.07] py-1 pl-1.5 pr-3 text-[11px] font-medium text-fuchsia-100/90 shadow-[0_2px_12px_-8px_rgba(217,70,239,0.65)] transition-all duration-200 hover:border-fuchsia-300/35 hover:from-violet-400/[0.13] hover:to-fuchsia-400/[0.13] hover:text-white hover:shadow-[0_4px_18px_-8px_rgba(217,70,239,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-300/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95"
                 >
-                  <LotusMark className="h-4 w-4" />
-                  <span className="hidden sm:inline">Ask Lotus</span>
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-300/20 to-violet-400/20 text-fuchsia-100 ring-1 ring-inset ring-fuchsia-200/20 transition-transform duration-200 group-hover/lotus:scale-105">
+                    <LotusMark className="h-[17px] w-[17px] -translate-y-px" />
+                  </span>
+                  <span>Ask Lotus</span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-60">
-                <DropdownMenuItem onSelect={() => openLotus("ask")}>
-                  <Sparkles className="mr-2 h-4 w-4 text-fuchsia-400" />
-                  Ask Lotus about this post
+              <DropdownMenuContent
+                align="start"
+                sideOffset={8}
+                className="w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-fuchsia-300/15 bg-[#17121f]/[0.97] p-2 text-zinc-100 shadow-[0_18px_50px_-18px_rgba(0,0,0,0.85)] backdrop-blur-xl"
+              >
+                <DropdownMenuLabel className="px-3 pb-2 pt-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-200/70">
+                  Lotus for this thought
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="mx-2 mb-1 bg-white/[0.07]" />
+                <DropdownMenuItem
+                  onSelect={() => openLotus("ask")}
+                  className="gap-3 rounded-xl px-2.5 py-2.5 text-zinc-200 focus:bg-fuchsia-300/[0.09] focus:text-white"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-fuchsia-300/15 bg-fuchsia-300/[0.08] text-fuchsia-200">
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium">Ask about this thought</span>
+                    <span className="mt-0.5 block text-[10px] text-zinc-500">Explore a question or idea</span>
+                  </span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => openLotus("explain")}>
-                  <Lightbulb className="mr-2 h-4 w-4" />
-                  Explain this post
+                <DropdownMenuItem
+                  onSelect={() => openLotus("explain")}
+                  className="gap-3 rounded-xl px-2.5 py-2.5 text-zinc-200 focus:bg-fuchsia-300/[0.09] focus:text-white"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-violet-300/10 bg-violet-300/[0.07] text-violet-200">
+                    <Lightbulb className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium">Explain this post</span>
+                    <span className="mt-0.5 block text-[10px] text-zinc-500">Unpack the main point</span>
+                  </span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => openLotus("comment")}>
-                  <MessageSquareText className="mr-2 h-4 w-4" />
-                  Suggest a comment
+                <DropdownMenuItem
+                  onSelect={() => openLotus("comment")}
+                  className="gap-3 rounded-xl px-2.5 py-2.5 text-zinc-200 focus:bg-fuchsia-300/[0.09] focus:text-white"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-pink-300/10 bg-pink-300/[0.07] text-pink-200">
+                    <MessageSquareText className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium">Suggest a comment</span>
+                    <span className="mt-0.5 block text-[10px] text-zinc-500">Start a thoughtful conversation</span>
+                  </span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => openLotus("reply")}>
-                  <MessagesSquare className="mr-2 h-4 w-4" />
-                  Generate a thoughtful reply
+                <DropdownMenuItem
+                  onSelect={() => openLotus("reply")}
+                  className="gap-3 rounded-xl px-2.5 py-2.5 text-zinc-200 focus:bg-fuchsia-300/[0.09] focus:text-white"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-purple-300/10 bg-purple-300/[0.07] text-purple-200">
+                    <MessagesSquare className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium">Write a thoughtful reply</span>
+                    <span className="mt-0.5 block text-[10px] text-zinc-500">Respond with care and context</span>
+                  </span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => openLotus("summarize")}>
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Summarize discussion
+                <DropdownMenuItem
+                  onSelect={() => openLotus("summarize")}
+                  className="gap-3 rounded-xl px-2.5 py-2.5 text-zinc-200 focus:bg-fuchsia-300/[0.09] focus:text-white"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-indigo-300/10 bg-indigo-300/[0.07] text-indigo-200">
+                    <MessageCircle className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium">Summarize discussion</span>
+                    <span className="mt-0.5 block text-[10px] text-zinc-500">Find the key points in replies</span>
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

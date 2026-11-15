@@ -46,6 +46,7 @@ describe("ThoughtCard Lotus actions", () => {
     const lotusTrigger = screen.getByRole("button", {
       name: "Ask Lotus about this post",
     });
+    expect(lotusTrigger).toHaveClass("group/lotus");
     fireEvent.keyDown(lotusTrigger, { key: "Enter", code: "Enter" });
     fireEvent.click(await screen.findByText("Explain this post"));
 
