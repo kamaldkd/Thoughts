@@ -392,7 +392,7 @@ export function ThoughtCard({
   };
 
   return (
-    <article className="group/card mx-3 my-3 overflow-hidden rounded-[24px] border border-border/60 bg-card/90 shadow-sm transition-all duration-200 hover:border-border hover:shadow-md sm:mx-0 sm:my-4 sm:rounded-[28px] animate-fade-in">
+    <article className="group/card overflow-hidden border border-border/60 shadow-sm transition-all duration-200 hover:border-border hover:shadow-md sm:mx-0 sm:my-4 sm:rounded-[28px] animate-fade-in">
       {/* Header row */}
       <div className="flex items-center gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
         <Link
@@ -471,6 +471,9 @@ export function ThoughtCard({
         </div>
       </div>
 
+      {/* Media */}
+      <MediaGallery items={mediaItems} />
+
       {thoughtText.trim() && (
         <Link to={`/thought/${id}`} className="block px-4 pt-3 sm:px-5">
           <p className="whitespace-pre-wrap text-[14px] leading-6 text-foreground/90">
@@ -482,11 +485,8 @@ export function ThoughtCard({
         </Link>
       )}
 
-      {/* Media */}
-      <MediaGallery items={mediaItems} />
-
       {/* Action bar */}
-      <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-border/50 px-3 py-2 sm:px-4">
+      <div className="mt-2 flex flex-wrap items-center gap-1 px-3 py-2 sm:px-4">
             <ActionBtn onClick={handleLike}>
               <Heart
                 className={`h-[18px] w-[18px] transition-all duration-200 ${
