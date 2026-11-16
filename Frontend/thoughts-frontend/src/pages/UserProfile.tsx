@@ -536,11 +536,11 @@ export default function UserProfile() {
                     <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
                   )}
                 </div>
-                {profile?.username && (profile?.name || profile?.fullName) && (
+                {/* {profile?.username && (profile?.name || profile?.fullName) && (
                   <p className="text-[13px] text-muted-foreground">
                     @{profile.username}
                   </p>
-                )}
+                )} */}
                 {profile?.bio && (
                   <p className="text-[13.5px] leading-snug text-foreground whitespace-pre-line">
                     {profile.bio}
@@ -607,7 +607,7 @@ export default function UserProfile() {
                     type="button"
                     onClick={handleMessageClick}
                     disabled={isMessaging}
-                    className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isMessaging ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

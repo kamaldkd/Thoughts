@@ -6,7 +6,7 @@ import Story from "../models/Story.js";
 import ExpressError from "../utils/ExpressError.js";
 
 const STORY_LIFETIME_MS = 24 * 60 * 60 * 1000;
-const ALLOWED_IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp", "gif"];
+const ALLOWED_IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp", "gif", "heic", "heif"];
 const ALLOWED_VIDEO_FORMATS = ["mp4", "mov", "webm", "mkv"];
 
 const asId = (id) => id?.toString();

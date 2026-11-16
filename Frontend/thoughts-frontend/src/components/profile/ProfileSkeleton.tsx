@@ -25,8 +25,9 @@ export function ProfileSkeleton() {
       </div>
 
       {/* Follow button */}
-      <div className="px-4 pb-5">
-        <Skeleton className="h-9 w-full rounded-full" />
+      <div className="px-4 pb-5 flex gap-2">
+        <Skeleton className="h-9 w-full rounded-md" />
+        <Skeleton className="h-9 w-full rounded-md" />
       </div>
 
       {/* Grid */}

@@ -1,5 +1,5 @@
 /**
- * Compresses an image file natively via an HTML5 Canvas to drastically reduce upload payloads.
+ * Compresses images as JPEG for consistent upload support across image formats.
  */
 export const compressImage = async (
   file: File,
@@ -33,15 +33,16 @@ export const compressImage = async (
 
         canvas.toBlob(
           (blob) => {
-            if (!blob) return resolve(file);
+            if (!blob || blob.type !== "image/jpeg") return resolve(file);
+            const name = file.name.replace(/\.[^.]+$/, "") || file.name;
             resolve(
-              new File([blob], file.name, {
-                type: file.type || "image/jpeg",
+              new File([blob], `${name}.jpg`, {
+                type: "image/jpeg",
                 lastModified: Date.now(),
               })
             );
           },
-          file.type || "image/jpeg",
+          "image/jpeg",
           options.quality
         );
       };

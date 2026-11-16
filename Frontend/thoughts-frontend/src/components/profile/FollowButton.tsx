@@ -83,7 +83,7 @@ export function FollowButton({
         onMouseLeave={() => setIsHovering(false)}
         disabled={loading}
         className={cn(
-          "relative h-9 px-6 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-60",
+          "relative h-9 px-6 rounded-md text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-60",
           state === "not_following"
             ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
             : "bg-transparent border border-border text-foreground hover:border-destructive hover:text-destructive",

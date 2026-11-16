@@ -19,7 +19,7 @@ export const addThought = async (userId, text, files) => {
         const result = await cloudinary.uploader.upload(file.path, {
           folder: "thoughts",
           resource_type: "auto",
-          allowed_formats: isImage ? ["jpg", "png", "jpeg"] : ["mp4", "mov", "webm", "mkv"],
+          allowed_formats: isImage ? ["jpg", "png", "jpeg", "heic", "heif"] : ["mp4", "mov", "webm", "mkv"],
         });
 
         return { type: isImage ? "image" : "video", url: result.secure_url, public_id: result.public_id };
